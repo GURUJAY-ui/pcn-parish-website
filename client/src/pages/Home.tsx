@@ -86,42 +86,27 @@ export default function Home() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4 flex-wrap justify-center flex-1">
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
+          <div className="hidden md:flex items-center gap-6">
+            <Button variant="ghost" className="text-foreground hover:text-primary text-sm">
               Home
             </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
+            <Button variant="ghost" className="text-foreground hover:text-primary text-sm">
               About Us
             </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
+            <Button variant="ghost" className="text-foreground hover:text-primary text-sm">
               Leadership
             </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
+            <Button variant="ghost" className="text-foreground hover:text-primary text-sm">
               Sermons
             </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
+            <Button variant="ghost" className="text-foreground hover:text-primary text-sm">
               Ministries
             </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
-              Testimonies
-            </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
+            <Button variant="ghost" className="text-foreground hover:text-primary text-sm">
               Events
             </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
-              Gallery
-            </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
-              Live Stream
-            </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
-              Contact Us
-            </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
-              Downloads
-            </Button>
-            <Button variant="ghost" className="text-foreground hover:text-primary text-xs">
-              Give
+            <Button variant="ghost" className="text-foreground hover:text-primary text-sm">
+              Contact
             </Button>
           </div>
 
@@ -133,7 +118,7 @@ export default function Home() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden glass backdrop-blur-xl border-b border-white/10 p-4 space-y-2 max-h-96 overflow-y-auto">
+          <div className="md:hidden glass backdrop-blur-xl border-b border-white/10 p-4 space-y-2">
             <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
               Home
             </Button>
@@ -141,34 +126,13 @@ export default function Home() {
               About Us
             </Button>
             <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
-              Leadership
-            </Button>
-            <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
               Sermons
-            </Button>
-            <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
-              Ministries
-            </Button>
-            <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
-              Testimonies
             </Button>
             <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
               Events
             </Button>
             <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
-              Gallery
-            </Button>
-            <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
-              Live Stream
-            </Button>
-            <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
-              Contact Us
-            </Button>
-            <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
-              Downloads
-            </Button>
-            <Button variant="ghost" className="w-full text-left text-foreground hover:text-primary text-sm">
-              Give
+              Contact
             </Button>
           </div>
         )}
