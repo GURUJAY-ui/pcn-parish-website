@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Shield, Users, Zap, Globe, BookOpen, Lock, Church, Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Shield, Users, Zap, Globe, BookOpen, Lock, Church, Menu, X, ChevronLeft, ChevronRight, Facebook, Twitter, Youtube, Instagram } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 
@@ -342,65 +342,126 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-12">
+      <footer className="border-t border-white/10 py-16">
         <div className="container">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          {/* Footer Main Grid */}
+          <div className="grid md:grid-cols-5 gap-12 mb-12">
+            {/* New Here Section */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-                  <Church className="w-5 h-5 text-white" />
-                </div>
-                <span style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold">
-                  PCN First Abuja
-                </span>
+              <h4 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold mb-6 text-lg text-primary">
+                New Here?
+              </h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-foreground transition">Service Times</a></li>
+                <li><a href="#" className="hover:text-foreground transition">Vision & Beliefs</a></li>
+                <li><a href="#" className="hover:text-foreground transition">Leadership</a></li>
+              </ul>
+            </div>
+
+            {/* Ministries Section */}
+            <div>
+              <h4 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold mb-6 text-lg text-secondary">
+                Ministries
+              </h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-foreground transition">Children's Dept</a></li>
+                <li><a href="#" className="hover:text-foreground transition">Teenage Ministry</a></li>
+                <li><a href="#" className="hover:text-foreground transition">Evangelism</a></li>
+                <li><a href="#" className="hover:text-foreground transition">Family Life</a></li>
+                <li><a href="#" className="hover:text-foreground transition">Prayer</a></li>
+              </ul>
+            </div>
+
+            {/* Contact Section */}
+            <div>
+              <h4 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold mb-6 text-lg text-accent">
+                Contact
+              </h4>
+              <ul className="space-y-4 text-sm text-muted-foreground">
+                <li>
+                  <a href="tel:+2348151111877" className="hover:text-foreground transition flex items-start gap-2">
+                    <span className="text-primary mt-1">📞</span>
+                    <span>+234 (0) 8151111877</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-foreground transition flex items-start gap-2">
+                    <span className="text-primary mt-1">📍</span>
+                    <span>No. 5 Boke Close, off Sakono Street, Opposite AP Plaza, Wuse II, Abuja</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:pulpitfap@gmail.com" className="hover:text-foreground transition flex items-start gap-2">
+                    <span className="text-primary mt-1">✉️</span>
+                    <span>pulpitfap@gmail.com</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Social Media Icons */}
+            <div>
+              <h4 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold mb-6 text-lg">
+                Follow Us
+              </h4>
+              <div className="flex gap-4">
+                <a
+                  href="https://facebook.com/firstabujapresbyterian"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg glass flex items-center justify-center hover:bg-white/10 hover:border-primary/50 transition group"
+                  title="Facebook"
+                >
+                  <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                </a>
+                <a
+                  href="https://x.com/firstabujapresbyterian"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg glass flex items-center justify-center hover:bg-white/10 hover:border-primary/50 transition group"
+                  title="X (Twitter)"
+                >
+                  <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.165-6.75-5.913 6.75h-3.308l7.73-8.835L2.56 2.25h6.772l4.681 6.187 5.431-6.187zM17.7 20.005h1.813L6.283 3.993H4.366l13.334 16.012z" />
+                  </svg>
+                </a>
+                <a
+                  href="https://youtube.com/@firstabujapresbyterian"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg glass flex items-center justify-center hover:bg-white/10 hover:border-primary/50 transition group"
+                  title="YouTube"
+                >
+                  <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                </a>
+                <a
+                  href="https://instagram.com/firstabujapresbyterian"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg glass flex items-center justify-center hover:bg-white/10 hover:border-primary/50 transition group"
+                  title="Instagram"
+                >
+                  <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition" fill="currentColor" viewBox="0 0 24 24">
+                    <rect x="2.17" y="2.17" width="19.66" height="19.66" rx="4.58" ry="4.58" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                    <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor"/>
+                  </svg>
+                </a>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Presbyterian Church of Nigeria — Serving with excellence, integrity, and the love of Christ
-              </p>
-            </div>
-            <div>
-              <h4 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold mb-4">
-                Ministry
-              </h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition">Services</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Events</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Sermons</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold mb-4">
-                Community
-              </h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition">About Us</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Gallery</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Contact</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold mb-4">
-                Legal
-              </h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Safeguarding</a></li>
-              </ul>
             </div>
           </div>
+
+          {/* Footer Bottom */}
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
             <p>&copy; 2026 Presbyterian Church of Nigeria, First Abuja Parish. All rights reserved.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="https://www.facebook.com/pcnfap/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">
-                Facebook
-              </a>
-              <a href="https://www.youtube.com/@pulpitfaptv" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">
-                YouTube
-              </a>
-              <a href="mailto:pulpitfap@gmail.com" className="hover:text-primary transition">
-                Email
-              </a>
+              <a href="#" className="hover:text-foreground transition">Privacy Policy</a>
+              <a href="#" className="hover:text-foreground transition">Terms of Service</a>
+              <a href="#" className="hover:text-foreground transition">Safeguarding</a>
             </div>
           </div>
         </div>
