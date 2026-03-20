@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["./server/*"],
+      "@shared/*": ["./shared/*"]
+    }
+  },
+  "include": ["**/*", "../shared/**/*"]
+}

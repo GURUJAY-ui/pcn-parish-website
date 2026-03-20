@@ -84,6 +84,11 @@
   /* Dark theme is default - no changes needed */
 }
 
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
