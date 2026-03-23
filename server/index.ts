@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import hpp from "hpp";
 import path from "path";
+import cookieParser from "cookie-parser";
 import fs from "fs";
 import dotenv from "dotenv";
 import expressWinston from "express-winston";
@@ -86,6 +87,9 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 // ── HTTP Parameter Pollution protection ───────────────────────────────────
 app.use(hpp());
+
+// ── Cookie parsing ─────────────────────────────────────────────────────
+app.use(cookieParser());
 
 // ── XSS sanitization on all inputs ───────────────────────────────────────
 app.use(sanitizeBody);
