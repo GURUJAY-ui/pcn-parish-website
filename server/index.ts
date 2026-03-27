@@ -61,9 +61,12 @@ app.use(
 );
 
 // ── CORS — only allow your exact frontend domain ─────────────────────────
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
-  .split(",")
-  .map((o) => o.trim());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://pcn-parish-website.vercel.app",
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",").map((o) => o.trim()) : []),
+];
 
 app.use(
   cors({
