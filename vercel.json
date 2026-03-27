@@ -1,7 +1,7 @@
 {
   "version": 2,
   "outputDirectory": "dist/public",
-  "buildCommand": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --tsconfig=server/tsconfig.json",
+  "buildCommand": "pnpm vite build && pnpm esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --tsconfig=server/tsconfig.json",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }

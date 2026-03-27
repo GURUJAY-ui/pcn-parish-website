@@ -137,13 +137,12 @@ app.use("/api/site-content", siteContentRoutes);
 // ── Health check ──────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" && process.env.SERVE_FRONTEND === "true") {
   app.use(express.static(frontendDist));
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api/")) {
       return next();
     }
-
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 }
