@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { ChevronRight, BookOpen, Target, Heart, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { api } from "@/lib/api";
 
-const timeline = [
+const fallbackTimeline = [
   { year: "1846", event: "Rev. Hope Masterdon Waddell and five Jamaicans arrive in Calabar at the invitation of King Evamba V and King Eyo II." },
   { year: "1858", event: "The Presbytery of Biafra is created on September 1st, marking a landmark in Nigerian church history." },
   { year: "1872", event: "Rev. Esien Esien Ukpabio becomes the first indigenous Nigerian minister, ordained on April 9th." },
@@ -12,7 +14,7 @@ const timeline = [
   { year: "1984", event: "PCN First Abuja Parish is inaugurated on 8th April, comprising Wuse, Zauda and Jeida Congregations." },
 ];
 
-const doctrines = [
+const fallbackDoctrines = [
   { title: "The Holy Scripture", description: "We believe the Bible is the inspired, infallible Word of God and the supreme authority for faith and practice." },
   { title: "The Holy Trinity", description: "We believe in one God, eternally existing in three persons: Father, Son, and Holy Spirit." },
   { title: "Jesus Christ", description: "We believe in the deity and humanity of Jesus Christ, His virgin birth, sinless life, atoning death, bodily resurrection, and ascension." },
@@ -25,6 +27,34 @@ const doctrines = [
 
 export default function About() {
   const [, navigate] = useLocation();
+  const [timeline, setTimeline] = useState(fallbackTimeline);
+  const [doctrines, setDoctrines] = useState(fallbackDoctrines);
+  const [stats, setStats] = useState([
+    { value: "1846", label: "Year Founded in Nigeria", color: "text-amber-400" },
+    { value: "178+", label: "Years of Ministry", color: "text-cyan-400" },
+    { value: "11", label: "Congregations in Abuja", color: "text-emerald-400" },
+    { value: "1984", label: "First Abuja Parish Est.", color: "text-purple-400" },
+  ]);
+  const [originParagraphs, setOriginParagraphs] = useState([
+    "The Presbyterian Church of Nigeria is aware of its origins in the Reformation, especially the enlightening ministries of John Calvin in Switzerland and John Knox in Scotland.",
+    "The PCN is indebted to the Presbyterian Church in Jamaica for sending five Jamaicans and Rev. Hope Masterdon Waddell to Calabar in 1846 at the invitation of King Evamba V and King Eyo II.",
+    "The PCN First Abuja Parish was inaugurated on 8th April, 1984. It comprises Wuse, Zauda and Jeida Congregations with Mission Stations at Apo, Pegi, Abaji, Ogaminana, Kabusa, Kwali, Piyanko and Wuye.",
+  ]);
+  const [vision, setVision] = useState("To be a Bible-based Church, proclaiming to the world by preaching and example, the good news of the love of God through Jesus Christ His Son under the guidance of the Holy Spirit.");
+  const [mission, setMission] = useState("To carry the gospel to all parts of Nigeria and beyond through evangelism, discipleship, service and promotion of social righteousness.");
+
+  useEffect(() => {
+    api.getSiteContent("about")
+      .then((data) => {
+        if (Array.isArray(data?.timeline) && data.timeline.length > 0) setTimeline(data.timeline);
+        if (Array.isArray(data?.doctrines) && data.doctrines.length > 0) setDoctrines(data.doctrines);
+        if (Array.isArray(data?.stats) && data.stats.length > 0) setStats(data.stats);
+        if (Array.isArray(data?.origin?.paragraphs) && data.origin.paragraphs.length > 0) setOriginParagraphs(data.origin.paragraphs);
+        if (typeof data?.vision === "string" && data.vision.trim()) setVision(data.vision);
+        if (typeof data?.mission === "string" && data.mission.trim()) setMission(data.mission);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -70,26 +100,15 @@ export default function About() {
               Rooted in the Reformation
             </h2>
             <div className="space-y-4 text-muted-foreground leading-relaxed">
-              <p>
-                The Presbyterian Church of Nigeria is aware of its origins in the Reformation, especially the enlightening ministries of <strong className="text-foreground">John Calvin</strong> in Switzerland and <strong className="text-foreground">John Knox</strong> in Scotland.
-              </p>
-              <p>
-                The PCN is indebted to the Presbyterian Church in Jamaica for sending five Jamaicans and <strong className="text-foreground">Rev. Hope Masterdon Waddell</strong> to Calabar in 1846 at the invitation of King Evamba V and King Eyo II.
-              </p>
-              <p>
-                The PCN First Abuja Parish was inaugurated on <strong className="text-foreground">8th April, 1984</strong>. It comprises Wuse, Zauda and Jeida Congregations with Mission Stations at Apo, Pegi, Abaji, Ogaminana, Kabusa, Kwali, Piyanko and Wuye.
-              </p>
+              {originParagraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4">
-            {[
-              { value: "1846", label: "Year Founded in Nigeria", color: "text-amber-400" },
-              { value: "178+", label: "Years of Ministry", color: "text-cyan-400" },
-              { value: "11", label: "Congregations in Abuja", color: "text-emerald-400" },
-              { value: "1984", label: "First Abuja Parish Est.", color: "text-purple-400" },
-            ].map((stat) => (
+            {stats.map((stat) => (
               <Card key={stat.label} className="glass-lg p-6 text-center hover:border-white/20 transition-all">
                 <p className={`text-4xl font-bold ${stat.color} mb-2`}>{stat.value}</p>
                 <p className="text-xs text-muted-foreground leading-snug">{stat.label}</p>
@@ -143,7 +162,7 @@ export default function About() {
             </div>
             <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">Our Vision</h3>
             <p className="text-muted-foreground leading-relaxed">
-              To be a Bible-based Church, proclaiming to the world by preaching and example, the good news of the love of God through Jesus Christ His Son under the guidance of the Holy Spirit.
+              {vision}
             </p>
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl" />
           </div>
@@ -154,7 +173,7 @@ export default function About() {
             </div>
             <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">Our Mission</h3>
             <p className="text-muted-foreground leading-relaxed">
-              To carry the gospel to all parts of Nigeria and beyond through evangelism, discipleship, service and promotion of social righteousness.
+              {mission}
             </p>
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl" />
           </div>

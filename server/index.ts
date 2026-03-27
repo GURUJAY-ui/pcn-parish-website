@@ -34,9 +34,11 @@ import testimonyRoutes from "./routes/testimonies";
 import galleryRoutes from "./routes/gallery";
 import contactRoutes from "./routes/contact";
 import donationRoutes from "./routes/donations";
+import siteContentRoutes from "./routes/site-content";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const frontendDist = path.join(process.cwd(), "dist", "public");
 
 // ── Security headers via Helmet ───────────────────────────────────────────
 app.use(
@@ -130,9 +132,21 @@ app.use("/api/testimonies", testimonyRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/donations", donationRoutes);
+app.use("/api/site-content", siteContentRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(frontendDist));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api/")) {
+      return next();
+    }
+
+    res.sendFile(path.join(frontendDist, "index.html"));
+  });
+}
 
 // ── 404 handler ───────────────────────────────────────────────────────────
 app.use((_req, res) => {
@@ -153,14 +167,6 @@ app.use((err: any, req: express.Request, res: express.Response, _next: express.N
     error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message,
   });
 });
-
-// Serve frontend in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(process.cwd(), "client/dist")));
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(process.cwd(), "client/dist", "index.html"));
-  });
-}
 
 app.listen(PORT, () => {
   logger.info(`✅ PCN API running on port ${PORT} [${process.env.NODE_ENV}]`);

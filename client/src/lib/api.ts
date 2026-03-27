@@ -1,259 +1,440 @@
-    /**
-     * client/src/lib/api.ts
-     *
-     * Security hardening over the original:
-     *  1. Access token stored in MODULE MEMORY only — never localStorage/sessionStorage.
-     *     localStorage tokens survive page close and can be stolen by XSS.
-     *     A memory variable dies with the page — zero persistence for attackers.
-     *  2. Refresh token is an httpOnly cookie set by the server.
-     *     The client never sees, touches, or stores it. It's sent automatically
-     *     by the browser on /api/auth/* requests with credentials:"include".
-     *  3. Auto-refresh: a timer fires 60 seconds before the access token expires,
-     *     silently fetching a new one via the cookie. No user interaction needed.
-     *  4. username stored in sessionStorage only (non-sensitive display value).
-     *  5. All mutating requests send credentials:"include" so the browser attaches
-     *     the SameSite=Strict refresh-token cookie automatically.
-     */
+import logger from "./logger";
 
-    const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
-    // ─── In-memory token store ─────────────────────────────────────────────────
-    // These variables live only in this module's closure.
-    // They are wiped on page reload — intentional for security.
-    let _accessToken: string | null = null;
-    let _refreshTimer: ReturnType<typeof setTimeout> | null = null;
+let _accessToken: string | null = null;
+let _refreshToken: string | null = null;
 
-    function setAccessToken(token: string, expiresIn: number) {
-      _accessToken = token;
-      scheduleRefresh(expiresIn);
+// ── Initialize tokens from localStorage ────────────────────────────────────
+function initializeTokens() {
+  _accessToken = localStorage.getItem("accessToken");
+  _refreshToken = localStorage.getItem("refreshToken");
+}
+
+// ── Set tokens in memory and localStorage ──────────────────────────────────
+function setAccessToken(token: string, expiresIn?: number) {
+  _accessToken = token;
+  localStorage.setItem("accessToken", token);
+
+  if (expiresIn) {
+    const expiresAt = Date.now() + expiresIn * 1000;
+    localStorage.setItem("accessTokenExpiresAt", String(expiresAt));
+  }
+}
+
+function setRefreshToken(token: string) {
+  _refreshToken = token;
+  localStorage.setItem("refreshToken", token);
+}
+
+// ── Clear tokens ──────────────────────────────────────────────────────────
+function clearAccessToken() {
+  _accessToken = null;
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("accessTokenExpiresAt");
+}
+
+function clearRefreshToken() {
+  _refreshToken = null;
+  localStorage.removeItem("refreshToken");
+}
+
+function clearAllTokens() {
+  clearAccessToken();
+  clearRefreshToken();
+}
+
+// ── Check if token is expired ──────────────────────────────────────────────
+function isTokenExpired(): boolean {
+  const expiresAt = localStorage.getItem("accessTokenExpiresAt");
+  if (!expiresAt) return false;
+  return Date.now() > Number(expiresAt);
+}
+
+// ── Refresh access token ──────────────────────────────────────────────────
+async function refreshAccessToken(): Promise<{ accessToken: string; expiresIn: number } | null> {
+  if (!_refreshToken) return null;
+
+  try {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ refreshToken: _refreshToken }),
+    });
+
+    if (!res.ok) {
+      clearAllTokens();
+      return null;
     }
 
-    function clearAccessToken() {
-      _accessToken = null;
-      if (_refreshTimer) { clearTimeout(_refreshTimer); _refreshTimer = null; }
+    const data = await res.json();
+    setAccessToken(data.accessToken, data.expiresIn);
+    return data;
+  } catch (err) {
+    logger.error("Token refresh failed", err);
+    clearAllTokens();
+    return null;
+  }
+}
+
+// ── Generic request helper ────────────────────────────────────────────────
+async function request(
+  endpoint: string,
+  options: RequestInit & { requiresAuth?: boolean } = {}
+): Promise<any> {
+  const { requiresAuth = false, ...fetchOptions } = options;
+  const isFormDataBody = typeof FormData !== "undefined" && fetchOptions.body instanceof FormData;
+
+  // Check if token needs refresh
+  if (requiresAuth && isTokenExpired()) {
+    const refreshed = await refreshAccessToken();
+    if (!refreshed) {
+      window.location.href = "/admin/login";
+      throw new Error("Session expired");
     }
+  }
 
-    function scheduleRefresh(expiresIn: number) {
-      if (_refreshTimer) clearTimeout(_refreshTimer);
-      // Refresh 60 s before expiry
-      const delay = Math.max((expiresIn - 60) * 1000, 5000);
-      _refreshTimer = setTimeout(async () => {
-        try {
-          const data = await refreshAccessToken();
-          if (data) setAccessToken(data.accessToken, data.expiresIn);
-          else clearAccessToken();
-        } catch {
-          clearAccessToken();
-        }
-      }, delay);
-    }
-
-    // ─── Auth helpers ──────────────────────────────────────────────────────────
-
-    async function refreshAccessToken(): Promise<{ accessToken: string; expiresIn: number } | null> {
-      try {
-        const res = await fetch(`${BASE_URL}/auth/refresh`, {
-          method: "POST",
-          credentials: "include", // sends the httpOnly cookie automatically
-        });
-        if (!res.ok) return null;
-        return res.json();
-      } catch {
-        return null;
-      }
-    }
-
-    // ─── Core request helper ───────────────────────────────────────────────────
-
-    async function request(path: string, options: RequestInit = {}, retry = true): Promise<any> {
-      const headers: Record<string, string> = {};
-
-      // Copy over any caller-provided headers (but not Content-Type for FormData)
-      if (options.headers) {
-        Object.assign(headers, options.headers);
-      }
-
-      // Attach access token if we have one
-      if (_accessToken) {
-        headers["Authorization"] = `Bearer ${_accessToken}`;
-      }
-
-      // Only set Content-Type for JSON — FormData sets its own boundary
-      if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
-        headers["Content-Type"] = "application/json";
-      }
-
-      const res = await fetch(`${BASE_URL}${path}`, {
-        ...options,
-        headers,
-        credentials: "include", // needed so the refresh cookie is sent on /auth/* routes
-      });
-
-      // Auto-refresh on 401 (expired access token)
-      if (res.status === 401 && retry) {
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-          setAccessToken(refreshed.accessToken, refreshed.expiresIn);
-          return request(path, options, false); // retry once
-        }
-        // Refresh also failed — force re-login
-        clearAccessToken();
-        sessionStorage.removeItem("pcn_admin_username");
-        window.location.href = "/admin/login";
-        return;
-      }
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Request failed" }));
-        throw new Error(err.error || "Request failed");
-      }
-
-      return res.json();
-    }
-
-    // ─── Public API ────────────────────────────────────────────────────────────
-
-    export const api = {
-      // ── Auth ──────────────────────────────────────────────────────────────────
-      login: async (username: string, password: string) => {
-        const res = await fetch(`${BASE_URL}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", // so the Set-Cookie for refresh token is accepted
-          body: JSON.stringify({ username, password }),
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Login failed");
-        }
-        const data = await res.json();
-        // Store access token in memory only
-        setAccessToken(data.accessToken, data.expiresIn ?? 900);
-        // Username is non-sensitive — sessionStorage is fine (cleared on tab close)
-        sessionStorage.setItem("pcn_admin_username", data.username);
-        return data;
-      },
-
-      logout: async () => {
-        try {
-          // Send the access token so the server can blacklist it
-          await request("/auth/logout", { method: "POST" });
-        } finally {
-          clearAccessToken();
-          sessionStorage.removeItem("pcn_admin_username");
-        }
-      },
-
-      // Check if we currently have an access token in memory.
-      // Note: returns false after a page reload (token is not persisted).
-      // The AdminLogin page should call api.tryRestoreSession() on mount.
-      isLoggedIn: () => !!_accessToken,
-
-      getUsername: () => sessionStorage.getItem("pcn_admin_username") ?? "Admin",
-
-      /**
-       * Called on app mount / AdminLogin mount.
-       * Attempts a silent token refresh using the httpOnly cookie.
-       * If the cookie is still valid the user stays logged in across reloads.
-       * Returns true if session was restored, false otherwise.
-       */
-      tryRestoreSession: async (): Promise<boolean> => {
-        const data = await refreshAccessToken();
-        if (data) {
-          setAccessToken(data.accessToken, data.expiresIn ?? 900);
-          return true;
-        }
-        return false;
-      },
-
-      // ── Hero ──────────────────────────────────────────────────────────────────
-      getHero:     ()                  => request("/hero"),
-      createHero:  (data: any)         => request("/hero",      { method: "POST",   body: JSON.stringify(data) }),
-      updateHero:  (id: number, data: any) => request(`/hero/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-      deleteHero:  (id: number)        => request(`/hero/${id}`, { method: "DELETE" }),
-
-      // ── Sermons ───────────────────────────────────────────────────────────────
-      getSermons:    ()                     => request("/sermons"),
-      createSermon:  (data: any)            => request("/sermons",       { method: "POST",   body: JSON.stringify(data) }),
-      updateSermon:  (id: number, data: any) => request(`/sermons/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
-      deleteSermon:  (id: number)           => request(`/sermons/${id}`, { method: "DELETE" }),
-
-      // ── Events ────────────────────────────────────────────────────────────────
-      getEvents:    ()                      => request("/events"),
-      createEvent:  (data: any)             => request("/events",        { method: "POST",   body: JSON.stringify(data) }),
-      updateEvent:  (id: number, data: any) => request(`/events/${id}`,  { method: "PUT",    body: JSON.stringify(data) }),
-      deleteEvent:  (id: number)            => request(`/events/${id}`,  { method: "DELETE" }),
-
-      // ── Testimonies ───────────────────────────────────────────────────────────
-      getTestimonies:   ()                       => request("/testimonies"),
-      submitTestimony:  (data: any)              => request("/testimonies/submit",   { method: "POST", body: JSON.stringify(data) }),
-      createTestimony:  (data: any)              => request("/testimonies",          { method: "POST", body: JSON.stringify(data) }),
-      updateTestimony:  (id: number, data: any)  => request(`/testimonies/${id}`,    { method: "PUT",  body: JSON.stringify(data) }),
-      deleteTestimony:  (id: number)             => request(`/testimonies/${id}`,    { method: "DELETE" }),
-
-      // ── Gallery ───────────────────────────────────────────────────────────────
-      getGallery: () => request("/gallery"),
-
-      /**
-       * Upload a new gallery item (image + metadata).
-       * Requires admin auth — the Bearer token is attached automatically from memory.
-       * FormData is sent as multipart/form-data (Content-Type NOT manually set).
-       */
-      uploadGalleryImage: async (formData: FormData) : Promise<any> => {
-        if (!_accessToken) throw new Error("Not authenticated");
-        const res = await fetch(`${BASE_URL}/gallery`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${_accessToken}` },
-          credentials: "include",
-          body: formData, // browser sets Content-Type: multipart/form-data with boundary
-        });
-        if (res.status === 401) {
-          // Try refresh once
-          const refreshed = await refreshAccessToken();
-          if (refreshed) {
-            setAccessToken(refreshed.accessToken, refreshed.expiresIn ?? 900);
-            return api.uploadGalleryImage(formData);
-          }
-          clearAccessToken();
-          window.location.href = "/admin/login";
-          return;
-        }
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: "Upload failed" }));
-          throw new Error(err.error || "Upload failed");
-        }
-        return res.json();
-      },
-
-      /**
-       * Replace the image on an existing gallery item.
-       * Uses PUT /gallery/:id with a FormData body.
-       */
-      replaceGalleryImage: async (id: number, formData: FormData) => {
-        if (!_accessToken) throw new Error("Not authenticated");
-        const res = await fetch(`${BASE_URL}/gallery/${id}`, {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${_accessToken}` },
-          credentials: "include",
-          body: formData,
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: "Upload failed" }));
-          throw new Error(err.error || "Upload failed");
-        }
-        return res.json();
-      },
-
-      updateGallery: (id: number, data: any) => request(`/gallery/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
-      deleteGallery: (id: number)            => request(`/gallery/${id}`, { method: "DELETE" }),
-
-      // ── Contact ───────────────────────────────────────────────────────────────
-      sendContact:  (data: any)  => request("/contact",           { method: "POST", body: JSON.stringify(data) }),
-      getContacts:  ()           => request("/contact"),
-      markRead:     (id: number) => request(`/contact/${id}/read`, { method: "PUT" }),
-      deleteContact:(id: number) => request(`/contact/${id}`,      { method: "DELETE" }),
-
-      // ── Donations ─────────────────────────────────────────────────────────────
-      recordDonation: (data: any) => request("/donations", { method: "POST", body: JSON.stringify(data) }),
-      getDonations:   ()           => request("/donations"),
+  // Add auth header if needed
+  if (requiresAuth && _accessToken) {
+    fetchOptions.headers = {
+      ...fetchOptions.headers,
+      Authorization: `Bearer ${_accessToken}`,
     };
+  }
+
+  const url = `${BASE_URL}${endpoint}`;
+
+  try {
+    const res = await fetch(url, {
+      ...fetchOptions,
+      headers: isFormDataBody
+        ? fetchOptions.headers
+        : {
+            "Content-Type": "application/json",
+            ...fetchOptions.headers,
+          },
+      credentials: "include",
+    });
+
+    // Handle 401 Unauthorized
+    if (res.status === 401 && requiresAuth) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return request(endpoint, options);
+      }
+      clearAllTokens();
+      window.location.href = "/admin/login";
+      throw new Error("Unauthorized");
+    }
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      throw new Error(errorData.error || `HTTP ${res.status}`);
+    }
+
+    return await res.json();
+  } catch (err) {
+    logger.error(`Request failed: ${endpoint}`, err);
+    throw err;
+  }
+}
+
+// ── API Object with all methods ────────────────────────────────────────────
+export const api = {
+  // ── Authentication ────────────────────────────────────────────────────────
+  login: async (username: string, password: string) => {
+    const data = await request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+    setAccessToken(data.accessToken, data.expiresIn);
+    setRefreshToken(data.refreshToken);
+    return data;
+  },
+
+  logout: async () => {
+    try {
+      await request("/auth/logout", {
+        method: "POST",
+        requiresAuth: true,
+      });
+    } catch (err) {
+      logger.warn("Logout request failed", err);
+    } finally {
+      clearAllTokens();
+    }
+  },
+
+  isLoggedIn: () => !!_accessToken,
+
+  getUsername: () => localStorage.getItem("username") || "",
+
+  tryRestoreSession: async () => {
+    initializeTokens();
+    if (!_refreshToken) return false;
+
+    const refreshed = await refreshAccessToken();
+    return !!refreshed;
+  },
+
+  // ── Sermons ───────────────────────────────────────────────────────────────
+  getSermons: async (): Promise<any[]> => {
+    return request("/sermons");
+  },
+
+  createSermon: async (data: {
+    title: string;
+    scripture: string;
+    date: string;
+    preacher: string;
+    excerpt: string;
+    category: string;
+    youtubeUrl?: string;
+    facebookUrl?: string;
+  }): Promise<any> => {
+    return request("/sermons", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  updateSermon: async (
+    id: number,
+    data: {
+      title: string;
+      scripture: string;
+      date: string;
+      preacher: string;
+      excerpt: string;
+      category: string;
+      youtubeUrl?: string;
+      facebookUrl?: string;
+    }
+  ): Promise<any> => {
+    return request(`/sermons/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  deleteSermon: async (id: number): Promise<any> => {
+    return request(`/sermons/${id}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    });
+  },
+
+  getYouTubeVideos: async (): Promise<any[]> => {
+    return request("/sermons/youtube/videos");
+  },
+
+  syncYouTubeVideos: async (): Promise<any> => {
+    return request("/sermons/youtube/sync", {
+      method: "GET",
+      requiresAuth: true,
+    });
+  },
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  getEvents: async (): Promise<any[]> => {
+    return request("/events");
+  },
+
+  createEvent: async (data: any): Promise<any> => {
+    return request("/events", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  updateEvent: async (id: number, data: any): Promise<any> => {
+    return request(`/events/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  deleteEvent: async (id: number): Promise<any> => {
+    return request(`/events/${id}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    });
+  },
+
+  // ── Testimonies ───────────────────────────────────────────────────────────
+  getTestimonies: async (): Promise<any[]> => {
+    return request("/testimonies");
+  },
+
+  submitTestimony: async (data: any): Promise<any> => {
+    return request("/testimonies/submit", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  createTestimony: async (data: any): Promise<any> => {
+    return request("/testimonies", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  updateTestimony: async (id: number, data: any): Promise<any> => {
+    return request(`/testimonies/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  deleteTestimony: async (id: number): Promise<any> => {
+    return request(`/testimonies/${id}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    });
+  },
+
+  // ── Gallery ───────────────────────────────────────────────────────────────
+  getGallery: async (): Promise<any[]> => {
+    return request("/gallery");
+  },
+
+  createGalleryItem: async (data: any): Promise<any> => {
+    return request("/gallery", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  updateGalleryItem: async (id: number, data: any): Promise<any> => {
+    return request(`/gallery/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  deleteGalleryItem: async (id: number): Promise<any> => {
+    return request(`/gallery/${id}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    });
+  },
+
+  // ── Hero Slides ───────────────────────────────────────────────────────────
+  getHeroSlides: async (): Promise<any[]> => {
+    return request("/hero");
+  },
+
+  createHeroSlide: async (data: any): Promise<any> => {
+    return request("/hero", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  updateHeroSlide: async (id: number, data: any): Promise<any> => {
+    return request(`/hero/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  deleteHeroSlide: async (id: number): Promise<any> => {
+    return request(`/hero/${id}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    });
+  },
+
+  // ── Contacts ──────────────────────────────────────────────────────────────
+  getContacts: async (): Promise<any[]> => {
+    return request("/contact", { requiresAuth: true });
+  },
+
+  createContact: async (data: any): Promise<any> => {
+    return request("/contact", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  markContactRead: async (id: number): Promise<any> => {
+    return request(`/contact/${id}/read`, {
+      method: "PUT",
+      requiresAuth: true,
+    });
+  },
+
+  deleteContact: async (id: number): Promise<any> => {
+    return request(`/contact/${id}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    });
+  },
+
+  // ── Donations ─────────────────────────────────────────────────────────────
+  getDonations: async (): Promise<any[]> => {
+    return request("/donations", { requiresAuth: true });
+  },
+
+  createDonation: async (data: any): Promise<any> => {
+    return request("/donations", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  getSiteContent: async (page: string): Promise<any> => {
+    return request(`/site-content/${page}`);
+  },
+
+  updateSiteContent: async (page: string, data: any): Promise<any> => {
+    return request(`/site-content/${page}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  // ── Bank Details ──────────────────────────────────────────────────────────
+  getBankDetails: async (): Promise<any> => {
+    return request("/bank");
+  },
+
+  updateBankDetails: async (data: any): Promise<any> => {
+    return request("/bank", {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  // ── Settings ──────────────────────────────────────────────────────────────
+  getSettings: async (): Promise<any> => {
+    return request("/settings");
+  },
+
+  updateSettings: async (data: any): Promise<any> => {
+    return request("/settings", {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+};
+
+// ── Initialize tokens on module load ──────────────────────────────────────
+initializeTokens();
+
+export default api;

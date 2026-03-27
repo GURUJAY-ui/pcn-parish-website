@@ -1,21 +1,16 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import {
-  ChevronRight, Calendar, Clock, MapPin,
-  Sun, Moon, Star, Music, Users, BookOpen, Heart, Zap
-} from "lucide-react";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { parseEventDescription } from "@/lib/event-details";
+import { Calendar, ChevronRight, Clock, MapPin, Music, Star, Sun, Users, BookOpen, Heart, Zap } from "lucide-react";
 
 type WeeklyActivity = {
   day: string;
   name: string;
   time: string;
+  note?: string;
   icon: any;
   color: string;
-  note?: string;
 };
 
 type UpcomingEvent = {
@@ -29,142 +24,193 @@ type UpcomingEvent = {
   description: string;
   category: string;
   categoryColor: string;
-  icon?: any;
   featured?: boolean;
+  programName?: string;
+  programDate?: string;
+  itinerary?: Array<{ time: string; title: string; note?: string }>;
 };
 
-// ─── Static fallback data ─────────────────────────────────────────────────────
-
-const staticUpcomingEvents: UpcomingEvent[] = [
-  {
-    id: 1, day: "15", month: "APR", title: "Easter Sunday Celebration",
-    subtitle: "He is Risen!", time: "7:00 AM & 9:30 AM", location: "Main Sanctuary — Wuse II",
-    description: "Join us for a glorious Easter Sunday celebration as we commemorate the resurrection of our Lord Jesus Christ. Special choir ministration and communion service.",
-    category: "Special Service", categoryColor: "bg-amber-500/15 text-amber-400 border-amber-500/20", featured: true,
-  },
-  {
-    id: 2, day: "22", month: "APR", title: "Youth Empowerment Summit",
-    subtitle: "Raising Champions", time: "10:00 AM", location: "Fellowship Hall — Wuse II",
-    description: "A transformative summit for young people aged 16–35. Topics include career development, faith, and leadership.",
-    category: "Youth", categoryColor: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20", featured: true,
-  },
-  {
-    id: 3, day: "29", month: "APR", title: "Parish Thanksgiving Service",
-    subtitle: "Counting Our Blessings", time: "9:00 AM", location: "Main Sanctuary — Wuse II",
-    description: "Our quarterly parish thanksgiving service. Come with a heart full of gratitude and give God the glory for His faithfulness.",
-    category: "Thanksgiving", categoryColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20", featured: true,
-  },
-  {
-    id: 4, day: "5", month: "MAY", title: "Women's Fellowship Retreat",
-    subtitle: "", time: "8:00 AM – 4:00 PM", location: "TBC — Contact church office",
-    description: "A full-day retreat for all women of the parish. A day of prayer, fellowship, and spiritual refreshment.",
-    category: "Women", categoryColor: "bg-rose-500/15 text-rose-400 border-rose-500/20", featured: false,
-  },
-  {
-    id: 5, day: "12", month: "MAY", title: "Children's Sunday",
-    subtitle: "", time: "9:30 AM", location: "Main Sanctuary — Wuse II",
-    description: "Special service celebrating the children of our parish. Fun activities, special performances, and a children-focused sermon.",
-    category: "Children", categoryColor: "bg-purple-500/15 text-purple-400 border-purple-500/20", featured: false,
-  },
-  {
-    id: 6, day: "19", month: "MAY", title: "Men's Fellowship Breakfast",
-    subtitle: "", time: "7:30 AM", location: "Fellowship Hall — Wuse II",
-    description: "Monthly men's fellowship breakfast meeting. All men of the parish are welcome.",
-    category: "Men", categoryColor: "bg-blue-500/15 text-blue-400 border-blue-500/20", featured: false,
-  },
-];
-
-const dayColors = [
-  "from-amber-400 to-amber-600",
-  "from-cyan-400 to-cyan-600",
-  "from-emerald-400 to-emerald-600",
-  "from-rose-400 to-rose-600",
-  "from-purple-400 to-purple-600",
-  "from-blue-400 to-blue-600",
-];
-
-// ─── Weekly Activities ────────────────────────────────────────────────────────
-
 const weeklyActivities: WeeklyActivity[] = [
-  { day: "Sunday", name: "Worship Services", time: "7:00 AM & 9:30 AM", icon: Sun, color: "from-amber-400 to-amber-600", note: "Main Sanctuary — Wuse II" },
-  { day: "Monday", name: "House Fellowship", time: "6:00 PM", icon: Heart, color: "from-rose-400 to-rose-600", note: "Various homes across districts" },
-  { day: "Tuesday", name: "Bible Study", time: "6:00 PM", icon: BookOpen, color: "from-cyan-400 to-cyan-600", note: "Various district meeting points" },
-  { day: "Wednesday", name: "Midweek Service", time: "6:00 PM", icon: Star, color: "from-emerald-400 to-emerald-600", note: "Main Sanctuary — Wuse II" },
-  { day: "Thursday", name: "E&MM Prayer", time: "6:00 AM", icon: Zap, color: "from-purple-400 to-purple-600", note: "First Thursday of every month" },
-  { day: "Friday", name: "PYPAN Fellowship", time: "6:00 PM", icon: Users, color: "from-orange-400 to-orange-600", note: "First and last Friday monthly" },
-  { day: "Saturday", name: "Choir / BB / WG Meetings", time: "Various", icon: Music, color: "from-teal-400 to-teal-600", note: "Check department schedules" },
+  { day: "Sunday", name: "Worship Services", time: "7:00 AM & 9:30 AM", note: "Main Sanctuary - Wuse II", icon: Sun, color: "from-amber-400 to-amber-600" },
+  { day: "Monday", name: "House Fellowship", time: "6:00 PM", note: "Various homes across districts", icon: Heart, color: "from-rose-400 to-rose-600" },
+  { day: "Tuesday", name: "Bible Study", time: "6:00 PM", note: "Various district meeting points", icon: BookOpen, color: "from-cyan-400 to-cyan-600" },
+  { day: "Wednesday", name: "Midweek Service", time: "6:00 PM", note: "Main Sanctuary - Wuse II", icon: Star, color: "from-emerald-400 to-emerald-600" },
+  { day: "Thursday", name: "E&MM Prayer", time: "6:00 AM", note: "First Thursday monthly", icon: Zap, color: "from-purple-400 to-purple-600" },
+  { day: "Friday", name: "PYPAN Fellowship", time: "6:00 PM", note: "First and last Friday monthly", icon: Users, color: "from-orange-400 to-orange-600" },
+  { day: "Saturday", name: "Choir / BB / WG Meetings", time: "Various", note: "Check ministry schedules", icon: Music, color: "from-teal-400 to-teal-600" },
 ];
 
-// ─── Component ────────────────────────────────────────────────────────────────
+const categoryStyles: Record<string, string> = {
+  "Special Service": "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  Youth: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
+  Thanksgiving: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  Women: "bg-rose-500/15 text-rose-400 border-rose-500/20",
+  Children: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+  Men: "bg-blue-500/15 text-blue-400 border-blue-500/20",
+};
+
+const fallbackEvents: UpcomingEvent[] = [
+  {
+    id: 1,
+    day: "15",
+    month: "APR",
+    title: "Easter Sunday Celebration",
+    subtitle: "He is Risen!",
+    time: "7:00 AM & 9:30 AM",
+    location: "Main Sanctuary - Wuse II",
+    description: "Join us for a glorious Easter Sunday celebration as we commemorate the resurrection of our Lord Jesus Christ.",
+    category: "Special Service",
+    categoryColor: categoryStyles["Special Service"],
+    featured: true,
+  },
+  {
+    id: 2,
+    day: "22",
+    month: "APR",
+    title: "Youth Empowerment Summit",
+    subtitle: "Raising Champions",
+    time: "10:00 AM",
+    location: "Fellowship Hall - Wuse II",
+    description: "A transformative summit for young people focused on faith, leadership, and career growth.",
+    category: "Youth",
+    categoryColor: categoryStyles.Youth,
+    featured: true,
+  },
+  {
+    id: 3,
+    day: "29",
+    month: "APR",
+    title: "Parish Thanksgiving Service",
+    subtitle: "Counting Our Blessings",
+    time: "9:00 AM",
+    location: "Main Sanctuary - Wuse II",
+    description: "Our quarterly parish thanksgiving service to celebrate God's faithfulness.",
+    category: "Thanksgiving",
+    categoryColor: categoryStyles.Thanksgiving,
+    featured: true,
+  },
+];
+
+function normalizeEvent(event: any): UpcomingEvent {
+  const details = parseEventDescription(event.description);
+  return {
+    ...event,
+    subtitle: event.subtitle || "",
+    description: details.summary || event.description || "",
+    categoryColor: event.categoryColor || categoryStyles[event.category] || "bg-white/10 text-white border-white/10",
+    programName: details.programName,
+    programDate: details.programDate,
+    itinerary: details.itinerary,
+  };
+}
+
+function ItineraryBlock({ event }: { event: UpcomingEvent }) {
+  if (!event.programName && (!event.itinerary || event.itinerary.length === 0)) return null;
+
+  return (
+    <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+      {event.programName ? (
+        <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400">{event.programName}</p>
+      ) : null}
+      {event.programDate ? (
+        <p className="mt-1 text-xs text-muted-foreground">{event.programDate}</p>
+      ) : null}
+      {event.itinerary && event.itinerary.length > 0 ? (
+        <div className="mt-3 space-y-2">
+          {event.itinerary.map((item, index) => (
+            <div key={`${event.id}_${index}`} className="flex gap-3 text-xs">
+              <span className="w-20 shrink-0 font-semibold text-cyan-400">{item.time || "-"}</span>
+              <div>
+                <p className="text-foreground">{item.title || item.note}</p>
+                {item.note && item.title ? <p className="text-muted-foreground">{item.note}</p> : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function Events() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<"weekly" | "upcoming">("weekly");
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [upcomingEventsList, setUpcomingEventsList] = useState<UpcomingEvent[]>(staticUpcomingEvents);
   const [eventsLoading, setEventsLoading] = useState(true);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>(fallbackEvents.map(normalizeEvent));
 
   useEffect(() => {
     api.getEvents()
       .then((data) => {
-        if (data && data.length > 0) setUpcomingEventsList(data);
+        if (Array.isArray(data) && data.length > 0) {
+          setUpcomingEvents(data.map(normalizeEvent));
+        }
       })
-      .catch(() => {}) // keep static fallback silently
+      .catch(() => {})
       .finally(() => setEventsLoading(false));
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const eventId = Number(params.get("event"));
+
+    if (!eventId || Number.isNaN(eventId)) return;
+
+    setActiveTab("upcoming");
+    setExpandedId(eventId);
+  }, []);
+
+  useEffect(() => {
+    if (eventsLoading || !expandedId) return;
+
+    const timer = window.setTimeout(() => {
+      const node = document.getElementById(`event-${expandedId}`);
+      node?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [eventsLoading, expandedId]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-
-      {/* Hero */}
-      <div className="relative overflow-hidden py-28 border-b border-white/10">
+      <div className="relative overflow-hidden border-b border-white/10 py-28">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-background to-purple-500/10" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-cyan-500/5 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
 
         <div className="container relative">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-            <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Home</button>
-            <ChevronRight className="w-3.5 h-3.5" />
+          <div className="mb-8 flex items-center gap-2 text-sm text-muted-foreground">
+            <button onClick={() => navigate("/")} className="transition-colors hover:text-foreground">Home</button>
+            <ChevronRight className="h-3.5 w-3.5" />
             <span className="text-foreground">Events</span>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="space-y-5">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-                <Calendar className="w-4 h-4 text-cyan-400" />
-                <span className="text-cyan-400 text-sm font-semibold uppercase tracking-widest">Mark Your Calendar</span>
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-2">
+                <Calendar className="h-4 w-4 text-cyan-400" />
+                <span className="text-sm font-semibold uppercase tracking-widest text-cyan-400">Mark Your Calendar</span>
               </div>
-              <h1 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-5xl md:text-6xl font-bold leading-tight">
+              <h1 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-5xl font-bold leading-tight md:text-6xl">
                 Events & <span className="text-cyan-400">Activities</span>
               </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Stay connected with everything happening at PCN First Abuja Parish — from weekly services to special celebrations.
+              <p className="text-lg leading-relaxed text-muted-foreground">
+                Stay connected with everything happening at PCN First Abuja Parish, from weekly worship rhythms to full event programs and special celebrations.
               </p>
               <div className="flex flex-wrap gap-4 pt-2">
-                {[
-                  { value: "7", label: "Weekly Activities", color: "text-cyan-400" },
-                  { value: "6+", label: "Upcoming Events", color: "text-amber-400" },
-                  { value: "365", label: "Days of Worship", color: "text-emerald-400" },
-                ].map((stat) => (
-                  <div key={stat.label} className="px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-center">
-                    <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </div>
-                ))}
+                <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center"><p className="text-2xl font-bold text-cyan-400">7</p><p className="text-xs text-muted-foreground">Weekly Activities</p></div>
+                <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center"><p className="text-2xl font-bold text-amber-400">{upcomingEvents.length}</p><p className="text-xs text-muted-foreground">Upcoming Events</p></div>
+                <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center"><p className="text-2xl font-bold text-emerald-400">Programs</p><p className="text-xs text-muted-foreground">Now Supported</p></div>
               </div>
             </div>
 
-            {/* Mini calendar visual */}
-            <div className="hidden lg:grid grid-cols-3 gap-3">
-              {upcomingEventsList.slice(0, 6).map((event, i) => (
-                <div key={event.id}
-                  className={`rounded-2xl p-4 text-center border border-white/10 bg-white/5 hover:bg-white/10 transition-all ${i === 0 ? "border-amber-500/30 bg-amber-500/5" : ""}`}>
-                  <p className={`text-3xl font-bold bg-gradient-to-br ${dayColors[i] ?? dayColors[0]} bg-clip-text text-transparent`}>
-                    {event.day}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-semibold">{event.month}</p>
-                  <p className="text-xs text-foreground font-medium mt-1 leading-tight line-clamp-2">{event.subtitle || event.title}</p>
+            <div className="hidden grid-cols-3 gap-3 lg:grid">
+              {upcomingEvents.slice(0, 6).map((event, index) => (
+                <div key={event.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center transition-all hover:bg-white/10">
+                  <p className="text-3xl font-bold text-amber-400">{event.day}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{event.month}</p>
+                  <p className="mt-1 line-clamp-2 text-xs font-medium text-foreground">{event.subtitle || event.title}</p>
+                  {index === 0 ? <p className="mt-2 text-[10px] uppercase tracking-widest text-cyan-400">Featured</p> : null}
                 </div>
               ))}
             </div>
@@ -172,198 +218,157 @@ export default function Events() {
         </div>
       </div>
 
-      <div className="container py-16 space-y-12">
-
-        {/* Tab Switcher */}
-        <div className="flex gap-2 p-1.5 rounded-2xl bg-white/5 border border-white/10 w-fit">
+      <div className="container space-y-12 py-16">
+        <div className="flex w-fit gap-2 rounded-2xl border border-white/10 bg-white/5 p-1.5">
           {[
             { id: "weekly", label: "Weekly Activities" },
             { id: "upcoming", label: "Upcoming Events" },
           ].map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-              className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === tab.id
-                  ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}>
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as "weekly" | "upcoming")}
+              className={`rounded-xl px-6 py-2.5 text-sm font-semibold transition-all ${
+                activeTab === tab.id ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/20" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* ── Weekly Tab ── */}
-        {activeTab === "weekly" && (
+        {activeTab === "weekly" ? (
           <div className="space-y-6">
-            <div className="space-y-2">
+            <div>
               <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-3xl font-bold">Weekly Activities</h2>
-              <p className="text-muted-foreground">Our regular schedule — every week, every month, all year round.</p>
+              <p className="text-muted-foreground">Our regular worship and fellowship rhythm all through the week.</p>
             </div>
-
-            <div className="relative">
-              <div className="absolute left-[28px] top-6 bottom-6 w-px bg-gradient-to-b from-cyan-500/50 via-purple-500/30 to-transparent hidden md:block" />
-              <div className="space-y-4">
-                {weeklyActivities.map((activity) => {
-                  const Icon = activity.icon;
-                  return (
-                    <div key={activity.day} className="flex gap-6 items-center group">
-                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${activity.color} flex items-center justify-center shadow-lg shrink-0 group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1 p-5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/8 hover:border-white/20 transition-all">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-3 mb-1">
-                              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{activity.day}</span>
-                            </div>
-                            <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-lg font-bold">{activity.name}</h3>
-                            {activity.note && (
-                              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                                <MapPin className="w-3 h-3" /> {activity.note}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/5 border border-white/10 shrink-0">
-                            <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                            <span className="text-sm font-semibold text-cyan-400">{activity.time}</span>
-                          </div>
+            <div className="space-y-4">
+              {weeklyActivities.map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={activity.day} className="flex items-center gap-6">
+                    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${activity.color} shadow-lg`}>
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1 rounded-2xl border border-white/10 bg-white/5 p-5">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{activity.day}</p>
+                          <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-lg font-bold">{activity.name}</h3>
+                          {activity.note ? <p className="mt-1 text-xs text-muted-foreground">{activity.note}</p> : null}
+                        </div>
+                        <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2">
+                          <Clock className="h-3.5 w-3.5 text-cyan-400" />
+                          <span className="text-sm font-semibold text-cyan-400">{activity.time}</span>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 flex gap-4">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
-                <MapPin className="w-5 h-5 text-amber-400" />
-              </div>
-              <div>
-                <p className="font-semibold text-amber-400 text-sm mb-1">📍 Note on Tuesday Bible Study</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  The Tuesday Bible Study holds at <strong className="text-foreground">various district meeting points</strong> across the parish. Please contact your district elder or the church office to find your nearest venue.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Upcoming Tab ── */}
-        {activeTab === "upcoming" && (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-3xl font-bold">Upcoming Events</h2>
-              <p className="text-muted-foreground">Special services, retreats, and celebrations coming up.</p>
-            </div>
-
-            {eventsLoading ? (
-              <div className="flex justify-center py-12">
-                <div className="w-10 h-10 rounded-full border-2 border-cyan-500/20 border-t-cyan-500 animate-spin" />
-              </div>
-            ) : (
-              <>
-                {/* Featured Events */}
-                <div className="grid md:grid-cols-3 gap-6">
-                  {upcomingEventsList.filter((e) => e.featured).map((event) => (
-                    <div key={event.id}
-                      className="relative rounded-2xl border border-white/10 bg-white/5 hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-all duration-300 overflow-hidden group cursor-pointer"
-                      onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}>
-                      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
-                      <div className="p-6 space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div className="text-center w-14 h-14 rounded-xl bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a] border border-[#2a3a80] flex flex-col items-center justify-center">
-                            <p className="text-xl font-bold text-amber-400 leading-none">{event.day}</p>
-                            <p className="text-xs text-blue-300 font-semibold uppercase">{event.month}</p>
-                          </div>
-                          <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${event.categoryColor}`}>
-                            {event.category}
-                          </span>
-                        </div>
-                        <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
-                          className="text-xl font-bold leading-snug group-hover:text-cyan-400 transition-colors">
-                          {event.title}
-                        </h3>
-                        <div className="space-y-1.5 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-3.5 h-3.5 text-cyan-400" /> {event.time}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-3.5 h-3.5 text-cyan-400" /> {event.location}
-                          </div>
-                        </div>
-                        {expandedId === event.id && (
-                          <p className="text-sm text-muted-foreground leading-relaxed border-t border-white/10 pt-3">
-                            {event.description}
-                          </p>
-                        )}
-                        <p className="text-xs text-cyan-400">
-                          {expandedId === event.id ? "Show less ↑" : "Read more ↓"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* More Events List */}
-                {upcomingEventsList.filter((e) => !e.featured).length > 0 && (
-                  <div className="space-y-3 pt-4">
-                    <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-xl font-bold text-muted-foreground">More Events</h3>
-                    {upcomingEventsList.filter((e) => !e.featured).map((event) => (
-                      <div key={event.id}
-                        className="flex gap-5 items-center p-5 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8 transition-all cursor-pointer group"
-                        onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}>
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a] border border-[#2a3a80] flex flex-col items-center justify-center shrink-0">
-                          <p className="text-xl font-bold text-amber-400 leading-none">{event.day}</p>
-                          <p className="text-xs text-blue-300 font-semibold uppercase">{event.month}</p>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${event.categoryColor}`}>{event.category}</span>
-                          </div>
-                          <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold group-hover:text-cyan-400 transition-colors">{event.title}</h3>
-                          {expandedId === event.id && (
-                            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{event.description}</p>
-                          )}
-                        </div>
-                        <div className="text-right shrink-0 space-y-1">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground justify-end">
-                            <Clock className="w-3 h-3" /> {event.time}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground justify-end">
-                            <MapPin className="w-3 h-3" /> {event.location.split("—")[0].trim()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
                   </div>
-                )}
-              </>
-            )}
+                );
+              })}
+            </div>
+          </div>
+        ) : eventsLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-500/20 border-t-cyan-500" />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div>
+              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-3xl font-bold">Upcoming Events</h2>
+              <p className="text-muted-foreground">Special services, retreats, and event programs coming up.</p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              {upcomingEvents.filter((event) => event.featured).map((event) => (
+                <div
+                  key={event.id}
+                  id={`event-${event.id}`}
+                  onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}
+                  className="cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:border-cyan-500/30 hover:bg-cyan-500/5"
+                >
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex h-14 w-14 flex-col items-center justify-center rounded-xl border border-[#2a3a80] bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a]">
+                        <p className="text-xl font-bold leading-none text-amber-400">{event.day}</p>
+                        <p className="text-xs font-semibold uppercase text-blue-300">{event.month}</p>
+                      </div>
+                      <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${event.categoryColor}`}>{event.category}</span>
+                    </div>
+                    <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-xl font-bold leading-snug">{event.title}</h3>
+                    <div className="space-y-1.5 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-cyan-400" /> {event.time}</div>
+                      <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-cyan-400" /> {event.location}</div>
+                      {event.programDate ? <div className="flex items-center gap-2 text-emerald-400"><Calendar className="h-3.5 w-3.5" /> {event.programDate}</div> : null}
+                    </div>
+                    {expandedId === event.id ? (
+                      <div className="space-y-4 border-t border-white/10 pt-3">
+                        {event.description ? <p className="text-sm leading-relaxed text-muted-foreground">{event.description}</p> : null}
+                        <ItineraryBlock event={event} />
+                      </div>
+                    ) : null}
+                    <p className="text-xs text-cyan-400">{expandedId === event.id ? "Show less" : "Read more"}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {upcomingEvents.filter((event) => !event.featured).length > 0 ? (
+              <div className="space-y-3 pt-4">
+                <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-xl font-bold text-muted-foreground">More Events</h3>
+                {upcomingEvents.filter((event) => !event.featured).map((event) => (
+                  <div
+                    key={event.id}
+                    id={`event-${event.id}`}
+                    onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}
+                    className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 transition-all hover:border-white/20 hover:bg-white/8"
+                  >
+                    <div className="flex gap-5">
+                      <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-[#2a3a80] bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a]">
+                        <p className="text-xl font-bold leading-none text-amber-400">{event.day}</p>
+                        <p className="text-xs font-semibold uppercase text-blue-300">{event.month}</p>
+                      </div>
+                      <div className="flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${event.categoryColor}`}>{event.category}</span>
+                          {event.programName ? <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-xs font-semibold text-cyan-400">{event.programName}</span> : null}
+                        </div>
+                        <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold">{event.title}</h3>
+                        {expandedId === event.id ? (
+                          <div className="mt-3 space-y-3">
+                            {event.description ? <p className="text-sm leading-relaxed text-muted-foreground">{event.description}</p> : null}
+                            <ItineraryBlock event={event} />
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="space-y-1 text-right text-xs text-muted-foreground">
+                        <div className="flex items-center justify-end gap-1.5"><Clock className="h-3 w-3" /> {event.time}</div>
+                        <div className="flex items-center justify-end gap-1.5"><MapPin className="h-3 w-3" /> {event.location}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
 
-        {/* CTA */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a] border border-[#2a3a80] p-12 text-white text-center space-y-5">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl" />
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center mx-auto shadow-xl shadow-cyan-500/20">
-            <Calendar className="w-7 h-7 text-white" />
-          </div>
-          <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-4xl font-bold">Never Miss an Event</h2>
-          <p className="text-blue-200 max-w-xl mx-auto leading-relaxed">
-            Stay connected with PCN First Abuja Parish. Follow us on social media or contact the church office for the latest updates and announcements.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="https://facebook.com/firstabujapresbyterian" target="_blank" rel="noopener noreferrer"
-              className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all">
-              Follow on Facebook
-            </a>
-            <a href="mailto:pulpitfap@gmail.com"
-              className="px-8 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold transition-all">
-              Contact the Office
-            </a>
+        <div className="relative overflow-hidden rounded-2xl border border-[#2a3a80] bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a] p-12 text-center text-white">
+          <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-cyan-500/5 blur-3xl" />
+          <div className="relative space-y-5">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-xl shadow-cyan-500/20">
+              <Calendar className="h-7 w-7 text-white" />
+            </div>
+            <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-4xl font-bold">Never Miss an Event</h2>
+            <p className="mx-auto max-w-xl leading-relaxed text-blue-200">
+              Stay connected with PCN First Abuja Parish. Follow our channels or contact the church office for current schedules and announcements.
+            </p>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              <a href="https://facebook.com/firstabujapresbyterian" target="_blank" rel="noopener noreferrer" className="rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition-all hover:bg-blue-700">Follow on Facebook</a>
+              <a href="mailto:pulpitfap@gmail.com" className="rounded-xl border border-white/20 bg-white/10 px-8 py-3 font-semibold text-white transition-all hover:bg-white/20">Contact the Office</a>
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   );
