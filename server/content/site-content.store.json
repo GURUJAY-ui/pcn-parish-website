@@ -1,0 +1,993 @@
+{
+  "about": {
+    "hero": {
+      "title": "About The Presbyterian Church of Nigeria",
+      "subtitle": "Transforming Lives, Changing Destinies"
+    },
+    "origin": {
+      "eyebrow": "Our Origins",
+      "title": "Rooted in the Reformation",
+      "paragraphs": [
+        "The Presbyterian Church of Nigeria is aware of its origins in the Reformation, especially the enlightening ministries of John Calvin in Switzerland and John Knox in Scotland.",
+        "The PCN is indebted to the Presbyterian Church in Jamaica for sending five Jamaicans and Rev. Hope Masterdon Waddell to Calabar in 1846 at the invitation of King Evamba V and King Eyo II.",
+        "The PCN First Abuja Parish was inaugurated on 8th April, 1984. It comprises Wuse, Zauda and Jeida Congregations with Mission Stations at Apo, Pegi, Abaji, Ogaminana, Kabusa, Kwali, Piyanko and Wuye."
+      ]
+    },
+    "stats": [
+      {
+        "value": "1846",
+        "label": "Year Founded in Nigeria",
+        "color": "text-amber-400"
+      },
+      {
+        "value": "178+",
+        "label": "Years of Ministry",
+        "color": "text-cyan-400"
+      },
+      {
+        "value": "11",
+        "label": "Congregations in Abuja",
+        "color": "text-emerald-400"
+      },
+      {
+        "value": "1984",
+        "label": "First Abuja Parish Est.",
+        "color": "text-purple-400"
+      }
+    ],
+    "timeline": [
+      {
+        "year": "1846",
+        "event": "Rev. Hope Masterdon Waddell and five Jamaicans arrive in Calabar at the invitation of King Evamba V and King Eyo II."
+      },
+      {
+        "year": "1858",
+        "event": "The Presbytery of Biafra is created on September 1st, marking a landmark in Nigerian church history."
+      },
+      {
+        "year": "1872",
+        "event": "Rev. Esien Esien Ukpabio becomes the first indigenous Nigerian minister, ordained on April 9th."
+      },
+      {
+        "year": "1921",
+        "event": "The Synod of Biafra is formed on May 4th, a major step toward church independence."
+      },
+      {
+        "year": "1952",
+        "event": "The church is renamed The Presbyterian Church of Eastern Nigeria in June."
+      },
+      {
+        "year": "1960",
+        "event": "In June, the church adopts its current name - The Presbyterian Church of Nigeria."
+      },
+      {
+        "year": "1984",
+        "event": "PCN First Abuja Parish is inaugurated on 8th April, comprising Wuse, Zauda and Jeida Congregations."
+      }
+    ],
+    "vision": "To be a Bible-based Church, proclaiming to the world by preaching and example, the good news of the love of God through Jesus Christ His Son under the guidance of the Holy Spirit.",
+    "mission": "To carry the gospel to all parts of Nigeria and beyond through evangelism, discipleship, service and promotion of social righteousness.",
+    "doctrines": [
+      {
+        "title": "The Holy Scripture",
+        "description": "We believe the Bible is the inspired, infallible Word of God and the supreme authority for faith and practice."
+      },
+      {
+        "title": "The Holy Trinity",
+        "description": "We believe in one God, eternally existing in three persons: Father, Son, and Holy Spirit."
+      },
+      {
+        "title": "Jesus Christ",
+        "description": "We believe in the deity and humanity of Jesus Christ, His virgin birth, sinless life, atoning death, bodily resurrection, and ascension."
+      },
+      {
+        "title": "Salvation by Grace",
+        "description": "We believe that salvation is by grace alone, through faith alone, in Christ alone - not by works."
+      },
+      {
+        "title": "The Holy Spirit",
+        "description": "We believe in the person and work of the Holy Spirit, who convicts, regenerates, indwells, and empowers believers."
+      },
+      {
+        "title": "The Church",
+        "description": "We believe in the universal Church, the body of Christ, composed of all true believers from every nation and generation."
+      },
+      {
+        "title": "The Second Coming",
+        "description": "We believe in the personal, visible, and bodily return of Jesus Christ to judge the living and the dead."
+      },
+      {
+        "title": "Eternal Life",
+        "description": "We believe in the resurrection of the dead - the saved unto eternal life, and the lost unto eternal separation from God."
+      }
+    ]
+  },
+  "staff": {
+    "stats": [
+      {
+        "label": "Board Committees",
+        "value": "13",
+        "color": "text-amber-400"
+      },
+      {
+        "label": "Committee Leads",
+        "value": "18",
+        "color": "text-cyan-400"
+      },
+      {
+        "label": "Service Areas",
+        "value": "Governance, Mission, Care",
+        "color": "text-emerald-400"
+      }
+    ],
+    "committees": [
+      {
+        "id": 1,
+        "name": "Legal",
+        "duties": [
+          "Internal legal advisory",
+          "External legal representation"
+        ],
+        "leads": [
+          {
+            "title": "Convener / Legal Adviser",
+            "name": "Barr Darlington Onyekwere",
+            "phone": "08032892640"
+          },
+          {
+            "title": "Chairman",
+            "name": "Chief Solo Akuma, SAN",
+            "phone": "08055927374"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Education",
+        "duties": [
+          "JKC school management",
+          "Jeida schools management",
+          "Other schools",
+          "Scholarships"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Elder Mrs Elly Kama",
+            "phone": "08037881561"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Medical",
+        "duties": [
+          "Hospitals management",
+          "Health insurance",
+          "Health education",
+          "Medical outreach",
+          "Immunization",
+          "First aid"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Dr Ochea Uka",
+            "phone": "08037864463"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Works & Projects",
+        "duties": [
+          "Project development and supervision"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Arc Kingsley Okoro",
+            "phone": "07060909444"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Property Maintenance & Equipment Maintenance",
+        "duties": [
+          "Church buildings maintenance",
+          "Church equipment maintenance",
+          "Vehicle and GenSet maintenance"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Engr Bassey Ekpenyong",
+            "phone": "08035015372"
+          },
+          {
+            "title": "Convener",
+            "name": "Engr Ifemezue Uma",
+            "phone": "07035656848"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "name": "Property Inventory & Documentation",
+        "duties": [
+          "Land and fixed assets inventory and documentation",
+          "Land registry liaison"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Bro Duke Mma Ezikpe",
+            "phone": "07068565402"
+          },
+          {
+            "title": "Chairman",
+            "name": "Barr Akpabio Ekpa",
+            "phone": "08033142396"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "name": "Strategic Planning",
+        "duties": [
+          "Project planning, monitoring, and measuring"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Elder E.E. Esege",
+            "phone": "07069319381"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "name": "Finance & Kingdom Wealth Creation",
+        "duties": [
+          "Resource mobilization for project implementation"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Elder Allojoe Ayang",
+            "phone": "07088710204"
+          },
+          {
+            "title": "Convener",
+            "name": "Bro Nnanna Anyim-Ude",
+            "phone": "08032550211"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "name": "Security & Safety",
+        "duties": [
+          "Internal safety and security",
+          "External security representation"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Capt. Bassey Ayi",
+            "phone": "08034525021"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "name": "Mary Slessor Centre Project",
+        "duties": [
+          "Project implementation"
+        ],
+        "leads": [
+          {
+            "title": "Convener / Chairman",
+            "name": "Barr Obo Effanga",
+            "phone": "08033248854"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "name": "Digital Database, Website & Online Presence",
+        "duties": [
+          "Create and manage central FAP membership data and website",
+          "Manage FAP-PCN presence on social media",
+          "Promote digital skills development"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Bro Itobo Ofem",
+            "phone": "07033775244"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "name": "PresbyFAP Investments",
+        "duties": [
+          "FAP business portfolios",
+          "New businesses"
+        ],
+        "leads": [
+          {
+            "title": "Convener / Chairman",
+            "name": "Bro Nnanna Ude",
+            "phone": "08032550211"
+          },
+          {
+            "title": "Secretary",
+            "name": "Dr Emma Akuma"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "name": "Ogaminana Church Dev Committee",
+        "duties": [
+          "Facilitate development and future handover of Ogaminana Church in Kogi State to PCN Board of Missions"
+        ],
+        "leads": [
+          {
+            "title": "Convener",
+            "name": "Elder Mrs. Ugochi Chima",
+            "phone": "09051521996"
+          }
+        ]
+      }
+    ]
+  },
+  "contact": {
+    "cards": [
+      {
+        "label": "Phone",
+        "lines": [
+          "+234 (0) 8151111877",
+          "+234 (0) 817 5777773"
+        ],
+        "href": "tel:+2348151111877",
+        "color": "from-cyan-400 to-cyan-600"
+      },
+      {
+        "label": "Address",
+        "lines": [
+          "No. 5 Boke Close, off Sakono Street,",
+          "Opposite AP Plaza, Wuse II, Abuja"
+        ],
+        "href": "https://maps.google.com/?q=Wuse+II+Abuja",
+        "color": "from-amber-400 to-amber-600"
+      },
+      {
+        "label": "Email",
+        "lines": [
+          "pulpitfap@gmail.com"
+        ],
+        "href": "mailto:pulpitfap@gmail.com",
+        "color": "from-emerald-400 to-emerald-600"
+      }
+    ],
+    "serviceTimes": [
+      {
+        "day": "Sunday",
+        "time": "7:00 AM & 9:30 AM"
+      },
+      {
+        "day": "Tuesday",
+        "time": "6:00 PM - Bible Study"
+      },
+      {
+        "day": "Wednesday",
+        "time": "6:00 PM - Midweek"
+      }
+    ],
+    "socials": [
+      {
+        "label": "Facebook",
+        "handle": "@pcnfap",
+        "href": "https://facebook.com/pcnfap",
+        "color": "text-blue-400"
+      },
+      {
+        "label": "YouTube",
+        "handle": "@pulpitfaptv",
+        "href": "https://youtube.com/@pulpitfaptv",
+        "color": "text-red-400"
+      },
+      {
+        "label": "Instagram",
+        "handle": "@pcnfap",
+        "href": "https://instagram.com/pcnfap",
+        "color": "text-pink-400"
+      },
+      {
+        "label": "X (Twitter)",
+        "handle": "@pcnfap",
+        "href": "https://x.com/pcnfap",
+        "color": "text-foreground"
+      }
+    ]
+  },
+  "donations": {
+    "categories": [
+      {
+        "id": "tithe",
+        "label": "Tithe",
+        "description": "A tenth of your increase unto the Lord",
+        "color": "from-amber-400 to-amber-600"
+      },
+      {
+        "id": "offering",
+        "label": "Offering",
+        "description": "Freewill offerings and donations",
+        "color": "from-cyan-400 to-cyan-600"
+      },
+      {
+        "id": "special-seed",
+        "label": "Special Seed",
+        "description": "Special seed sowing and faith offerings",
+        "color": "from-emerald-400 to-emerald-600"
+      },
+      {
+        "id": "building-fund",
+        "label": "Building Fund",
+        "description": "Support the church building project",
+        "color": "from-purple-400 to-purple-600"
+      },
+      {
+        "id": "missions",
+        "label": "Missions",
+        "description": "Support evangelism and missions work",
+        "color": "from-rose-400 to-rose-600"
+      },
+      {
+        "id": "covenant-seed",
+        "label": "Covenant Seed",
+        "description": "A special covenant seed offering to unlock blessings",
+        "color": "from-green-400 to-green-600"
+      },
+      {
+        "id": "education-trust-fund",
+        "label": "Education Trust Fund",
+        "description": "Support the funding of schools owned by the Parish",
+        "color": "from-blue-400 to-blue-600"
+      }
+    ],
+    "accounts": {
+      "ngn": [
+        {
+          "bank": "Ecobank Nigeria Plc",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (PCN-ECO 70%)",
+          "accountNumber": "0122008480",
+          "type": "CURRENT",
+          "flag": "NGN",
+          "label": "Naira - Tithe & Offering"
+        },
+        {
+          "bank": "UBA PLC",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (PCN)",
+          "accountNumber": "2057766515",
+          "type": "SAVINGS",
+          "flag": "NGN",
+          "label": "Naira - General"
+        },
+        {
+          "bank": "UBA PLC",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (Love & Care)",
+          "accountNumber": "1017515110",
+          "type": "CURRENT",
+          "flag": "NGN",
+          "label": "Naira - Love & Care"
+        },
+        {
+          "bank": "GTBank",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (Evangelism & Missions)",
+          "accountNumber": "0024200913",
+          "type": "CURRENT",
+          "flag": "NGN",
+          "label": "Naira - Evangelism & Missions"
+        },
+        {
+          "bank": "Access Bank",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (MCA)",
+          "accountNumber": "0021845681",
+          "type": "CURRENT",
+          "flag": "NGN",
+          "label": "Naira - MCA"
+        },
+        {
+          "bank": "Access Bank",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (Trust Fund)",
+          "accountNumber": "0009052513",
+          "type": "CURRENT",
+          "flag": "NGN",
+          "label": "Naira - Trust Fund"
+        },
+        {
+          "bank": "Ecobank Nigeria Plc",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (Project)",
+          "accountNumber": "0312008551",
+          "type": "CURRENT",
+          "flag": "NGN",
+          "label": "Naira - Project Account"
+        }
+      ],
+      "usd": [
+        {
+          "bank": "Ecobank Nigeria Plc",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (Dollar)",
+          "accountNumber": "0122101941",
+          "type": "CURRENT",
+          "flag": "USD",
+          "label": "USD Dollar Account"
+        },
+        {
+          "bank": "UBA PLC",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (Dollar)",
+          "accountNumber": "3003939332",
+          "type": "CURRENT",
+          "flag": "USD",
+          "label": "USD Dollar Account"
+        }
+      ],
+      "gbp": [
+        {
+          "bank": "Ecobank Nigeria Plc",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (Pound)",
+          "accountNumber": "0122101958",
+          "type": "CURRENT",
+          "flag": "GBP",
+          "label": "Pounds Sterling Account"
+        }
+      ],
+      "eur": [
+        {
+          "bank": "Ecobank Nigeria Plc",
+          "accountName": "Presbyterian Church of Nigeria - First Abuja Parish (Euro)",
+          "accountNumber": "0129589449",
+          "type": "CURRENT",
+          "flag": "EUR",
+          "label": "Euro Account"
+        }
+      ]
+    }
+  },
+  "home": {
+    "heroSlides": [
+      {
+        "id": 1,
+        "label": "Welcome",
+        "title": "Welcome to The\nPresbyterian\nChurch of Nigeria",
+        "subtitle": "Transforming Lives, Changing Destinies",
+        "image": "https://d2xsxph8kpxj0f.cloudfront.net/310519663442941753/aGVKkYmkpS8dwgNiKtJuPS/hero-church-community-XpYfXsab73HbnPsjgMAM8h.webp",
+        "cta1": {
+          "label": "Learn More",
+          "route": "/about"
+        },
+        "cta2": {
+          "label": "Watch Live",
+          "href": "https://youtube.com/@pulpitfaptv"
+        }
+      },
+      {
+        "id": 2,
+        "label": "Community",
+        "title": "Join Our\nGrowing\nFamily",
+        "subtitle": "Experience Faith, Fellowship, and Purpose",
+        "image": "https://d2xsxph8kpxj0f.cloudfront.net/310519663442941753/aGVKkYmkpS8dwgNiKtJuPS/hero-safeguarding-DaMHzJv7ufA7TMjb5jH9wR.webp",
+        "cta1": {
+          "label": "Visit Us",
+          "route": "/contact"
+        },
+        "cta2": {
+          "label": "Our Story",
+          "route": "/about"
+        }
+      },
+      {
+        "id": 3,
+        "label": "Grace",
+        "title": "Grace\nUpon\nGrace",
+        "subtitle": "Happy Presbyterians! From glory to glory!",
+        "image": "https://d2xsxph8kpxj0f.cloudfront.net/310519663442941753/aGVKkYmkpS8dwgNiKtJuPS/ministry-background-VH63ZYgwAZ2uQP63B7gG3J.webp",
+        "cta1": {
+          "label": "Our Mission",
+          "route": "/about"
+        },
+        "cta2": {
+          "label": "Get Involved",
+          "route": "/ministries"
+        }
+      }
+    ],
+    "digitalMinistries": [
+      {
+        "label": "Sermons & Archive",
+        "desc": "Complete sermon library, weekly messages and spiritual resources",
+        "icon": "Globe",
+        "accent": "#06b6d4",
+        "route": "/sermons"
+      },
+      {
+        "label": "Events & Calendar",
+        "desc": "Upcoming services, events and community gatherings",
+        "icon": "Users",
+        "accent": "#10b981",
+        "route": "/events"
+      },
+      {
+        "label": "Giving & Donations",
+        "desc": "Support our ministry with secure, transparent online giving",
+        "icon": "Heart",
+        "accent": "#f59e0b",
+        "route": "/donations"
+      },
+      {
+        "label": "Prayer Requests",
+        "desc": "Submit requests and join our interceding prayer community",
+        "icon": "BookOpen",
+        "accent": "#06b6d4",
+        "route": "/contact"
+      },
+      {
+        "label": "Leadership",
+        "desc": "Meet our pastoral team and ministry leaders",
+        "icon": "Church",
+        "accent": "#10b981",
+        "route": "/staff"
+      },
+      {
+        "label": "Gallery",
+        "desc": "Browse photos from services, events and community life",
+        "icon": "Play",
+        "accent": "#f59e0b",
+        "route": "/gallery"
+      }
+    ]
+  },
+  "ministries": {
+    "mainMinistries": [
+      {
+        "id": "worship",
+        "icon": "Music",
+        "style": "amber",
+        "name": "Worship Ministry",
+        "tagline": "Lifting His Name in Every Service",
+        "description": "Leading the congregation in Spirit-filled worship across all services - from the earliest morning gathering to the Teen & Children's Church.",
+        "convener": "Rev. Agan",
+        "units": [
+          "First Service",
+          "Second Service",
+          "Fresh Anointing",
+          "Mid Week Service",
+          "Teen/Youth Church",
+          "Children Church"
+        ],
+        "members": [
+          "Eld. Dr. E. Nkang",
+          "Eld. Dr. E. Asanga",
+          "Eld. Dr. Nnachi Ibiam",
+          "Eld. Mrs. Nkata",
+          "Rev. Mrs. Onu",
+          "Eld. Mike Oti"
+        ]
+      },
+      {
+        "id": "evangelism",
+        "icon": "Globe",
+        "style": "orange",
+        "name": "Evangelism, Discipleship & Follow Up Ministry",
+        "tagline": "Going Into All the World",
+        "description": "Active gospel outreach, systematic discipleship and diaspora engagement - taking the Word beyond the walls of the sanctuary.",
+        "convener": "Rev. Dr. U. Ukiwo",
+        "units": [
+          "Evangelism & Missions",
+          "Discipleship",
+          "Diaspora"
+        ],
+        "members": [
+          "Eld. Dr. A. K. Allotey",
+          "Eld. Ikechukwu Okoro",
+          "Eld. Allojoe Ayang"
+        ]
+      },
+      {
+        "id": "prayer",
+        "icon": "Star",
+        "style": "violet",
+        "name": "Prayer & Teaching Ministry",
+        "tagline": "The Intercession Engine of the Parish",
+        "description": "Fuelling every department through corporate and individual prayer, and grounding the congregation in deep, systematic Bible teaching.",
+        "convener": "Rev. Iyke Anaga",
+        "units": [
+          "Prayer",
+          "Teaching"
+        ],
+        "members": [
+          "Eld. Mrs. Ijeoma Amanabu",
+          "Eld. Mike Oti",
+          "Eld. Iyke Okoro"
+        ]
+      },
+      {
+        "id": "music",
+        "icon": "Music",
+        "style": "pink",
+        "name": "Music Ministry",
+        "tagline": "Excellence in Every Note of Praise",
+        "description": "Five distinct choral and orchestral ensembles - from the Awesome Choir to the Church Orchestra - lifting worship to the highest standard.",
+        "convener": "Eld. Sam Etum",
+        "units": [
+          "Awesome Choir",
+          "Christ Anointed Singers",
+          "Children Choir",
+          "Teen Choir",
+          "Church Orchestra"
+        ],
+        "members": [
+          "Eld. Mrs. Dee Nkang",
+          "Eld. Etum Ukpai",
+          "Eld. Emmanuel Ononokpono",
+          "Eld. Otu Ekpenyong",
+          "Eld. Dr. E. Nkang"
+        ]
+      },
+      {
+        "id": "ushering",
+        "icon": "UserCheck",
+        "style": "cyan",
+        "name": "Ushering, Protocol & Follow Up Ministry",
+        "tagline": "First Impressions of God's House",
+        "description": "Dedicated to orderliness, warm hospitality, and diligent follow-up - ensuring every member and visitor feels the excellence of God's presence.",
+        "convener": "Eld. Dr. A. K. Allotey",
+        "units": [
+          "Ushering",
+          "Protocol",
+          "Follow Up"
+        ],
+        "members": [
+          "Eld. Dr. E. J. Okorie",
+          "Eld. Mary Itobo",
+          "Eld. Dr. Irene Ijoma"
+        ]
+      },
+      {
+        "id": "media",
+        "icon": "Monitor",
+        "style": "emerald",
+        "name": "Media, ICT, Library & Documentation Ministry",
+        "tagline": "Bridging Church and the Digital World",
+        "description": "End-to-end digital ministry: live streaming, social media, publications, documentation, and managing the parish library and bookshop resources.",
+        "convener": "Eld. Dr. E. Nkang",
+        "units": [
+          "Media/ICT",
+          "Publication",
+          "Documentation",
+          "Library",
+          "Bookshop",
+          "Kiosks"
+        ],
+        "members": [
+          "Eld. Felix Onwuchekwa",
+          "Eld. E. E. Esege",
+          "Eld. Mrs. A. V. Ukpanyang",
+          "Eld. Mike Ani Agwu"
+        ]
+      },
+      {
+        "id": "lovecare",
+        "icon": "Heart",
+        "style": "rose",
+        "name": "Love & Care Ministry",
+        "tagline": "Carrying One Another's Burdens",
+        "description": "Upholding the spiritual and physical welfare of Parish families - overseeing church arms, organisations, and supporting members through every season of life.",
+        "convener": "Most Rev. Mba Idika",
+        "units": [
+          "Love and Care",
+          "Welfare of Church Members",
+          "Oversight of Church Arms & Organisations"
+        ],
+        "members": [
+          "Eld. Mrs. Ogbonne Nnachi Ibiam",
+          "Eld. Mrs. A. V. Ukpanyang",
+          "Eld. Dr. Enefiok Asanga"
+        ]
+      },
+      {
+        "id": "family",
+        "icon": "Home",
+        "style": "blue",
+        "name": "Christian Home & Family Life Ministry",
+        "tagline": "Strengthening Every Home",
+        "description": "Walking with families through every stage of life - from pre-marriage preparation to post-marriage counselling and sustained family life balance.",
+        "convener": "Eld. Mrs. B. Umoga",
+        "units": [
+          "Pre-Marriage Preparation",
+          "Post Marriage Counselling",
+          "Family Life Balance"
+        ],
+        "members": [
+          "Eld. A. K. Allotey",
+          "Eld. Dr. Enefiok Asanga",
+          "Eld. Mrs. Ebere Ukandu"
+        ]
+      },
+      {
+        "id": "csr",
+        "icon": "HandHeart",
+        "style": "green",
+        "name": "Neighbourhood Intervention & Corporate Social Responsibility Ministry",
+        "tagline": "The Church in the Community",
+        "description": "Executing the church's social responsibility through scholarships, community programmes, and strategic interventions in the Wuse host community.",
+        "convener": "Rev. Mrs. Victoria Onu",
+        "units": [
+          "Church CSR Programmes",
+          "Host Community Scholarships",
+          "Other Community Social Interventions"
+        ],
+        "members": [
+          "Eld. Mary Itobo",
+          "Eld. E. J. Okorie",
+          "Eld. Mrs. Nkata"
+        ]
+      },
+      {
+        "id": "environment",
+        "icon": "Leaf",
+        "style": "teal",
+        "name": "Environment, Aesthetics & Sanctuary Keepers Ministry",
+        "tagline": "Keeping God's House in Excellence",
+        "description": "Maintaining the beauty, order and sanctity of the church environment - from landscaping and aesthetics to the dedicated sanctuary keepers team.",
+        "convener": "Eld. Otu Ekpenyong",
+        "units": [
+          "Church Environment",
+          "Beautification & Aesthetics",
+          "Sanctuary Keepers"
+        ],
+        "members": [
+          "Eld. Ugochi Chima",
+          "Eld. Mrs. Ebere Ukandu",
+          "Eld. Mike Oti"
+        ]
+      }
+    ],
+    "churchArms": [
+      {
+        "id": "mca",
+        "icon": "Users",
+        "style": "blue",
+        "name": "Men's Christian Association",
+        "shortName": "MCA",
+        "description": "Monthly breakfast meetings hosted by different MCA families, building brotherhood and accountability among men of the parish.",
+        "leader": "Dr. Roy Ndoma-Egba",
+        "leaderTitle": "President",
+        "activities": [
+          "Monthly breakfast",
+          "Family hosting",
+          "Men's discipleship"
+        ]
+      },
+      {
+        "id": "wg",
+        "icon": "Heart",
+        "style": "rose",
+        "name": "Women's Guild",
+        "shortName": "WG",
+        "description": "Monthly fellowship every second Saturday and business meetings on the last Thursday - empowering women in faith and purposeful living.",
+        "leader": "Sis Adeola Ijeoma Eleri",
+        "leaderTitle": "President",
+        "activities": [
+          "2nd Saturday fellowship",
+          "Last Thursday meetings",
+          "Community service"
+        ]
+      },
+      {
+        "id": "pypan",
+        "icon": "Crosshair",
+        "style": "orange",
+        "name": "PYPAN",
+        "shortName": "Youth",
+        "description": "The vibrant youth arm of the parish. Fellowships twice monthly on the first and last Friday evenings - raising the next generation.",
+        "leader": "Chidinma Onwuchekwa",
+        "leaderTitle": "President",
+        "activities": [
+          "1st & last Friday fellowships",
+          "Youth outreach",
+          "Leadership development"
+        ]
+      },
+      {
+        "id": "cgit",
+        "icon": "Star",
+        "style": "fuchsia",
+        "name": "Christian Girls in Training",
+        "shortName": "CGIT",
+        "description": "Raising godly girls through intentional grooming, moral formation, and practical skills development for purposeful living in Christ.",
+        "leader": "Mrs. Ada Agama",
+        "leaderTitle": "Mother Coordinator",
+        "activities": [
+          "Character formation",
+          "Skills training",
+          "Moral development"
+        ]
+      },
+      {
+        "id": "bb",
+        "icon": "Shield",
+        "style": "sky",
+        "name": "Boy's Brigade",
+        "shortName": "BB",
+        "description": "Promoting obedience, reverence, discipline and self-respect in young boys through structured, faith-based activities.",
+        "leader": "Mr. Ikechukwu Paul",
+        "leaderTitle": "Company Captain",
+        "activities": [
+          "Drill & discipline",
+          "Character building",
+          "Outdoor activities"
+        ]
+      }
+    ],
+    "outreachArms": [
+      {
+        "id": "child",
+        "icon": "Baby",
+        "style": "pink",
+        "name": "Children's Department",
+        "description": "Five age-grouped classes serving 50-100 children regularly with dedicated Sunday school teachers nurturing faith from the earliest years.",
+        "leader": "Mrs. Anda Nsa (Superintendent)",
+        "activities": [
+          "5 age-grouped classes",
+          "50-100 children",
+          "Sunday school"
+        ]
+      },
+      {
+        "id": "teen",
+        "icon": "Star",
+        "style": "violet",
+        "name": "Teenage Department",
+        "description": "Investing in teenagers (ages 13-21) for a fruitful future generation through mentorship, discipleship, and fellowship.",
+        "leader": "Elder Mike Ani Agwu (Co-ordinator)",
+        "activities": [
+          "Youth discipleship",
+          "Leadership training",
+          "Monthly fellowships"
+        ]
+      },
+      {
+        "id": "friends",
+        "icon": "Globe",
+        "style": "amber",
+        "name": "Friends of the Lost",
+        "description": "A dedicated support structure for missionaries in the field - connecting the parish to gospel frontlines across Nigeria and beyond.",
+        "leader": "Elder Dr. A. K. Allotey",
+        "activities": [
+          "Missionary support",
+          "Mission giving",
+          "Prayer for the field"
+        ]
+      },
+      {
+        "id": "prison",
+        "icon": "BookOpen",
+        "style": "emerald",
+        "name": "Prison & Hospital Ministry",
+        "description": "Active outreach to hospitals, prisons, and vulnerable communities - taking the love of Christ to those the world often forgets.",
+        "leader": "Evangelism & Missions Team",
+        "activities": [
+          "Hospital visitation",
+          "Prison ministry",
+          "Community evangelism"
+        ]
+      }
+    ]
+  }
+}
