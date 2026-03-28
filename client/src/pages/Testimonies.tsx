@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 import { ChevronRight, ChevronLeft, Quote, Star, Heart, Plus } from "lucide-react";
 
@@ -241,6 +242,7 @@ function FeaturedSlider({ items }: { items: Testimony[] }) {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function Testimonies() {
+  const { theme } = useTheme();
   const [, navigate] = useLocation();
   const [activeCategory, setActiveCategory] = useState("All");
   const [testimoniesList, setTestimoniesList] = useState<Testimony[]>(staticTestimonies);
@@ -262,7 +264,7 @@ export default function Testimonies() {
     : testimoniesList.filter((t) => t.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-background text-foreground"}`}>
 
       {/* Hero */}
       <div className="relative overflow-hidden py-28 border-b border-white/10">

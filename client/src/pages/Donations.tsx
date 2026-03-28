@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 import QRCodeSection from "@/pages/QRCodeSection";
 import { motion } from "framer-motion";
@@ -201,6 +202,7 @@ function BankTransferSection({ accounts }: { accounts: Record<CurrencyKey, reado
 }
 
 export default function Donations() {
+  const { theme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [amount, setAmount] = useState(5000);
   const [donorName, setDonorName] = useState("");
@@ -279,7 +281,7 @@ export default function Donations() {
   const selectedCat = categories.find((category) => category.id === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-background text-foreground"}`}>
       <div className="relative overflow-hidden py-24 border-b border-white/10">
         <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-background to-cyan-500/10" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />

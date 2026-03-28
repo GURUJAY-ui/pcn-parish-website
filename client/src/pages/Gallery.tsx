@@ -10,6 +10,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
+import { useTheme } from "@/contexts/ThemeContext";
 import { ChevronRight, Image, Upload, X, ZoomIn, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -54,6 +55,7 @@ const placeholderGradients = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Gallery() {
+  const { theme } = useTheme();
   const [, navigate] = useLocation();
   const [items, setItems]                   = useState<GalleryItem[]>([]);
   const [loading, setLoading]               = useState(true);
@@ -75,7 +77,7 @@ export default function Gallery() {
     categories.find((c) => c.id === categoryId) ?? categories[0];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-background text-foreground"}`}>
 
       {/* ── Lightbox ──────────────────────────────────────────────────────── */}
       {lightboxItem && (

@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 import { ChevronRight, Phone, Mail, MapPin, Send, Heart, CheckCircle, MessageSquare } from "lucide-react";
 
@@ -60,6 +61,7 @@ const fallbackSocials = [
 ];
 
 export default function Contact() {
+  const { theme } = useTheme();
   const [, navigate] = useLocation();
   const [activeForm, setActiveForm] = useState<"message" | "prayer">("message");
   const [messageSent, setMessageSent] = useState(false);
@@ -136,7 +138,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-background text-foreground"}`}>
       <div className="relative overflow-hidden py-28 border-b border-white/10">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-background to-cyan-500/10" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />

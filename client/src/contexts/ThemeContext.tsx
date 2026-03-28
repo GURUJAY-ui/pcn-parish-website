@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
+const THEME_STORAGE_KEY = "pcn-theme-preference";
 
 interface ThemeContextType {
   theme: Theme;
@@ -23,7 +24,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (switchable) {
-      const stored = localStorage.getItem("theme");
+      const stored = localStorage.getItem(THEME_STORAGE_KEY);
       if (stored === "light" || stored === "dark") {
         return stored;
       }
@@ -42,7 +43,7 @@ export function ThemeProvider({
     }
 
     if (switchable) {
-      localStorage.setItem("theme", theme);
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
     }
   }, [theme, switchable]);
 

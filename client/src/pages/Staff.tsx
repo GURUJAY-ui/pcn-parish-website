@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, BriefcaseBusiness, Mail, MapPin, Menu, Phone, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useLocation } from "wouter";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 
 type CommitteeLead = {
@@ -679,6 +680,7 @@ function Footer() {
 }
 
 export default function Staff() {
+  const { theme } = useTheme();
   const [committees, setCommittees] = useState<Committee[]>(fallbackCommittees);
   const [stats, setStats] = useState<{ label: string; value: string; color: string }[]>([...fallbackStats]);
 
@@ -701,7 +703,10 @@ export default function Staff() {
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
       `}</style>
 
-      <div className="min-h-screen bg-[#050912] text-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div
+        className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-[#050912] text-white"}`}
+        style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
+      >
         <Nav />
         <section className="relative overflow-hidden border-b border-white/6">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.16),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(6,182,212,0.14),transparent_28%),linear-gradient(180deg,#081120_0%,#050912_65%,#04070d_100%)]" />

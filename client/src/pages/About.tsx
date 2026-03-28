@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { ChevronRight, BookOpen, Target, Heart, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 
 const fallbackTimeline = [
@@ -26,6 +27,7 @@ const fallbackDoctrines = [
 ];
 
 export default function About() {
+  const { theme } = useTheme();
   const [, navigate] = useLocation();
   const [timeline, setTimeline] = useState(fallbackTimeline);
   const [doctrines, setDoctrines] = useState(fallbackDoctrines);
@@ -57,7 +59,7 @@ export default function About() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-background text-foreground"}`}>
 
       {/* Hero Header */}
       <div className="relative overflow-hidden py-28 border-b border-white/10">

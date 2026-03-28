@@ -77,6 +77,7 @@
 
 import { useState, useCallback, useEffect, useId } from "react";
 import { useLocation } from "wouter";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 import {
   ChevronRight, Users, Music, Shield, Monitor, Baby,
@@ -524,6 +525,7 @@ function OutreachCard({ arm, index }: { arm: OutreachArm; index: number }) {
 // MAIN PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Ministries() {
+  const { theme } = useTheme();
   const [, navigate] = useLocation();
   // VULN-01: safe tab type with runtime whitelist
   const [activeTab, setActiveTab] = useState<TabId>("ministries");
@@ -581,7 +583,7 @@ export default function Ministries() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-white"
+    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-[#070b14] text-white"}`}
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
       <style>{`

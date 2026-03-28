@@ -50,6 +50,7 @@
         Heart, MapPin, Phone, Mail, Clock,
       } from "lucide-react";
       import { motion, AnimatePresence } from "framer-motion";
+      import { useTheme } from "@/contexts/ThemeContext";
       import { api } from "@/lib/api";
       import QRCodeSection from "@/pages/QRCodeSection";
 
@@ -772,12 +773,17 @@
       // PAGE ROOT
       // ═════════════════════════════════════════════════════════════════
       export default function Home() {
+        const { theme } = useTheme();
+
         return (
           <>
             <style>{`
               @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
             `}</style>
-            <div className="min-h-screen bg-[#050912] text-white" style={{ fontFamily: "'DM Sans',system-ui,sans-serif" }}>
+            <div
+              className={`home-theme min-h-screen ${theme === "dark" ? "home-theme--dark bg-[#050912] text-white" : "home-theme--light bg-background text-foreground"}`}
+              style={{ fontFamily: "'DM Sans',system-ui,sans-serif" }}
+            >
               <Nav />
               <HeroCarousel />
               <ServiceTimes />
