@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
 
 export const heroSlides = pgTable("hero_slides", {
   id: serial("id").primaryKey(),
@@ -87,4 +87,10 @@ export const admins = pgTable("admins", {
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const siteContentEntries = pgTable("site_content", {
+  page: text("page").primaryKey(),
+  payload: jsonb("payload").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
