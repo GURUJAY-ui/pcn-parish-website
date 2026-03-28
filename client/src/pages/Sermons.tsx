@@ -198,7 +198,7 @@ function HeroSermonCard({ sermon }: { sermon: Sermon }) {
       initial={{ opacity: 0, y: 32 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] }}
-      className="relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#0d1b3e] via-[#0a1628] to-[#060d1f] shadow-2xl"
+      className="sermons-hero-card relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#0d1b3e] via-[#0a1628] to-[#060d1f] shadow-2xl"
     >
       {/* Background texture */}
       <div className="absolute inset-0 opacity-[0.03]"
@@ -298,7 +298,7 @@ function SermonCard({ sermon, index }: { sermon: Sermon; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] }}
     >
-      <Card className={`group relative flex flex-col h-full overflow-hidden border border-white/8 bg-gradient-to-br from-[#0d1b3e]/80 to-[#060d1f]/90 hover:border-white/15 transition-all duration-500 hover:shadow-xl hover:${cat.glow} backdrop-blur-sm rounded-2xl`}>
+      <Card className={`sermons-grid-card group relative flex flex-col h-full overflow-hidden border border-white/8 bg-gradient-to-br from-[#0d1b3e]/80 to-[#060d1f]/90 hover:border-white/15 transition-all duration-500 hover:shadow-xl hover:${cat.glow} backdrop-blur-sm rounded-2xl`}>
 
         {/* Thumbnail */}
         <div className="relative aspect-video bg-black/40 overflow-hidden">
@@ -486,7 +486,7 @@ export default function Sermons() {
   const hasActiveFilters = rawSearch || activeCategory !== "All" || selectedYear !== "All Years" || selectedMonth !== 0;
 
   return (
-    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-[#060d1f] text-white"}`}
+    <div className={`sermons-page min-h-screen ${theme === "light" ? "sermons-page--light bg-background text-foreground" : "sermons-page--dark bg-[#060d1f] text-white"}`}
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
       {/* ── Global styles injected once ──────────────────────────────────── */}
@@ -507,7 +507,7 @@ export default function Sermons() {
       <div className="sermon-grain" />
 
       {/* ── Hero Header ──────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden border-b border-white/5">
+      <div className="sermons-page__hero relative overflow-hidden border-b border-white/5">
         {/* Deep background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0d1b3e] via-[#060d1f] to-[#0a0f1e]" />
         {/* Gold light leak */}
@@ -600,7 +600,7 @@ export default function Sermons() {
 
         {/* ── Featured Sermon ─────────────────────────────────────────────── */}
         {!loading && featuredSermon && (
-          <section>
+          <section className="sermons-page__featured">
             <div className="flex items-center gap-2 mb-5">
               <Sparkles className="w-4 h-4 text-amber-400" />
               <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-400/70">
@@ -612,7 +612,7 @@ export default function Sermons() {
         )}
 
         {/* ── Search + Filters ─────────────────────────────────────────────── */}
-        <section className="space-y-4">
+        <section className="sermons-page__filters space-y-4">
           <div className="flex gap-3 items-center">
             {/* Search */}
             <div className="relative flex-1 max-w-xl">
@@ -765,7 +765,7 @@ export default function Sermons() {
         <motion.section
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.7 }}
-          className="relative overflow-hidden rounded-3xl border border-white/8 p-12 text-center"
+          className="sermons-page__cta relative overflow-hidden rounded-3xl border border-white/8 p-12 text-center"
           style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.08) 0%, transparent 70%), linear-gradient(135deg, #0d1b3e 0%, #060d1f 100%)" }}>
 
           <div className="absolute inset-0 opacity-[0.04]"
