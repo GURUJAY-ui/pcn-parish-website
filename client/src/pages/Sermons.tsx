@@ -45,6 +45,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 import {
   Play, Youtube, Facebook, Search, BookOpen,
@@ -407,6 +408,7 @@ function SermonCard({ sermon, index }: { sermon: Sermon; index: number }) {
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Sermons() {
+  const { theme } = useTheme();
   const [, navigate] = useLocation();
   const [rawSearch, setRawSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -484,7 +486,7 @@ export default function Sermons() {
   const hasActiveFilters = rawSearch || activeCategory !== "All" || selectedYear !== "All Years" || selectedMonth !== 0;
 
   return (
-    <div className="min-h-screen bg-[#060d1f] text-white"
+    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-[#060d1f] text-white"}`}
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
       {/* ── Global styles injected once ──────────────────────────────────── */}
