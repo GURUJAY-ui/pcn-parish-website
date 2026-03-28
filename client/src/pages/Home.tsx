@@ -147,6 +147,8 @@
       // NAV
       // ═════════════════════════════════════════════════════════════════
       function Nav() {
+        const { theme } = useTheme();
+        const isLight = theme === "light";
         const [scrolled, setScrolled]     = useState(false);
         const [mobileOpen, setMobileOpen] = useState(false);
         const [, navigate]                = useLocation();
@@ -163,23 +165,32 @@
         return (
           <>
             <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-              scrolled ? "bg-[#050912]/96 backdrop-blur-xl border-b border-amber-500/15 shadow-2xl shadow-black/50"
-                      : "bg-transparent"}`}>
-              <div className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent transition-opacity duration-500 ${scrolled ? "opacity-100" : "opacity-0"}`} />
+              scrolled
+                ? isLight
+                  ? "bg-[#fffaf0]/88 backdrop-blur-xl border-b border-[#1a3a6b]/10 shadow-xl shadow-[#1a3a6b]/8"
+                  : "bg-[#050912]/96 backdrop-blur-xl border-b border-amber-500/15 shadow-2xl shadow-black/50"
+                : isLight
+                  ? "bg-gradient-to-b from-[#fffaf0]/92 via-[#fffaf0]/50 to-transparent"
+                  : "bg-transparent"}`}>
+              <div className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent ${isLight ? "via-[#c8972a]" : "via-amber-400"} to-transparent transition-opacity duration-500 ${scrolled ? "opacity-100" : "opacity-0"}`} />
 
               <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
                 <button onClick={() => go("/")} className="flex items-center gap-3 group">
                   <img src="/assets/pcn-logo.png" alt="PCN Logo" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
                   <div className="hidden lg:flex flex-col leading-tight">
-                    <span style={{ fontFamily: "'Cormorant Garamond', serif" }} className="font-black text-base text-white tracking-wide">PCN First Abuja</span>
-                    <span className="text-[9px] text-amber-400/60 uppercase tracking-[0.25em]">Parish</span>
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif" }} className={`font-black text-base tracking-wide ${isLight ? "text-[#132744]" : "text-white"}`}>PCN First Abuja</span>
+                    <span className={`text-[9px] uppercase tracking-[0.25em] ${isLight ? "text-[#c8972a]" : "text-amber-400/60"}`}>Parish</span>
                   </div>
                 </button>
 
                 <div className="hidden md:flex items-center gap-0.5">
                   {NAV_ITEMS.map((n) => (
                     <button key={n.route} onClick={() => go(n.route)}
-                      className="px-3 py-1.5 text-[11px] font-semibold text-white/50 hover:text-white uppercase tracking-widest transition-colors hover:bg-white/4 rounded-lg">
+                      className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-colors rounded-lg ${
+                        isLight
+                          ? "text-[#1a3a6b]/65 hover:text-[#1a3a6b] hover:bg-[#1a3a6b]/6"
+                          : "text-white/50 hover:text-white hover:bg-white/4"
+                      }`}>
                       {n.label}
                     </button>
                   ))}
@@ -193,7 +204,11 @@
                 </div>
 
                 <button onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu"
-                  className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/8 text-white">
+                  className={`md:hidden w-9 h-9 flex items-center justify-center rounded-lg ${
+                    isLight
+                      ? "bg-white/80 border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/8"
+                      : "bg-white/5 border border-white/8 text-white"
+                  }`}>
                   {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
                 </button>
               </div>
@@ -205,14 +220,22 @@
                 <>
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     onClick={() => setMobileOpen(false)}
-                    className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden" />
+                    className={`fixed inset-0 z-40 backdrop-blur-sm md:hidden ${isLight ? "bg-[#132744]/18" : "bg-black/70"}`} />
                   <motion.div
                     initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }}
                     exit={{ x: "100%", opacity: 0 }}
                     transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] }}
-                    className="fixed inset-y-0 right-0 z-50 w-72 bg-[#050912]/99 backdrop-blur-2xl border-l border-white/6 flex flex-col pt-20 pb-8 px-6">
+                    className={`fixed inset-y-0 right-0 z-50 w-72 backdrop-blur-2xl flex flex-col pt-20 pb-8 px-6 ${
+                      isLight
+                        ? "bg-[#fffaf0]/96 border-l border-[#1a3a6b]/10"
+                        : "bg-[#050912]/99 border-l border-white/6"
+                    }`}>
                     <button onClick={() => setMobileOpen(false)} aria-label="Close"
-                      className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/8 text-white">
+                      className={`absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-lg ${
+                        isLight
+                          ? "bg-white/85 border border-[#1a3a6b]/10 text-[#132744]"
+                          : "bg-white/5 border border-white/8 text-white"
+                      }`}>
                       <X className="w-4 h-4" />
                     </button>
                     <div className="flex flex-col gap-1 flex-1">
@@ -221,7 +244,11 @@
                           initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.04 }}
                           onClick={() => go(n.route)}
-                          className="text-left px-4 py-3 text-sm font-semibold text-white/50 hover:text-white hover:bg-white/4 rounded-xl transition-all">
+                          className={`text-left px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
+                            isLight
+                              ? "text-[#1a3a6b]/65 hover:text-[#1a3a6b] hover:bg-[#1a3a6b]/6"
+                              : "text-white/50 hover:text-white hover:bg-white/4"
+                          }`}>
                           {n.label}
                         </motion.button>
                       ))}
@@ -242,6 +269,8 @@
       // HERO CAROUSEL
       // ═════════════════════════════════════════════════════════════════
       function HeroCarousel() {
+        const { theme } = useTheme();
+        const isLight = theme === "light";
         const [current, setCurrent] = useState(0);
         const [, navigate]          = useLocation();
         const timerRef              = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -296,8 +325,13 @@
                     animate={{ scale: i === current ? 1.07 : 1 }}
                     transition={{ duration: 8, ease: "linear" }} />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050912] via-[#050912]/55 to-[#050912]/10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#050912]/65 via-transparent to-transparent" />
+                <div className={`absolute inset-0 ${isLight
+                  ? "bg-gradient-to-t from-[#fffaf0] via-[#fffaf0]/52 to-[#fffaf0]/10"
+                  : "bg-gradient-to-t from-[#050912] via-[#050912]/55 to-[#050912]/10"}`} />
+                <div className={`absolute inset-0 ${isLight
+                  ? "bg-gradient-to-r from-[#fffaf0]/82 via-[#fffaf0]/22 to-transparent"
+                  : "bg-gradient-to-r from-[#050912]/65 via-transparent to-transparent"}`} />
+                {isLight && <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(200,151,42,0.18),transparent_28%)]" />}
               </div>
             ))}
 
@@ -306,10 +340,10 @@
                 {heroSlides.map((s, i) => (
                 <button key={s.id} onClick={() => { setCurrent(i); startTimer(); }}
                   className={`text-right transition-all duration-300 ${i === current ? "opacity-100" : "opacity-25 hover:opacity-50"}`}>
-                  <span className={`block text-[9px] font-black uppercase tracking-[0.25em] ${i === current ? "text-amber-400" : "text-white"}`}>
+                  <span className={`block text-[9px] font-black uppercase tracking-[0.25em] ${i === current ? "text-amber-500" : isLight ? "text-[#1a3a6b]" : "text-white"}`}>
                     {s.label}
                   </span>
-                  <div className={`h-px mt-1.5 transition-all duration-500 ml-auto ${i === current ? "bg-amber-400 w-10" : "bg-white/30 w-4"}`} />
+                  <div className={`h-px mt-1.5 transition-all duration-500 ml-auto ${i === current ? "bg-amber-500 w-10" : isLight ? "bg-[#1a3a6b]/25 w-4" : "bg-white/30 w-4"}`} />
                 </button>
               ))}
             </div>
@@ -325,15 +359,15 @@
 
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-400/25 bg-amber-400/8">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-amber-400 text-[9px] font-black uppercase tracking-[0.3em]">First Abuja Parish</span>
+                    <span className="text-amber-500 text-[9px] font-black uppercase tracking-[0.3em]">First Abuja Parish</span>
                   </div>
 
                   <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-                    className="text-6xl md:text-8xl font-black text-white leading-[0.87] tracking-tight whitespace-pre-line">
+                    className={`text-6xl md:text-8xl font-black leading-[0.87] tracking-tight whitespace-pre-line ${isLight ? "text-[#132744] drop-shadow-[0_10px_32px_rgba(255,250,240,0.4)]" : "text-white"}`}>
                     {slide.title}
                   </h1>
 
-                  <p className="text-white/45 text-lg max-w-lg leading-relaxed">{slide.subtitle}</p>
+                  <p className={`text-lg max-w-lg leading-relaxed ${isLight ? "text-[#1a3a6b]/72" : "text-white/45"}`}>{slide.subtitle}</p>
 
                   <div className="flex flex-wrap gap-3 pt-2">
                     {/* CTA 1 — always a route */}
@@ -347,13 +381,21 @@
                     {slide.cta2.href ? (
                       isAllowedExternalUrl(slide.cta2.href) ? (
                         <a href={slide.cta2.href} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/8 hover:bg-white/15 border border-white/15 text-white text-sm font-semibold transition-all backdrop-blur-sm">
-                          <Play className="w-4 h-4 fill-white/70" /> {slide.cta2.label}
+                          className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all backdrop-blur-sm ${
+                            isLight
+                              ? "bg-white/78 hover:bg-white/92 border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/8"
+                              : "bg-white/8 hover:bg-white/15 border border-white/15 text-white"
+                          }`}>
+                          <Play className={`w-4 h-4 ${isLight ? "fill-[#1a3a6b]/70" : "fill-white/70"}`} /> {slide.cta2.label}
                         </a>
                       ) : null
                     ) : (
                       <button onClick={() => navigate(slide.cta2.route!)}
-                        className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/8 hover:bg-white/15 border border-white/15 text-white text-sm font-semibold transition-all">
+                        className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all ${
+                          isLight
+                            ? "bg-white/78 hover:bg-white/92 border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/8"
+                            : "bg-white/8 hover:bg-white/15 border border-white/15 text-white"
+                        }`}>
                         {slide.cta2.label}
                       </button>
                     )}
@@ -365,25 +407,33 @@
               <div className="flex gap-2 mt-10">
                 {heroSlides.map((_, i) => (
                   <button key={i} onClick={() => { setCurrent(i); startTimer(); }}
-                    className={`h-0.5 rounded-full transition-all duration-400 ${i === current ? "bg-amber-400 w-10" : "bg-white/20 w-3 hover:bg-white/40"}`} />
+                    className={`h-0.5 rounded-full transition-all duration-400 ${i === current ? "bg-amber-500 w-10" : isLight ? "bg-[#1a3a6b]/20 w-3 hover:bg-[#1a3a6b]/40" : "bg-white/20 w-3 hover:bg-white/40"}`} />
                 ))}
               </div>
             </div>
 
             {/* Prev / Next */}
             <button onClick={() => go(-1)} aria-label="Previous"
-              className="absolute left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/6 hover:bg-white/12 border border-white/8 text-white transition-all backdrop-blur-sm">
+              className={`absolute left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full transition-all backdrop-blur-sm ${
+                isLight
+                  ? "bg-white/82 hover:bg-white border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/10"
+                  : "bg-white/6 hover:bg-white/12 border border-white/8 text-white"
+              }`}>
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button onClick={() => go(1)} aria-label="Next"
-              className="absolute right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/6 hover:bg-white/12 border border-white/8 text-white transition-all backdrop-blur-sm">
+              className={`absolute right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full transition-all backdrop-blur-sm ${
+                isLight
+                  ? "bg-white/82 hover:bg-white border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/10"
+                  : "bg-white/6 hover:bg-white/12 border border-white/8 text-white"
+              }`}>
               <ChevronRight className="w-5 h-5" />
             </button>
 
             {/* Scroll cue */}
             <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-30 select-none">
-              <div className="w-px h-9 bg-gradient-to-b from-transparent to-white animate-pulse" />
-              <span className="text-[8px] text-white uppercase tracking-[0.35em]">Scroll</span>
+              <div className={`w-px h-9 bg-gradient-to-b from-transparent ${isLight ? "to-[#1a3a6b]" : "to-white"} animate-pulse`} />
+              <span className={`text-[8px] uppercase tracking-[0.35em] ${isLight ? "text-[#1a3a6b]" : "text-white"}`}>Scroll</span>
             </div>
           </section>
         );
