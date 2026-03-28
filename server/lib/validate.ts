@@ -7,14 +7,24 @@ export function sanitizeString(str: string): string {
   return xss(str.trim());
 }
 
-export function sanitizeObject(obj: Record<string, any>): Record<string, any> {
-  const result: Record<string, any> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === "string") result[key] = sanitizeString(value);
-    else if (typeof value === "object" && value !== null) result[key] = sanitizeObject(value);
-    else result[key] = value;
+export function sanitizeObject<T>(value: T): T {
+  if (typeof value === "string") {
+    return sanitizeString(value) as T;
   }
-  return result;
+
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeObject(item)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, nestedValue] of Object.entries(value)) {
+      result[key] = sanitizeObject(nestedValue);
+    }
+    return result as T;
+  }
+
+  return value;
 }
 
 // ── Middleware: sanitize all body inputs ──────────────────────────────────

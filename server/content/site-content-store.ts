@@ -8,6 +8,31 @@ import { siteContent, type SiteContent, type SiteContentPage } from "./site-cont
 const LEGACY_SITE_CONTENT_FILE = path.resolve(process.cwd(), "server", "content", "site-content.store.json");
 let storeReadyPromise: Promise<void> | null = null;
 
+function normalizeArrayLike<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeArrayLike(item)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value);
+    const allNumericKeys = entries.length > 0 && entries.every(([key]) => /^\d+$/.test(key));
+
+    if (allNumericKeys) {
+      return entries
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([, nestedValue]) => normalizeArrayLike(nestedValue)) as T;
+    }
+
+    const normalized: Record<string, unknown> = {};
+    for (const [key, nestedValue] of entries) {
+      normalized[key] = normalizeArrayLike(nestedValue);
+    }
+    return normalized as T;
+  }
+
+  return value;
+}
+
 function cloneDefaultContent(): SiteContent {
   return JSON.parse(JSON.stringify(siteContent)) as SiteContent;
 }
@@ -40,7 +65,7 @@ async function ensureStoreReady() {
           .insert(siteContentEntries)
           .values({
             page,
-            payload: (legacy[page] ?? defaults[page]) as unknown,
+            payload: normalizeArrayLike((legacy[page] ?? defaults[page]) as unknown),
           })
           .onConflictDoNothing();
       }
@@ -60,7 +85,7 @@ export async function getStoredSiteContent(): Promise<SiteContent> {
 
   for (const row of rows) {
     if (row.page in defaults) {
-      defaults[row.page as SiteContentPage] = row.payload as SiteContent[SiteContentPage];
+      defaults[row.page as SiteContentPage] = normalizeArrayLike(row.payload) as SiteContent[SiteContentPage];
     }
   }
 
@@ -74,18 +99,19 @@ export async function getStoredSiteContentPage(page: SiteContentPage) {
 
 export async function updateStoredSiteContentPage(page: SiteContentPage, payload: unknown) {
   await ensureStoreReady();
+  const normalizedPayload = normalizeArrayLike(payload);
 
   const [row] = await db
     .insert(siteContentEntries)
     .values({
       page,
-      payload,
+      payload: normalizedPayload,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
       target: siteContentEntries.page,
       set: {
-        payload,
+        payload: normalizedPayload,
         updatedAt: new Date(),
       },
     })
