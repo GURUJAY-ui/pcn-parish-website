@@ -44,28 +44,56 @@
 }
 
 :root {
-  /* Dark Glassmorphic Theme - DigitalShepherd */
-  --primary: #06d6d6; /* Cyan - primary CTA */
-  --primary-foreground: #0f1419; /* Dark navy */
-  --sidebar-primary: #06d6d6;
-  --sidebar-primary-foreground: #f0f4f8;
-  --chart-1: #06d6d6;
-  --chart-2: #10b981;
-  --chart-3: #fbbf24;
-  --chart-4: #06d6d6;
-  --chart-5: #10b981;
+  /* Light Theme - PCN First Abuja Parish */
   --radius: 0.75rem;
-  --background: #0f1419; /* Deep navy */
-  --foreground: #f0f4f8; /* Off-white */
-  --card: rgba(255, 255, 255, 0.05); /* Glassmorphic */
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+  --card: #f8f7f4;
+  --card-foreground: #1a1a2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+  --primary: #1a3a6b;          /* Deep navy blue - trust & faith */
+  --primary-foreground: #ffffff;
+  --secondary: #c8972a;        /* Gold - warmth & reverence */
+  --secondary-foreground: #ffffff;
+  --muted: #f0ede8;
+  --muted-foreground: #6b7280;
+  --accent: #c8972a;           /* Gold accent */
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e5e0d8;
+  --input: #f0ede8;
+  --ring: #1a3a6b;
+  --chart-1: #1a3a6b;
+  --chart-2: #c8972a;
+  --chart-3: #10b981;
+  --chart-4: #6366f1;
+  --chart-5: #f59e0b;
+  --sidebar: #1a3a6b;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #c8972a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #c8972a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255,255,255,0.15);
+  --sidebar-ring: #c8972a;
+}
+
+.dark {
+  --background: #0f1419;
+  --foreground: #f0f4f8;
+  --card: rgba(255, 255, 255, 0.05);
   --card-foreground: #f0f4f8;
   --popover: rgba(255, 255, 255, 0.08);
   --popover-foreground: #f0f4f8;
-  --secondary: #10b981; /* Emerald */
+  --primary: #06d6d6;
+  --primary-foreground: #0f1419;
+  --secondary: #10b981;
   --secondary-foreground: #f0f4f8;
-  --muted: #64748b; /* Muted silver */
+  --muted: #64748b;
   --muted-foreground: #cbd5e1;
-  --accent: #fbbf24; /* Amber */
+  --accent: #fbbf24;
   --accent-foreground: #0f1419;
   --destructive: #ef4444;
   --destructive-foreground: #f0f4f8;
@@ -74,14 +102,12 @@
   --ring: #06d6d6;
   --sidebar: #1a2332;
   --sidebar-foreground: #f0f4f8;
+  --sidebar-primary: #06d6d6;
+  --sidebar-primary-foreground: #f0f4f8;
   --sidebar-accent: #06d6d6;
   --sidebar-accent-foreground: #0f1419;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #06d6d6;
-}
-
-.dark {
-  /* Dark theme is default - no changes needed */
 }
 
 @keyframes floatBadge {
