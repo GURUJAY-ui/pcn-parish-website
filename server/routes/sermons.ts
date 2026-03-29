@@ -63,7 +63,7 @@ interface SermonFromYouTube {
   facebookUrl?: string;
 }
 
-// ── Helper: Fetch YouTube videos with error handling ────────────────────────
+// ── Helper: Fetch YouTube videos with error handling ──────────────────────
 async function fetchYouTubeVideos(): Promise<SermonFromYouTube[]> {
   const CHANNEL_ID = process.env.YOUTUBE_CHANNEL_ID;
   const API_KEY = process.env.YOUTUBE_API_KEY;
@@ -137,19 +137,16 @@ async function fetchYouTubeVideos(): Promise<SermonFromYouTube[]> {
   }
 }
 
-// ── GET /api/sermons - Get all sermons (DB + cached YouTube) ────────────────
+// ── GET /api/sermons - Get all sermons (DB + cached YouTube) ──────────────
 router.get("/", async (_req, res) => {
   try {
-    // Get database sermons
     const dbSermons = await db
       .select()
       .from(sermons)
       .orderBy(desc(sermons.createdAt));
 
-    // Get cached YouTube sermons
     let ytSermons: SermonFromYouTube[] = cache.get(CACHE_KEY_YOUTUBE) ?? [];
 
-    // If YouTube cache is empty, fetch fresh data (but don't block the response)
     if (ytSermons.length === 0) {
       ytSermons = await fetchYouTubeVideos();
       if (ytSermons.length > 0) {
@@ -157,12 +154,11 @@ router.get("/", async (_req, res) => {
       }
     }
 
-    // Combine and return
     const combined = [
       ...dbSermons,
       ...ytSermons.map((yt) => ({
         ...yt,
-        id: `yt_${yt.id}`, // Prefix YouTube IDs to avoid conflicts
+        id: `yt_${yt.id}`,
       })),
     ];
 
@@ -175,7 +171,7 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// ── POST /api/sermons - Create new sermon (admin only) ──────────────────────
+// ── POST /api/sermons - Create new sermon (admin only) ────────────────────
 router.post("/", requireAuth, validate(sermonSchema), async (req: AuthRequest, res: Response) => {
   try {
     const data = await db
@@ -192,7 +188,6 @@ router.post("/", requireAuth, validate(sermonSchema), async (req: AuthRequest, r
       })
       .returning();
 
-    // Invalidate cache
     cache.del(CACHE_KEY_DB);
 
     logger.info("Sermon created", {
@@ -211,7 +206,69 @@ router.post("/", requireAuth, validate(sermonSchema), async (req: AuthRequest, r
   }
 });
 
-// ── PUT /api/sermons/:id - Update sermon (admin only) ──────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// ⚠️  SPECIFIC /youtube/* ROUTES MUST COME BEFORE /:id
+//     Otherwise Express matches "youtube" as the :id param and these
+//     handlers are never reached.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── GET /api/sermons/youtube/sync - Manually sync YouTube videos ──────────
+router.get("/youtube/sync", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    // Force-clear cache so fetchYouTubeVideos always hits the API fresh
+    cache.del(CACHE_KEY_YOUTUBE);
+
+    const ytSermons = await fetchYouTubeVideos();
+
+    if (ytSermons.length > 0) {
+      cache.set(CACHE_KEY_YOUTUBE, ytSermons);
+    }
+
+    logger.info("YouTube sermons synced manually", {
+      count: ytSermons.length,
+      adminId: req.adminId,
+    });
+
+    res.json({
+      success: true,
+      count: ytSermons.length,
+      message:
+        ytSermons.length > 0
+          ? `Synced ${ytSermons.length} video${ytSermons.length === 1 ? "" : "s"} from YouTube`
+          : "No videos found — check YOUTUBE_CHANNEL_ID and YOUTUBE_API_KEY env vars",
+      data: ytSermons,
+    });
+  } catch (err) {
+    logger.error("YouTube sync failed", {
+      error: err instanceof Error ? err.message : String(err),
+      adminId: req.adminId,
+    });
+    res.status(500).json({ error: "Failed to sync YouTube videos" });
+  }
+});
+
+// ── GET /api/sermons/youtube/videos - Get cached YouTube videos ──────────
+router.get("/youtube/videos", async (_req, res) => {
+  try {
+    let ytSermons: SermonFromYouTube[] = cache.get(CACHE_KEY_YOUTUBE) ?? [];
+
+    if (ytSermons.length === 0) {
+      ytSermons = await fetchYouTubeVideos();
+      if (ytSermons.length > 0) {
+        cache.set(CACHE_KEY_YOUTUBE, ytSermons);
+      }
+    }
+
+    res.json(ytSermons);
+  } catch (err) {
+    logger.error("Failed to get YouTube videos", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    res.status(500).json({ error: "Failed to fetch YouTube videos" });
+  }
+});
+
+// ── PUT /api/sermons/:id - Update sermon (admin only) ────────────────────
 router.put("/:id", requireAuth, validate(sermonSchema), async (req: AuthRequest, res: Response) => {
   try {
     const id = Number(req.params.id);
@@ -220,7 +277,6 @@ router.put("/:id", requireAuth, validate(sermonSchema), async (req: AuthRequest,
       return res.status(400).json({ error: "Invalid sermon ID" });
     }
 
-    // Check if sermon exists
     const [existing] = await db
       .select()
       .from(sermons)
@@ -245,7 +301,6 @@ router.put("/:id", requireAuth, validate(sermonSchema), async (req: AuthRequest,
       .where(eq(sermons.id, id))
       .returning();
 
-    // Invalidate cache
     cache.del(CACHE_KEY_DB);
 
     logger.info("Sermon updated", {
@@ -264,7 +319,7 @@ router.put("/:id", requireAuth, validate(sermonSchema), async (req: AuthRequest,
   }
 });
 
-// ── DELETE /api/sermons/:id - Delete sermon (admin only) ────────────────────
+// ── DELETE /api/sermons/:id - Delete sermon (admin only) ──────────────────
 router.delete("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const id = Number(req.params.id);
@@ -273,7 +328,6 @@ router.delete("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "Invalid sermon ID" });
     }
 
-    // Check if sermon exists
     const [existing] = await db
       .select()
       .from(sermons)
@@ -285,7 +339,6 @@ router.delete("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
 
     await db.delete(sermons).where(eq(sermons.id, id));
 
-    // Invalidate cache
     cache.del(CACHE_KEY_DB);
 
     logger.info("Sermon deleted", {
@@ -304,53 +357,6 @@ router.delete("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// ── GET /api/sermons/youtube/sync - Manually sync YouTube videos ────────────
-router.get("/youtube/sync", requireAuth, async (_req: AuthRequest, res: Response) => {
-  try {
-    const ytSermons = await fetchYouTubeVideos();
-    cache.set(CACHE_KEY_YOUTUBE, ytSermons);
-
-    logger.info("YouTube sermons synced manually", {
-      count: ytSermons.length,
-      adminId: _req.adminId,
-    });
-
-    res.json({
-      success: true,
-      message: `Synced ${ytSermons.length} YouTube videos`,
-      data: ytSermons,
-    });
-  } catch (err) {
-    logger.error("YouTube sync failed", {
-      error: err instanceof Error ? err.message : String(err),
-      adminId: _req.adminId,
-    });
-    res.status(500).json({ error: "Failed to sync YouTube videos" });
-  }
-});
-
-// ── GET /api/sermons/youtube/videos - Get cached YouTube videos ────────────
-router.get("/youtube/videos", async (_req, res) => {
-  try {
-    let ytSermons: SermonFromYouTube[] = cache.get(CACHE_KEY_YOUTUBE) ?? [];
-
-    // If cache is empty, fetch fresh data
-    if (ytSermons.length === 0) {
-      ytSermons = await fetchYouTubeVideos();
-      if (ytSermons.length > 0) {
-        cache.set(CACHE_KEY_YOUTUBE, ytSermons);
-      }
-    }
-
-    res.json(ytSermons);
-  } catch (err) {
-    logger.error("Failed to get YouTube videos", {
-      error: err instanceof Error ? err.message : String(err),
-    });
-    res.status(500).json({ error: "Failed to fetch YouTube videos" });
-  }
-});
-
 // ── Auto-refresh YouTube cache every 30 minutes ────────────────────────────
 setInterval(async () => {
   try {
@@ -366,6 +372,6 @@ setInterval(async () => {
       error: err instanceof Error ? err.message : String(err),
     });
   }
-}, 30 * 60 * 1000); // 30 minutes
+}, 30 * 60 * 1000);
 
 export default router;
