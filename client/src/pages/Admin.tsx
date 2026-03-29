@@ -346,7 +346,7 @@ function SermonsSection() {
       title="Sermons"
       loading={loading}
       onNew={() => openDialog()}
-      extraAction={<Button onClick={async () => { try { setSyncing(true); await api.syncYouTubeVideos(); await load(); toast.success("YouTube sync completed"); } catch (err) { logger.error("YouTube sync failed", err); toast.error("Failed to sync YouTube"); } finally { setSyncing(false); } }} variant="outline" size="sm">{syncing ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : null}Sync YouTube</Button>}
+      extraAction={<Button onClick={async () => { try { setSyncing(true); const result = await api.syncYouTubeVideos(); await load();  toast.success(result.message); } catch (err) { logger.error("YouTube sync failed", err); toast.error("Failed to sync YouTube"); } finally { setSyncing(false); } }} variant="outline" size="sm">{syncing ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : null}Sync YouTube</Button>}
       items={items.map((item) => ({
         id: String(item.id),
         title: item.title,
