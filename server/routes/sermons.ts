@@ -10,6 +10,24 @@ import type { Response } from "express";
 
 const router = Router();
 
+router.get("/youtube/debug", async (_req, res) => {
+  const CHANNEL_ID = process.env.YOUTUBE_CHANNEL_ID;
+  const API_KEY = process.env.YOUTUBE_API_KEY;
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&type=video&order=date&maxResults=5&key=${API_KEY}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json({
+      channelIdValue: CHANNEL_ID,
+      apiKeyFirst8: API_KEY?.slice(0, 8),
+      youtubeHttpStatus: response.status,
+      youtubeResponse: data,
+    });
+  } catch (err) {
+    res.json({ fetchError: String(err) });
+  }
+});
+
 // ── Cache configuration ────────────────────────────────────────────────────
 const cache = new NodeCache({ stdTTL: 1800, checkperiod: 600 }); // 30 min cache
 const CACHE_KEY_YOUTUBE = "yt_sermons";
