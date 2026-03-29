@@ -17,9 +17,22 @@ import Testimonies from "./pages/Testimonies";
 import Events from "./pages/Events";
 import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
+import { JSX, useEffect } from "react";
+import { useLocation } from "wouter";
 
 
+function ProtectedRoute({ component: Component }: { component: () => JSX.Element }) {
+  const token = localStorage.getItem("accessToken");
+  const refresh = localStorage.getItem("refreshToken");
+  const [, navigate] = useLocation();
 
+  useEffect(() => {
+    if (!token && !refresh) navigate("/admin/login");
+  }, [token, refresh, navigate]);
+
+  if (!token && !refresh) return null;
+  return <Component />;
+}
 
 function Router() {
   return (
@@ -27,7 +40,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/donations"} component={Donations} />
       <Route path={"/admin/login"} component={AdminLogin} />
-      <Route path={"/admin"} component={Admin} />
+      <Route path={"/admin"} component={() => <ProtectedRoute component={Admin} />} />
       <Route path={"/about"} component={About} />
       <Route path={"/sermons"} component={Sermons} />
       <Route path={"/ministries"} component={Ministries} />
