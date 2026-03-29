@@ -10,16 +10,6 @@ import type { Response } from "express";
 
 const router = Router();
 
-// TEMP DEBUG
-router.get("/youtube/debug", async (_req, res) => {
-  res.json({
-    hasChannelId: !!process.env.YOUTUBE_CHANNEL_ID,
-    hasApiKey: !!process.env.YOUTUBE_API_KEY,
-    channelIdPreview: process.env.YOUTUBE_CHANNEL_ID?.slice(0, 6) + "...",
-    apiKeyPreview: process.env.YOUTUBE_API_KEY?.slice(0, 6) + "...",
-  });
-});
-
 // ── Cache configuration ────────────────────────────────────────────────────
 const cache = new NodeCache({ stdTTL: 1800, checkperiod: 600 }); // 30 min cache
 const CACHE_KEY_YOUTUBE = "yt_sermons";
