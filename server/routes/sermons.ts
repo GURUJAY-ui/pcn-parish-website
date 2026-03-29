@@ -11,7 +11,7 @@ import type { Response } from "express";
 const router = Router();
 
 // TEMP DEBUG
-router.get("/youtube/debug", requireAuth, async (_req, res) => {
+router.get("/youtube/debug", async (_req, res) => {
   res.json({
     hasChannelId: !!process.env.YOUTUBE_CHANNEL_ID,
     hasApiKey: !!process.env.YOUTUBE_API_KEY,
