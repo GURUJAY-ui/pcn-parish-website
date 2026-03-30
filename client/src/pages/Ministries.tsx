@@ -583,7 +583,7 @@ export default function Ministries() {
   ];
 
   return (
-    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-[#070b14] text-white"}`}
+    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light" : "bg-[#070b14] text-white"}`}
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
       <style>{`
@@ -774,7 +774,7 @@ export default function Ministries() {
         <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.7 }}
           className="relative overflow-hidden rounded-3xl border border-white/6 p-12 md:p-16 text-center"
-          style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(52,211,153,0.09) 0%, transparent 60%), linear-gradient(135deg, #0d1b3e 0%, #070b14 100%)" }}>
+          style={theme === "light" ? {} : { background: "radial-gradient(ellipse at 50% 0%, rgba(52,211,153,0.09) 0%, transparent 60%), linear-gradient(135deg, #0d1b3e 0%, #070b14 100%)" }}>
 
           <div className="absolute inset-0 opacity-[0.025]"
             style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 50px,rgba(255,255,255,.5) 50px,rgba(255,255,255,.5) 51px),repeating-linear-gradient(90deg,transparent,transparent 50px,rgba(255,255,255,.5) 50px,rgba(255,255,255,.5) 51px)" }} />
