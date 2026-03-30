@@ -54,7 +54,7 @@ const FALLBACK_HERO_SLIDES = [
     id: 1, label: "Welcome",
     title: "Welcome to The\nPresbyterian\nChurch of Nigeria",
     subtitle: "Transforming Lives, Changing Destinies",
-    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663442941753/aGVKkYmkpS8dwgNiKtJuPS/hero-church-community-XpYfXsab73HbnPsjgMAM8h.webp",
+    image: "/assets/PCN-FAP-CONG.jpeg",
     cta1: { label: "Learn More",  route: "/about"  as string, href: undefined as string | undefined },
     cta2: { label: "Watch Live",  route: undefined as string | undefined, href: "https://youtube.com/@pulpitfaptv" },
   },
@@ -249,7 +249,22 @@ function HeroCarousel() {
     api.getSiteContent("home")
       .then((data) => {
         if (Array.isArray(data?.heroSlides) && data.heroSlides.length > 0) {
-          setHeroSlides(data.heroSlides);
+          setHeroSlides(
+            data.heroSlides.map((slide: { id?: number; label?: string; title?: string; subtitle?: string; image?: string; cta1?: { label?: string; route?: string; href?: string }; cta2?: { label?: string; route?: string; href?: string } }, index: number) => ({
+              id: slide.id ?? index + 1,
+              label: slide.label ?? "",
+              title: slide.title ?? "",
+              subtitle: slide.subtitle ?? "",
+              image:
+                index === 0
+                  ? "/assets/PCN-FAP-CONG.jpeg"
+                  : index === 1
+                    ? "/assets/Pcn-fap-cong 2.jpeg"
+                    : (slide.image ?? ""),
+              cta1: slide.cta1 ?? { label: "", route: undefined, href: undefined },
+              cta2: slide.cta2 ?? { label: "", route: undefined, href: undefined },
+            }))
+          );
         }
       })
       .catch(() => {});
