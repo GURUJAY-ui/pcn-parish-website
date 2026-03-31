@@ -1127,8 +1127,9 @@ function EventsSection() {
                 </Button>
               </div>
             </div>
-            <div id="event-qr-preview" className="rounded-2xl bg-white p-4 shadow-xl">
+            <div id="event-qr-preview" className="rounded-2xl bg-white p-4 shadow-xl flex flex-col items-center gap-2">
               <QRCodeSVG value={getEventShareUrl(editingId)} size={168} includeMargin bgColor="#ffffff" fgColor="#111827" />
+              <p className="text-xs font-bold tracking-widest text-gray-800 uppercase">Scan Me</p>
             </div>
           </div>
         </Card>
@@ -1223,8 +1224,9 @@ function EventsSection() {
                     <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Shareable Program QR</p>
                     <p className="text-xs text-muted-foreground">Scan to open this exact event on the public Events page.</p>
                   </div>
-                  <div id="event-qr-dialog" className="rounded-xl bg-white p-3">
+                  <div id="event-qr-dialog" className="rounded-xl bg-white p-3 flex flex-col items-center gap-1">
                     <QRCodeSVG value={getEventShareUrl(editingId)} size={112} includeMargin bgColor="#ffffff" fgColor="#111827" />
+                    <p className="text-xs font-bold tracking-widest text-gray-800 uppercase">Scan Me</p>
                   </div>
                 </div>
                 <div className="mt-3">
