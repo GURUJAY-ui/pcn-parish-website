@@ -257,7 +257,7 @@ function downloadQrSvg(containerId: string, filename: string) {
   }
 
   const clone = svg.cloneNode(true) as SVGSVGElement;
-  const originalSize = svg.getBoundingClientRect().width || 168;
+ const originalSize = parseFloat(svg.getAttribute("width") || "168");
   const labelHeight = 28;
   const totalHeight = originalSize + labelHeight;
 
