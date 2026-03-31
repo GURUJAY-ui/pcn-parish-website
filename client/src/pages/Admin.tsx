@@ -249,25 +249,59 @@ function getEventShareUrl(id: number) {
 }
 
 function downloadQrSvg(containerId: string, filename: string) {
-  const svg = document.getElementById(containerId)?.querySelector("svg");
+  const container = document.getElementById(containerId);
+  const svg = container?.querySelector("svg");
   if (!svg) {
     toast.error("QR code not ready yet");
     return;
   }
+
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+  const originalSize = svg.getBoundingClientRect().width || 168;
+  const labelHeight = 28;
+  const totalHeight = originalSize + labelHeight;
+
+  clone.setAttribute("width", String(originalSize));
+  clone.setAttribute("height", String(totalHeight));
+  clone.setAttribute("viewBox", `0 0 ${originalSize} ${totalHeight}`);
+
+  const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  bg.setAttribute("width", String(originalSize));
+  bg.setAttribute("height", String(totalHeight));
+  bg.setAttribute("fill", "white");
+  clone.insertBefore(bg, clone.firstChild);
+
+  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  text.setAttribute("x", String(originalSize / 2));
+  text.setAttribute("y", String(originalSize + 20));
+  text.setAttribute("text-anchor", "middle");
+  text.setAttribute("font-family", "Arial, sans-serif");
+  text.setAttribute("font-size", "13");
+  text.setAttribute("font-weight", "bold");
+  text.setAttribute("letter-spacing", "3");
+  text.setAttribute("fill", "#1f2937");
+  text.textContent = "SCAN ME";
+  clone.appendChild(text);
+
+  const scale = 3;
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  const svgData = new XMLSerializer().serializeToString(svg);
+  canvas.width = originalSize * scale;
+  canvas.height = totalHeight * scale;
+  const ctx = canvas.getContext("2d")!;
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, originalSize, totalHeight);
+
+  const svgData = new XMLSerializer().serializeToString(clone);
   const img = new window.Image();
   img.onload = () => {
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx?.drawImage(img, 0, 0);
+    ctx.drawImage(img, 0, 0);
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
     link.download = filename;
     link.click();
   };
-  img.src = "data:image/svg+xml;base64," + btoa(svgData);
+  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
 }
 
 function DashboardCard({
