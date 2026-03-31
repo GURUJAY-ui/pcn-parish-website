@@ -140,6 +140,79 @@ async function request(
   }
 }
 
+// ── Content helpers ───────────────────────────────────────────────────────
+export type HeroSlideContent = {
+  id: number;
+  label: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  cta1: { label: string; route?: string; href?: string };
+  cta2: { label: string; route?: string; href?: string };
+};
+
+export type ContactContent = {
+  cards: Array<{
+    label: string;
+    lines: string[];
+    href: string;
+    color: string;
+  }>;
+  serviceTimes: Array<{
+    day: string;
+    time: string;
+  }>;
+  socials: Array<{
+    label: string;
+    handle: string;
+    href: string;
+    color: string;
+  }>;
+};
+
+export type DonationContent = {
+  categories: Array<{
+    id: string;
+    label: string;
+    description: string;
+    color: string;
+  }>;
+  accounts: {
+    ngn: Array<{
+      bank: string;
+      accountName: string;
+      accountNumber: string;
+      type: string;
+      flag: string;
+      label: string;
+    }>;
+    usd: Array<{
+      bank: string;
+      accountName: string;
+      accountNumber: string;
+      type: string;
+      flag: string;
+      label: string;
+    }>;
+    gbp: Array<{
+      bank: string;
+      accountName: string;
+      accountNumber: string;
+      type: string;
+      flag: string;
+      label: string;
+    }>;
+    eur: Array<{
+      bank: string;
+      accountName: string;
+      accountNumber: string;
+      type: string;
+      flag: string;
+      label: string;
+    }>;
+  };
+};
+
 // ── API Object with all methods ────────────────────────────────────────────
 export const api = {
   // ── Authentication ────────────────────────────────────────────────────────
@@ -330,31 +403,8 @@ export const api = {
   },
 
   // ── Hero Slides ───────────────────────────────────────────────────────────
-  getHeroSlides: async (): Promise<any[]> => {
-    return request("/hero");
-  },
-
-  createHeroSlide: async (data: any): Promise<any> => {
-    return request("/hero", {
-      method: "POST",
-      body: JSON.stringify(data),
-      requiresAuth: true,
-    });
-  },
-
-  updateHeroSlide: async (id: number, data: any): Promise<any> => {
-    return request(`/hero/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-      requiresAuth: true,
-    });
-  },
-
-  deleteHeroSlide: async (id: number): Promise<any> => {
-    return request(`/hero/${id}`, {
-      method: "DELETE",
-      requiresAuth: true,
-    });
+  getHeroSlides: async (): Promise<HeroSlideContent[]> => {
+    return request("/site-content/home").then((data) => data?.heroSlides ?? []);
   },
 
   // ── Contacts ──────────────────────────────────────────────────────────────

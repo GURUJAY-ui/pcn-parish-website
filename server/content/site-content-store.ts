@@ -3,7 +3,11 @@ import path from "node:path";
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { siteContentEntries } from "../db/schema";
-import { siteContent, type SiteContent, type SiteContentPage } from "./site-content";
+import {
+  siteContent,
+  type SiteContent,
+  type SiteContentPage,
+} from "./site-content";
 
 const LEGACY_SITE_CONTENT_FILE = path.resolve(process.cwd(), "server", "content", "site-content.store.json");
 let storeReadyPromise: Promise<void> | null = null;
@@ -35,6 +39,37 @@ function normalizeArrayLike<T>(value: T): T {
 
 function cloneDefaultContent(): SiteContent {
   return JSON.parse(JSON.stringify(siteContent)) as SiteContent;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+export function isHeroSlideContent(value: unknown): value is SiteContent["home"]["heroSlides"][number] {
+  if (!isRecord(value)) return false;
+  if (typeof value.id !== "number") return false;
+  if (!isNonEmptyString(value.label) || !isNonEmptyString(value.title) || !isNonEmptyString(value.subtitle) || !isNonEmptyString(value.image)) return false;
+  if (!isRecord(value.cta1) || !isRecord(value.cta2)) return false;
+  if (!isNonEmptyString(value.cta1.label) || !isNonEmptyString(value.cta2.label)) return false;
+  return true;
+}
+
+export function isContactContent(value: unknown): value is SiteContent["contact"] {
+  if (!isRecord(value)) return false;
+  return Array.isArray(value.cards) && Array.isArray(value.serviceTimes) && Array.isArray(value.socials);
+}
+
+export function isDonationContent(value: unknown): value is SiteContent["donations"] {
+  if (!isRecord(value)) return false;
+  return Array.isArray(value.categories) && isRecord(value.accounts);
+}
+
+export function isSiteContentPage(page: string): page is SiteContentPage {
+  return page in siteContent;
 }
 
 async function loadLegacyStore(): Promise<Partial<SiteContent>> {

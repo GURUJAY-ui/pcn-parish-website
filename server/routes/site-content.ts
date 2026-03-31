@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { siteContent } from "../content/site-content";
+import { siteContent, type SiteContentPage } from "../content/site-content";
 import {
   getStoredSiteContent,
   getStoredSiteContentPage,
+  isSiteContentPage,
   updateStoredSiteContentPage,
 } from "../content/site-content-store";
 import { requireAuth } from "../middleware/auth";
@@ -14,8 +15,13 @@ router.get("/", async (_req, res) => {
 });
 
 router.get("/:page", async (req, res) => {
-  const page = req.params.page as keyof typeof siteContent;
-  const payload = await getStoredSiteContentPage(page);
+  const page = req.params.page;
+
+  if (!isSiteContentPage(page)) {
+    return res.status(404).json({ error: "Content not found" });
+  }
+
+  const payload = await getStoredSiteContentPage(page as SiteContentPage);
 
   if (!payload) {
     return res.status(404).json({ error: "Content not found" });
@@ -25,13 +31,13 @@ router.get("/:page", async (req, res) => {
 });
 
 router.put("/:page", requireAuth, async (req, res) => {
-  const page = req.params.page as keyof typeof siteContent;
+  const page = req.params.page;
 
-  if (!(page in siteContent)) {
+  if (!isSiteContentPage(page)) {
     return res.status(404).json({ error: "Content not found" });
   }
 
-  const payload = await updateStoredSiteContentPage(page, req.body);
+  const payload = await updateStoredSiteContentPage(page as SiteContentPage, req.body);
   return res.json(payload);
 });
 

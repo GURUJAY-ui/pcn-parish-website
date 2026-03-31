@@ -1,4 +1,176 @@
-export const siteContent = {
+export type HeroSlideContent = {
+  id: number;
+  label: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  cta1: {
+    label: string;
+    route?: string;
+    href?: string;
+  };
+  cta2: {
+    label: string;
+    route?: string;
+    href?: string;
+  };
+};
+
+export type DigitalMinistryContent = {
+  label: string;
+  desc: string;
+  icon: "Globe" | "Users" | "Heart" | "BookOpen" | "Church" | "Play";
+  accent: string;
+  route: string;
+};
+
+export type ContactCardContent = {
+  label: string;
+  lines: string[];
+  href: string;
+  color: string;
+};
+
+export type ContactServiceTimeContent = {
+  day: string;
+  time: string;
+};
+
+export type ContactSocialContent = {
+  label: string;
+  handle: string;
+  href: string;
+  color: string;
+};
+
+export type DonationCategoryContent = {
+  id: string;
+  label: string;
+  description: string;
+  color: string;
+};
+
+export type DonationAccountContent = {
+  bank: string;
+  accountName: string;
+  accountNumber: string;
+  type: string;
+  flag: string;
+  label: string;
+};
+
+export type DonationAccountsContent = {
+  ngn: DonationAccountContent[];
+  usd: DonationAccountContent[];
+  gbp: DonationAccountContent[];
+  eur: DonationAccountContent[];
+};
+
+export type AboutContent = {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  origin: {
+    eyebrow: string;
+    title: string;
+    paragraphs: string[];
+  };
+  stats: Array<{
+    value: string;
+    label: string;
+    color: string;
+  }>;
+  timeline: Array<{
+    year: string;
+    event: string;
+  }>;
+  vision: string;
+  mission: string;
+  doctrines: Array<{
+    title: string;
+    description: string;
+  }>;
+};
+
+export type StaffContent = {
+  stats: Array<{
+    label: string;
+    value: string;
+    color: string;
+  }>;
+  committees: Array<{
+    id: number;
+    name: string;
+    duties: string[];
+    leads: Array<{
+      title: string;
+      name: string;
+      phone?: string;
+    }>;
+  }>;
+};
+
+export type ContactContent = {
+  cards: ContactCardContent[];
+  serviceTimes: ContactServiceTimeContent[];
+  socials: ContactSocialContent[];
+};
+
+export type DonationsContent = {
+  categories: DonationCategoryContent[];
+  accounts: DonationAccountsContent;
+};
+
+export type HomeContent = {
+  heroSlides: HeroSlideContent[];
+  digitalMinistries: DigitalMinistryContent[];
+};
+
+export type MinistriesContent = {
+  mainMinistries: Array<{
+    id: string;
+    icon: string;
+    style: string;
+    name: string;
+    tagline: string;
+    description: string;
+    convener: string;
+    units: string[];
+    members: string[];
+  }>;
+  churchArms: Array<{
+    id: string;
+    icon: string;
+    style: string;
+    name: string;
+    shortName?: string;
+    description: string;
+    leader: string;
+    leaderTitle?: string;
+    activities: string[];
+  }>;
+  outreachArms: Array<{
+    id: string;
+    icon: string;
+    style: string;
+    name: string;
+    description: string;
+    leader: string;
+    activities: string[];
+  }>;
+};
+
+export type SiteContent = {
+  about: AboutContent;
+  staff: StaffContent;
+  contact: ContactContent;
+  donations: DonationsContent;
+  home: HomeContent;
+  ministries: MinistriesContent;
+};
+
+export const siteContent: SiteContent = {
   about: {
     hero: {
       title: "About The Presbyterian Church of Nigeria",
@@ -274,7 +446,6 @@ export const siteContent = {
       { id: "prison", icon: "BookOpen", style: "emerald", name: "Prison & Hospital Ministry", description: "Active outreach to hospitals, prisons, and vulnerable communities - taking the love of Christ to those the world often forgets.", leader: "Evangelism & Missions Team", activities: ["Hospital visitation", "Prison ministry", "Community evangelism"] },
     ],
   },
-} as const;
+};
 
-export type SiteContent = typeof siteContent;
 export type SiteContentPage = keyof SiteContent;
