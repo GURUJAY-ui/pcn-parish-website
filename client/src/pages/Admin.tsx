@@ -124,24 +124,65 @@ function getEventShareUrl(id: number) {
 function downloadQrSvg(containerId: string, filename: string) {
   const container = document.getElementById(containerId);
   const svg = container?.querySelector("svg");
-  if (!svg) { toast.error("QR code not ready yet"); return; }
+  if (!svg) {
+    toast.error("QR code not ready yet");
+    return;
+  }
 
-  const serializer = new XMLSerializer();
-  const svgData = serializer.serializeToString(svg);
   const qrSize = 200;
-  const paddingX = 48, paddingTop = 48, labelGap = 22, labelHeight = 34, bottomPadding = 48;
+  const paddingX = 48;
+  const paddingTop = 48;
+  const labelGap = 22;
+  const labelHeight = 34;
+  const bottomPadding = 48;
   const outputWidth = qrSize + paddingX * 2;
   const outputHeight = paddingTop + qrSize + labelGap + labelHeight + bottomPadding;
   const qrX = (outputWidth - qrSize) / 2;
-  const labelY = paddingTop + qrSize + labelGap;
+  const labelY = paddingTop + qrSize + labelGap + labelHeight / 2;
 
-  const centeredSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${outputWidth}" height="${outputHeight}" viewBox="0 0 ${outputWidth} ${outputHeight}"><rect width="100%" height="100%" fill="#ffffff"/><g transform="translate(${qrX},${paddingTop})">${svgData.replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g><text x="${outputWidth / 2}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="4" fill="#1f2937">SCAN ME</text></svg>`;
+  // Force the SVG to render at exactly qrSize x qrSize
+  const cloned = svg.cloneNode(true) as SVGSVGElement;
+  cloned.setAttribute("width", String(qrSize));
+  cloned.setAttribute("height", String(qrSize));
+
+  const svgBlob = new Blob(
+    [new XMLSerializer().serializeToString(cloned)],
+    { type: "image/svg+xml;charset=utf-8" }
+  );
+  const svgUrl = URL.createObjectURL(svgBlob);
 
   const canvas = document.createElement("canvas");
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
   const ctx = canvas.getContext("2d")!;
+
+  // White background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, outputWidth, outputHeight);
+
   const img = new window.Image();
-  img.onload = () => { canvas.width = outputWidth; canvas.height = outputHeight; ctx.drawImage(img, 0, 0); const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = filename; link.click(); };
-  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(centeredSvg)));
+  img.onload = () => {
+    // Draw QR centered
+    ctx.drawImage(img, qrX, paddingTop, qrSize, qrSize);
+    URL.revokeObjectURL(svgUrl);
+
+    // Draw SCAN ME text
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 16px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("SCAN ME", outputWidth / 2, labelY);
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = filename;
+    link.click();
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(svgUrl);
+    toast.error("Failed to render QR code");
+  };
+  img.src = svgUrl;
 }
 
 // ─── DashboardCard ────────────────────────────────────────────────────────────
