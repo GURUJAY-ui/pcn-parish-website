@@ -35,6 +35,7 @@ import galleryRoutes from "./routes/gallery";
 import contactRoutes from "./routes/contact";
 import donationRoutes from "./routes/donations";
 import siteContentRoutes from "./routes/site-content";
+import settingsRoutes from "./routes/settings";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -136,6 +137,7 @@ app.use("/api/gallery", galleryRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/site-content", siteContentRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
