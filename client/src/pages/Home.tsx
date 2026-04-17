@@ -144,14 +144,10 @@ function Nav() {
             </div>
           </button>
 
-          <div className="hidden md:flex items-center gap-0.5">
+          <div className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map((n) => (
               <button key={n.route} onClick={() => go(n.route)}
-                className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-colors rounded-lg ${
-                  isLight
-                    ? "text-[#1a3a6b]/65 hover:text-[#1a3a6b] hover:bg-[#1a3a6b]/6"
-                    : "text-white/50 hover:text-white hover:bg-white/4"
-                }`}>
+                className={`nav-link ${isLight ? "text-[#1a3a6b]/80" : "text-white/70"}`}>
                 {n.label}
               </button>
             ))}
@@ -159,7 +155,7 @@ function Nav() {
 
           <div className="hidden md:block">
             <button onClick={() => go("/donations")}
-              className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#050912] text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35">
+              className="button-primary">
               Give Online
             </button>
           </div>
@@ -205,17 +201,13 @@ function Nav() {
                     initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
                     onClick={() => go(n.route)}
-                    className={`text-left px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
-                      isLight
-                        ? "text-[#1a3a6b]/65 hover:text-[#1a3a6b] hover:bg-[#1a3a6b]/6"
-                        : "text-white/50 hover:text-white hover:bg-white/4"
-                    }`}>
+                    className={`nav-link text-left w-full ${isLight ? "text-[#1a3a6b]/80" : "text-white/70"}`}>
                     {n.label}
                   </motion.button>
                 ))}
               </div>
               <button onClick={() => go("/donations")}
-                className="w-full py-3 rounded-xl bg-amber-500 text-[#050912] text-sm font-black uppercase tracking-widest">
+                className="button-primary w-full justify-center">
                 Give Online
               </button>
             </motion.div>
@@ -342,7 +334,7 @@ function HeroCarousel() {
 
             <div className="flex flex-wrap gap-3 pt-2">
               <button onClick={() => navigate(slide.cta1.route!)}
-                className="group flex items-center gap-2 px-6 py-3 rounded-full bg-amber-500 hover:bg-amber-400 text-[#050912] text-sm font-black uppercase tracking-widest transition-all shadow-xl shadow-amber-500/25 hover:shadow-amber-500/45">
+                className="hero-cta hero-cta-primary group">
                 {slide.cta1.label}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -350,21 +342,13 @@ function HeroCarousel() {
               {slide.cta2.href ? (
                 isAllowedExternalUrl(slide.cta2.href) ? (
                   <a href={slide.cta2.href} target="_blank" rel="noopener noreferrer"
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all backdrop-blur-sm ${
-                      isLight
-                        ? "bg-white/78 hover:bg-white/92 border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/8"
-                        : "bg-white/8 hover:bg-white/15 border border-white/15 text-white"
-                    }`}>
+                    className="hero-cta hero-cta-secondary">
                     <Play className={`w-4 h-4 ${isLight ? "fill-[#1a3a6b]/70" : "fill-white/70"}`} /> {slide.cta2.label}
                   </a>
                 ) : null
               ) : (
                 <button onClick={() => navigate(slide.cta2.route!)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all ${
-                    isLight
-                      ? "bg-white/78 hover:bg-white/92 border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/8"
-                      : "bg-white/8 hover:bg-white/15 border border-white/15 text-white"
-                  }`}>
+                  className="hero-cta hero-cta-secondary">
                   {slide.cta2.label}
                 </button>
               )}
@@ -828,22 +812,14 @@ export default function Home() {
   const { theme } = useTheme();
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-      `}</style>
-      <div
-        className={`home-theme min-h-screen ${theme === "dark" ? "home-theme--dark bg-[#050912] text-white" : "home-theme--light bg-background text-foreground"}`}
-        style={{ fontFamily: "'DM Sans',system-ui,sans-serif" }}
-      >
-        <Nav />
-        <HeroCarousel />
-        <ServiceTimes />
-        <PastorWelcome />
-        <MinistryGrid />
-        <CTABanner />
-        <Footer />
-      </div>
-    </>
+    <div className={`page-shell min-h-screen ${theme === "dark" ? "home-theme--dark bg-[#050912] text-white" : "home-theme--light bg-background text-foreground"}`}>
+      <Nav />
+      <HeroCarousel />
+      <ServiceTimes />
+      <PastorWelcome />
+      <MinistryGrid />
+      <CTABanner />
+      <Footer />
+    </div>
   );
 }
