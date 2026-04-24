@@ -32,9 +32,6 @@ function ThemeToggle() {
           </span>
         </span>
       </span>
-      <span className="theme-toggle__label">
-        {isDark ? "Dark mode" : "Light mode"}
-      </span>
     </button>
   );
 }

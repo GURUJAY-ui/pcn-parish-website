@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // ── Particle component ────────────────────────────────────────────────────────
 function Particles() {
@@ -233,6 +234,8 @@ function LoadingOverlay({ visible }: { visible: boolean }) {
 // ── Main Login Page ───────────────────────────────────────────────────────────
 export default function AdminLogin() {
   const [, navigate] = useLocation();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -264,25 +267,27 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300 ${isLight ? "bg-gradient-to-br from-[#f7f5ef] via-[#ffffff] to-[#efe7d8] text-[#1a1a2e]" : "bg-[#0a0f1e] text-white"}`}>
 
       {/* Loading overlay */}
       <LoadingOverlay visible={isLoading} />
 
       {/* Background */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/8 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-3xl" />
+        <div className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl ${isLight ? "bg-amber-400/15" : "bg-blue-600/10"}`} />
+        <div className={`absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl ${isLight ? "bg-gold-500/10" : "bg-cyan-500/8"}`} />
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl ${isLight ? "bg-black/5" : "bg-indigo-600/5"}`} />
       </div>
 
       <Particles />
 
       {/* Grid */}
       <div
-        className="absolute inset-0 opacity-[0.02]"
+        className={`absolute inset-0 ${isLight ? "opacity-[0.035]" : "opacity-[0.02]"}`}
         style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          backgroundImage: isLight
+            ? "linear-gradient(rgba(26,58,107,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(26,58,107,0.08) 1px, transparent 1px)"
+            : "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }}
       />
@@ -305,30 +310,30 @@ export default function AdminLogin() {
             </div>
           </div>
           <div>
-            <h1 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold text-white tracking-tight">
+            <h1 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className={`text-2xl font-bold tracking-tight ${isLight ? "text-[#1a3a6b]" : "text-white"}`}>
               PCN First Abuja Parish
             </h1>
             <div className="flex items-center justify-center gap-2 mt-1">
               <div className="w-8 h-px bg-blue-500/50" />
-              <p className="text-xs text-blue-400/70 font-semibold uppercase tracking-[0.2em]">Admin Portal</p>
+              <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${isLight ? "text-[#c8972a]" : "text-blue-400/70"}`}>Admin Portal</p>
               <div className="w-8 h-px bg-blue-500/50" />
             </div>
           </div>
         </div>
 
         {/* Card */}
-        <div className="relative rounded-2xl border border-white/8 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent" />
+        <div className={`relative rounded-2xl backdrop-blur-xl shadow-2xl overflow-hidden border ${isLight ? "border-[#e5e0d8] bg-white/90" : "border-white/8 bg-white/[0.04]"}`}>
+          <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${isLight ? "via-[#c8972a]/70" : "via-blue-500/60"} to-transparent`} />
 
           <div className="p-8 space-y-6">
             <div className="text-center space-y-1">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
-                <ShieldCheck className="w-6 h-6 text-blue-400" />
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 border ${isLight ? "bg-[#1a3a6b]/10 border-[#1a3a6b]/20" : "bg-blue-500/10 border-blue-500/20"}`}>
+                <ShieldCheck className={`w-6 h-6 ${isLight ? "text-[#1a3a6b]" : "text-blue-400"}`} />
               </div>
-              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-xl font-bold text-white">
+              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className={`text-xl font-bold ${isLight ? "text-[#1a1a2e]" : "text-white"}`}>
                 Secure Sign In
               </h2>
-              <p className="text-xs text-white/30">Authorised personnel only</p>
+              <p className={`text-xs ${isLight ? "text-[#6b7280]" : "text-white/30"}`}>Authorised personnel only</p>
             </div>
 
             {error && (
@@ -348,7 +353,7 @@ export default function AdminLogin() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-white/40 uppercase tracking-[0.15em]">Username</label>
+                <label className={`text-xs font-semibold uppercase tracking-[0.15em] ${isLight ? "text-[#6b7280]" : "text-white/40"}`}>Username</label>
                 <Input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -356,12 +361,12 @@ export default function AdminLogin() {
                   placeholder="Enter your username"
                   autoComplete="username"
                   disabled={isLoading}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-blue-500/50 rounded-xl h-11"
+                  className={`rounded-xl h-11 ${isLight ? "bg-white border-[#e5e0d8] text-[#1a1a2e] placeholder:text-[#6b7280] focus:border-[#1a3a6b]/50" : "bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-blue-500/50"}`}
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-white/40 uppercase tracking-[0.15em]">Password</label>
+                <label className={`text-xs font-semibold uppercase tracking-[0.15em] ${isLight ? "text-[#6b7280]" : "text-white/40"}`}>Password</label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
@@ -371,12 +376,12 @@ export default function AdminLogin() {
                     placeholder="Enter your password"
                     autoComplete="current-password"
                     disabled={isLoading}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-blue-500/50 rounded-xl h-11 pr-10"
+                    className={`rounded-xl h-11 pr-10 ${isLight ? "bg-white border-[#e5e0d8] text-[#1a1a2e] placeholder:text-[#6b7280] focus:border-[#1a3a6b]/50" : "bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-blue-500/50"}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isLight ? "text-[#6b7280] hover:text-[#1a1a2e]" : "text-white/30 hover:text-white/60"}`}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -387,7 +392,7 @@ export default function AdminLogin() {
             <button
               onClick={handleLogin}
               disabled={isLoading || !username || !password}
-              className="w-full h-11 rounded-xl font-semibold text-sm transition-all duration-300 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className={`w-full h-11 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isLight ? "bg-gradient-to-r from-[#1a3a6b] to-[#c8972a] hover:from-[#183663] hover:to-[#b88a25] text-white shadow-[#1a3a6b]/20" : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-blue-500/20"}`}
             >
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" />Authenticating...</>
@@ -396,7 +401,7 @@ export default function AdminLogin() {
               )}
             </button>
 
-            <p className="text-center text-xs text-white/20">
+            <p className={`text-center text-xs ${isLight ? "text-[#6b7280]" : "text-white/20"}`}>
               🔒 All login attempts are logged and monitored
             </p>
           </div>
@@ -405,7 +410,7 @@ export default function AdminLogin() {
         <div className="text-center mt-6">
           <button
             onClick={() => navigate("/")}
-            className="text-xs text-white/25 hover:text-white/50 transition-colors"
+            className={`text-xs transition-colors ${isLight ? "text-[#6b7280] hover:text-[#1a1a2e]" : "text-white/25 hover:text-white/50"}`}
           >
             ← Back to website
           </button>
