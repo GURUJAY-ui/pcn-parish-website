@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Donations from "./pages/Donations";
 import staff from "./pages/Staff";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import About from "./pages/About";
@@ -66,6 +67,7 @@ function Router() {
       <Route path={"/gallery"} component={Gallery} />
       <Route path={"/events"} component={Events} />
       <Route path={"/staff"} component={staff} />
+      <Route path={"/privacy-policy"} component={PrivacyPolicy} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
