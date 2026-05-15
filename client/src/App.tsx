@@ -17,20 +17,37 @@ import Testimonies from "./pages/Testimonies";
 import Events from "./pages/Events";
 import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
-import { JSX, useEffect } from "react";
+import { JSX, useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { api } from "./lib/api";
 
 
 function ProtectedRoute({ component: Component }: { component: () => JSX.Element }) {
-  const token = localStorage.getItem("accessToken");
-  const refresh = localStorage.getItem("refreshToken");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    if (!token && !refresh) navigate("/admin/login");
-  }, [token, refresh, navigate]);
+    const checkSession = async () => {
+      if (api.isLoggedIn()) {
+        setIsLoggedIn(true);
+      } else {
+        // Try to restore session via refresh token (httpOnly cookie)
+        const restored = await api.tryRestoreSession();
+        if (!restored) {
+          navigate("/admin/login");
+        }
+        setIsLoggedIn(restored);
+      }
+      setIsLoading(false);
+    };
 
-  if (!token && !refresh) return null;
+    checkSession();
+  }, [navigate]);
+
+  if (isLoading) return null;
+  if (!isLoggedIn) return null;
+  
   return <Component />;
 }
 

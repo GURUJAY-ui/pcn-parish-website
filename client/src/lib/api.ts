@@ -3,64 +3,44 @@ import logger from "./logger";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 let _accessToken: string | null = null;
-let _refreshToken: string | null = null;
+let _accessTokenExpiresAt: number | null = null;
 
-// ── Initialize tokens from localStorage ────────────────────────────────────
-function initializeTokens() {
-  _accessToken = localStorage.getItem("accessToken");
-  _refreshToken = localStorage.getItem("refreshToken");
-}
+// ── Tokens are kept in memory only for security ────────────────────────────
+// - accessToken: held in memory (clears on refresh, mitigates XSS risk)
+// - refreshToken: sent as httpOnly cookie by server (not in JS memory)
 
-// ── Set tokens in memory and localStorage ──────────────────────────────────
+// ── Set access token in memory only ────────────────────────────────────────
 function setAccessToken(token: string, expiresIn?: number) {
   _accessToken = token;
-  localStorage.setItem("accessToken", token);
 
   if (expiresIn) {
-    const expiresAt = Date.now() + expiresIn * 1000;
-    localStorage.setItem("accessTokenExpiresAt", String(expiresAt));
+    _accessTokenExpiresAt = Date.now() + expiresIn * 1000;
   }
 }
 
-function setRefreshToken(token: string) {
-  _refreshToken = token;
-  localStorage.setItem("refreshToken", token);
-}
-
-// ── Clear tokens ──────────────────────────────────────────────────────────
+// ── Clear tokens from memory ───────────────────────────────────────────────
 function clearAccessToken() {
   _accessToken = null;
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("accessTokenExpiresAt");
-}
-
-function clearRefreshToken() {
-  _refreshToken = null;
-  localStorage.removeItem("refreshToken");
+  _accessTokenExpiresAt = null;
 }
 
 function clearAllTokens() {
   clearAccessToken();
-  clearRefreshToken();
 }
 
 // ── Check if token is expired ──────────────────────────────────────────────
 function isTokenExpired(): boolean {
-  const expiresAt = localStorage.getItem("accessTokenExpiresAt");
-  if (!expiresAt) return false;
-  return Date.now() > Number(expiresAt);
+  if (!_accessTokenExpiresAt) return false;
+  return Date.now() > _accessTokenExpiresAt;
 }
 
 // ── Refresh access token ──────────────────────────────────────────────────
 async function refreshAccessToken(): Promise<{ accessToken: string; expiresIn: number } | null> {
-  if (!_refreshToken) return null;
-
   try {
     const res = await fetch(`${BASE_URL}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ refreshToken: _refreshToken }),
     });
 
     if (!res.ok) {
@@ -222,7 +202,7 @@ export const api = {
       body: JSON.stringify({ username, password }),
     });
     setAccessToken(data.accessToken, data.expiresIn);
-    setRefreshToken(data.refreshToken);
+    // refreshToken is set as httpOnly cookie by server, not stored in JS
     return data;
   },
 
@@ -244,9 +224,7 @@ export const api = {
   getUsername: () => localStorage.getItem("username") || "",
 
   tryRestoreSession: async () => {
-    initializeTokens();
-    if (!_refreshToken) return false;
-
+    // Attempt to refresh token using httpOnly cookie from server
     const refreshed = await refreshAccessToken();
     return !!refreshed;
   },
@@ -483,8 +461,5 @@ export const api = {
     });
   },
 };
-
-// ── Initialize tokens on module load ──────────────────────────────────────
-initializeTokens();
 
 export default api;
