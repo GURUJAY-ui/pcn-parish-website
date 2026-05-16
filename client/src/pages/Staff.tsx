@@ -100,9 +100,10 @@ const fallbackCommittees: Committee[] = [
 
 const SOCIAL_LINKS = Object.freeze([
   { label: "Facebook", href: "https://facebook.com/pcnfap", isInstagram: false, path: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" },
-  { label: "X", href: "https://x.com/firstabujapresbyterian", isInstagram: false, path: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.165-6.75-5.913 6.75h-3.308l7.73-8.835L2.56 2.25h6.772l4.681 6.187 5.431-6.187zM17.7 20.005h1.813L6.283 3.993H4.366l13.334 16.012z" },
+  //{ label: "X", href: "https://x.com/firstabujapresbyterian", isInstagram: false, path: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.165-6.75-5.913 6.75h-3.308l7.73-8.835L2.56 2.25h6.772l4.681 6.187 5.431-6.187zM17.7 20.005h1.813L6.283 3.993H4.366l13.334 16.012z" },
   { label: "YouTube", href: "https://youtube.com/@pulpitfaptv", isInstagram: false, path: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" },
-  // { label: "Instagram", href: "https://instagram.com/pcnfap", isInstagram: true, path: "" },
+   { label: "Instagram", href: "https://instagram.com/pcnfap", isInstagram: true, path: "" },
+    { label: "TikTok", href: "https://www.tiktok.com/@pcnfap", isInstagram: false, path: "M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.193v13.548a2.896 2.896 0 1 1-2.896-2.896c.226 0 .447.027.659.078V9.485a6.09 6.09 0 0 0-.659-.036A6.09 6.09 0 1 0 15.82 15.54V8.687a7.984 7.984 0 0 0 4.179 1.18V6.686h-.41z" },
 ] as const);
 
 const CONTACT = Object.freeze({
@@ -124,7 +125,7 @@ const NAV_ITEMS = [
   { label: "Contact", route: "/contact" },
 ] as const;
 
-const ALLOWED_SOCIAL_DOMAINS = ["facebook.com", "x.com", "twitter.com", "youtube.com", "youtu.be", /* "instagram.com" */];
+const ALLOWED_SOCIAL_DOMAINS = ["facebook.com", /* "x.com", */ "twitter.com", "youtube.com", "youtu.be", "instagram.com", "tiktok.com"];
 const isAllowedExternalUrl = (url: string): boolean => {
   try {
     const { hostname } = new URL(url);
@@ -472,8 +473,8 @@ function Footer() {
           <p className={`text-[10px] ${isLight ? "text-[#1a3a6b]/25" : "text-white/15"}`}>© 2026 Presbyterian Church of Nigeria, First Abuja Parish. All rights reserved.</p>
           <div className="flex items-center gap-5">
             <a href="/privacy-policy" className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Privacy Policy</a>
-            <a href="#" className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Terms of Service</a>
-            <a href="#" className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Safeguarding</a>
+            <a href="/terms-of-service" className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Terms of Service</a>
+            <a href="/safeguarding" className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Safeguarding</a>
             <button onClick={() => navigate("/contact")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Contact</button>
           </div>
         </div>

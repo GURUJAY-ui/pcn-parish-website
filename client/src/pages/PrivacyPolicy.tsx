@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { ChevronRight } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { api } from "@/lib/api";
+import ReactMarkdown from "react-markdown";
 
 export default function PrivacyPolicy() {
   const { theme } = useTheme();
@@ -13,111 +13,494 @@ export default function PrivacyPolicy() {
     // In a real application, you might fetch this from a CMS or API
     // For now, we'll use a placeholder or load from a static markdown file
     const staticContent = `
-# Privacy Policy for Presbyterian Church of Nigeria, First Abuja Parish
+# Privacy Policy
+## Presbyterian Church of Nigeria, First Abuja Parish (PCN FAP)
 
-**Effective Date: May 15, 2026**
+**Effective Date:** May 15, 2026  
+**Last Updated:** May 15, 2026
 
-## 1. Introduction
+---
 
-The Presbyterian Church of Nigeria, First Abuja Parish ("PCN FAP", "we", "us", or "our") is committed to protecting the privacy and personal data of our members, visitors, and website users. This Privacy Policy outlines how we collect, use, disclose, and protect your personal data in compliance with the Nigerian Data Protection Act (NDPA) 2023 [1] and other applicable data protection laws.
+# 1. Introduction
 
-We recognize the sensitive nature of personal data, especially within a religious context, and are dedicated to upholding the trust placed in us. This policy applies to all personal data processed by PCN FAP through our website and related services.
+The Presbyterian Church of Nigeria, First Abuja Parish ("PCN FAP", "the Church", "we", "us", or "our") is committed to protecting the privacy, dignity, confidentiality, and personal data of all members, visitors, volunteers, workers, donors, ministry participants, and users of our digital platforms.
 
-## 2. Data Controller Information
+This Privacy Policy explains how we collect, use, store, disclose, secure, and manage personal data in accordance with:
 
-The Presbyterian Church of Nigeria, First Abuja Parish is the data controller responsible for the processing of your personal data. 
+- The Nigeria Data Protection Act (NDPA) 2023
+- Applicable regulations issued by the Nigeria Data Protection Commission (NDPC)
+- Applicable cybersecurity and electronic communications obligations
+- Church governance and accountability principles
 
-**Contact Details:**
-*   **Address:** No. 5 Boke Close, off Sakono Street, Opposite AP Plaza, Wuse II, Abuja, Nigeria
-*   **Email:** pulpitfap@gmail.com
-*   **Phone:** +234 (0) 8151111877
+This policy applies to:
 
-## 3. Types of Personal Data Collected
+- Our website
+- Contact forms
+- Prayer request systems
+- Donation systems
+- Livestream platforms
+- Social media platforms
+- Church administrative systems
+- Ministry communication channels
+- Event registration systems
+- Counseling and welfare interactions where applicable
 
-We collect various types of personal data depending on your interaction with our website and services. This may include:
+---
 
-*   **Contact Information:** Name, email address, phone number, subject, and message content when you use our general contact form.
-*   **Prayer Request Information:** Name, email address (optional), and prayer request content when you submit a prayer request. You have the option to submit prayer requests anonymously.
-*   **Donation Information:** Donor name (optional), donor email (optional), amount, donation category, message (optional), and payment reference when you make a donation. You have the option to donate anonymously.
-*   **Website Usage Data:** Information about how you use our website, such as IP address, browser type, operating system, pages viewed, and time spent on pages. This data is collected through cookies and similar technologies.
-*   **Sensitive Personal Data:** In the context of prayer requests or testimonies (if submitted via contact forms), you may voluntarily provide sensitive personal data such as health status or religious beliefs. We process such data only with your explicit consent or as otherwise permitted by law.
+# 2. Data Controller Information
 
-## 4. How Data is Collected
+The Data Controller responsible for your personal data is:
 
-We collect personal data through the following methods:
+## Presbyterian Church of Nigeria, First Abuja Parish
 
-*   **Directly from you:** When you fill out forms on our website (e.g., contact forms, prayer request forms, donation forms).
-*   **Automatically:** Through website technologies such as cookies and analytics tools that collect usage data.
+**Address:**  
+No. 5 Boke Close, Off Sakono Street,  
+Opposite AP Plaza, Wuse II, Abuja, Nigeria
 
-## 5. Purpose of Data Collection
-
-We collect and process your personal data for the following purposes:
-
-*   **To respond to inquiries:** To address your questions, comments, and requests submitted via our contact forms.
-*   **To process prayer requests:** To receive and process your prayer requests, including anonymous submissions, and share them with our prayer team for intercession.
-*   **To process donations:** To facilitate and acknowledge your financial contributions to the church, including processing anonymous donations.
-*   **To improve our website:** To understand how our website is used, identify areas for improvement, and enhance user experience.
-*   **To comply with legal obligations:** To meet regulatory and legal requirements under the NDPA 2023 and other applicable laws.
-
-## 6. Legal Basis for Processing
-
-Our legal basis for processing your personal data includes:
-
-*   **Consent:** Where you have given explicit consent for specific processing activities, such as submitting a prayer request or providing personal details for a donation.
-*   **Legitimate Interests:** Processing necessary for our legitimate interests as a religious organization, such as maintaining communication, improving our services, and ensuring website security, provided these interests do not override your fundamental rights and freedoms.
-*   **Legal Obligation:** Processing necessary to comply with a legal obligation, such as record-keeping requirements or responding to lawful requests from authorities.
-
-## 7. Data Sharing and Disclosure
-
-We do not sell, rent, or trade your personal data to third parties. We may share your data in the following limited circumstances:
-
-*   **With Service Providers:** We may engage third-party service providers to perform functions on our behalf, such as website hosting, analytics, or payment processing. These providers are contractually obligated to protect your data and use it only for the purposes for which it was disclosed.
-*   **With Church Staff/Volunteers:** Prayer requests may be shared with our dedicated prayer team for intercession. Anonymous prayer requests will be handled without identifying information.
-*   **Legal Requirements:** We may disclose your personal data if required to do so by law or in response to valid requests by public authorities.
-
-## 8. Data Retention
-
-We retain your personal data only for as long as necessary to fulfill the purposes for which it was collected, including for the purposes of satisfying any legal, accounting, or reporting requirements. To determine the appropriate retention period, we consider the amount, nature, and sensitivity of the personal data, the potential risk of harm from unauthorized use or disclosure of your personal data, the purposes for which we process your personal data and whether we can achieve those purposes through other means, and the applicable legal requirements.
-
-## 9. Data Security
-
-We implement appropriate technical and organizational measures to protect your personal data from unauthorized access, disclosure, alteration, or destruction. These measures include encryption, access controls, and secure data storage. We regularly review our security practices to ensure they remain robust.
-
-## 10. Your Data Protection Rights
-
-Under the NDPA 2023, you have the following rights regarding your personal data:
-
-*   **Right to be informed:** To be informed about the collection and use of your personal data.
-*   **Right of access:** To request access to your personal data.
-*   **Right to rectification:** To request that inaccurate or incomplete personal data be corrected.
-*   **Right to erasure (Right to be forgotten):** To request the deletion of your personal data under certain conditions.
-*   **Right to restrict processing:** To request the restriction of processing of your personal data under certain conditions.
-*   **Right to data portability:** To receive your personal data in a structured, commonly used, and machine-readable format.
-*   **Right to object:** To object to the processing of your personal data under certain conditions.
-*   **Rights in relation to automated decision-making and profiling:** To not be subject to a decision based solely on automated processing, including profiling, which produces legal effects concerning you or similarly significantly affects you.
-
-To exercise any of these rights, please contact us using the details provided in Section 2.
-
-## 11. Changes to this Privacy Policy
-
-We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. We will notify you of any significant changes by posting the new policy on our website with a revised effective date.
-
-## 12. Contact Us
-
-If you have any questions or concerns about this Privacy Policy or our data protection practices, please contact us at:
-
-**Email:** pulpitfap@gmail.com
+**Email:** pulpitfap@gmail.com  
 **Phone:** +234 (0) 8151111877
 
 ---
 
-## References
+# 3. Categories of Personal Data We Collect
 
-[1] Nigeria Data Protection Act, 2023 (https://ndpc.gov.ng/download/nigeria-data-protection-act-2023)
-[2] Contact Form Data (Internal Reference)
-[3] Donation Form Data (Internal Reference)
-    `;
-    `;
+Depending on your interaction with our church and digital platforms, we may collect the following categories of personal data.
+
+## 3.1 Identity Information
+
+- Full name
+- Title
+- Gender (where voluntarily provided)
+- Membership information
+- Ministry affiliation
+
+---
+
+## 3.2 Contact Information
+
+- Email address
+- Phone number
+- Residential address (where applicable)
+
+---
+
+## 3.3 Prayer Request Information
+
+- Prayer request content
+- Spiritual concerns
+- Welfare-related information
+- Testimonies voluntarily submitted
+
+Some prayer requests may contain sensitive personal data.
+
+---
+
+## 3.4 Donation Information
+
+- Donor name
+- Donation amount
+- Payment reference
+- Donation category
+- Transaction metadata
+- Optional donor messages
+
+We do NOT store full debit card details on our systems.
+
+---
+
+## 3.5 Technical Information
+
+- IP address
+- Browser type
+- Device information
+- Operating system
+- Referral URLs
+- Access timestamps
+- Website interaction logs
+
+---
+
+## 3.6 Communication Information
+
+- Messages submitted through forms
+- Email correspondence
+- Event registration details
+- Ministry inquiries
+
+---
+
+## 3.7 Media & Livestream Data
+
+During church services, conferences, programs, and events, photographs, video recordings, livestream footage, and audio recordings may capture attendees.
+
+This may include:
+- Images
+- Voice recordings
+- Livestream participation
+- Choir participation
+- Congregational footage
+
+---
+
+# 4. Sensitive Personal Data
+
+Under NDPA 2023, certain categories of personal data are classified as sensitive.
+
+Sensitive data may include:
+
+- Religious beliefs
+- Health information
+- Counseling information
+- Welfare information
+- Family-related concerns
+- Prayer request information
+
+We process sensitive personal data only:
+- With consent
+- Where voluntarily submitted
+- Where necessary for legitimate church ministry activities
+- Where otherwise permitted by applicable law
+
+---
+
+# 5. How We Collect Personal Data
+
+We collect data through:
+
+## Direct Collection
+
+When you:
+- Fill forms
+- Submit prayer requests
+- Contact the church
+- Register for events
+- Make donations
+- Subscribe to updates
+
+---
+
+## Automated Collection
+
+Using:
+- Cookies
+- Website analytics
+- Server logs
+- Security monitoring tools
+
+---
+
+## Church Activities
+
+Through:
+- Membership administration
+- Ministry participation
+- Volunteer coordination
+- Welfare coordination
+- Counseling interactions
+
+---
+
+# 6. Purposes of Processing
+
+We process personal data for the following lawful purposes:
+
+## Ministry Administration
+
+- Managing church communication
+- Coordinating ministries
+- Organizing events
+- Responding to inquiries
+
+---
+
+## Prayer & Spiritual Support
+
+- Receiving prayer requests
+- Coordinating intercessory support
+- Providing pastoral assistance
+
+---
+
+## Donations & Financial Accountability
+
+- Processing donations
+- Maintaining financial records
+- Issuing acknowledgements
+
+---
+
+## Website Operations
+
+- Improving website performance
+- Security monitoring
+- Analytics and diagnostics
+
+---
+
+## Media & Digital Ministry
+
+- Livestream broadcasting
+- Publishing church media
+- Ministry promotion
+- Sermon distribution
+
+---
+
+## Legal & Regulatory Compliance
+
+- Compliance with NDPA 2023
+- Fraud prevention
+- Security investigations
+- Cooperation with lawful authorities
+
+---
+
+# 7. Legal Basis for Processing
+
+Our lawful bases include:
+
+## Consent
+
+Where you voluntarily:
+- Submit forms
+- Provide information
+- Subscribe to communications
+- Submit prayer requests
+
+---
+
+## Legitimate Interests
+
+For:
+- Church administration
+- Ministry coordination
+- Digital ministry operations
+- Website security
+- Service improvement
+
+provided such interests do not override your rights.
+
+---
+
+## Legal Obligation
+
+Where required by:
+- Nigerian law
+- NDPA compliance obligations
+- Financial/accounting obligations
+- Security obligations
+
+---
+
+# 8. Media, Photography & Livestream Notice
+
+Church services and events may be:
+- Livestreamed
+- Photographed
+- Recorded
+- Broadcast online
+
+Media may appear on:
+- Website
+- Facebook
+- YouTube
+- Instagram
+- TikTok
+- Church publications
+
+We make reasonable efforts to respect privacy concerns.
+
+Parents or guardians may contact the church regarding concerns involving minors appearing prominently in media content.
+
+---
+
+# 9. Children's Privacy
+
+We recognize the importance of protecting children and young persons.
+
+We do not knowingly collect personal data from children online without appropriate oversight where required.
+
+Children participating in church activities remain under parental or guardian responsibility.
+
+Special care is taken regarding:
+- Children's photographs
+- Youth ministry records
+- Children's event participation
+- Online exposure of minors
+
+---
+
+# 10. Data Sharing & Disclosure
+
+We do not sell personal data.
+
+We may share personal data with:
+
+## Service Providers
+
+Such as:
+- Website hosting providers
+- Payment processors
+- Email service providers
+- Analytics providers
+
+under appropriate confidentiality obligations.
+
+---
+
+## Church Personnel
+
+Authorized:
+- Ministers
+- Administrative staff
+- Prayer coordinators
+- Welfare coordinators
+
+may access information strictly on a need-to-know basis.
+
+---
+
+## Regulatory & Legal Authorities
+
+Where disclosure is required by law or lawful governmental request.
+
+---
+
+# 11. International Data Transfers
+
+Some third-party services used by the church may process data outside Nigeria.
+
+Where international transfers occur, we take reasonable steps to ensure appropriate safeguards are implemented consistent with NDPA requirements.
+
+---
+
+# 12. Data Retention
+
+We retain personal data only for as long as necessary for:
+- Ministry purposes
+- Administrative purposes
+- Legal obligations
+- Security investigations
+- Financial accountability
+
+Retention periods depend on:
+- Data sensitivity
+- Legal requirements
+- Ministry necessity
+- Security obligations
+
+Data no longer required may be securely deleted or anonymized.
+
+---
+
+# 13. Security Measures
+
+We implement reasonable technical and organizational safeguards including:
+
+- Access controls
+- Authentication protections
+- Encrypted communications where applicable
+- Administrative restrictions
+- Monitoring and logging
+- Secure hosting practices
+
+However, no system can guarantee absolute security.
+
+---
+
+# 14. Data Breach Management
+
+In the event of a personal data breach, we may:
+- Investigate the incident
+- Mitigate risks
+- Notify affected parties where required
+- Notify regulators where legally required
+- Implement corrective actions
+
+---
+
+# 15. Your Rights Under NDPA 2023
+
+Subject to applicable law, you may have rights to:
+
+- Access your personal data
+- Request correction
+- Request deletion
+- Restrict processing
+- Withdraw consent
+- Object to certain processing
+- Request data portability
+- Lodge complaints with regulators
+
+Requests may be submitted using the contact details below.
+
+---
+
+# 16. Cookies & Analytics
+
+Our website may use:
+- Essential cookies
+- Performance cookies
+- Analytics technologies
+
+Cookies help:
+- Improve functionality
+- Understand usage patterns
+- Enhance user experience
+
+Users may manage cookies through browser settings.
+
+---
+
+# 17. Third-Party Platforms
+
+Our website may link to:
+- Facebook
+- YouTube
+- Instagram
+- TikTok
+- External ministry resources
+
+These platforms operate under their own privacy policies and terms.
+
+We are not responsible for third-party platform operations.
+
+---
+
+# 18. Automated Decision-Making
+
+We do not currently use fully automated decision-making systems producing legal or similarly significant effects.
+
+---
+
+# 19. Changes to This Policy
+
+We may update this Privacy Policy periodically.
+
+Updated versions will be published with revised effective dates.
+
+Continued use of our platforms indicates acceptance of updated policies.
+
+---
+
+# 20. Contact & Complaints
+
+For privacy inquiries, data protection concerns, or rights requests, contact:
+
+## Presbyterian Church of Nigeria, First Abuja Parish
+
+**Email:** pulpitfap@gmail.com  
+**Phone:** +234 (0) 8151111877
+
+You may also lodge complaints with the Nigeria Data Protection Commission (NDPC) where applicable.
+
+---
+
+# 21. Governing Law
+
+This Privacy Policy shall be governed by the laws of the Federal Republic of Nigeria.
+
+`;
     setContent(staticContent);
   }, []);
 
@@ -143,7 +526,9 @@ If you have any questions or concerns about this Privacy Policy or our data prot
       </div>
 
       <div className="container py-16">
-        <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
+        <div className="prose dark:prose-invert max-w-none">
+  <ReactMarkdown>{content}</ReactMarkdown>
+</div>
       </div>
     </div>
   );

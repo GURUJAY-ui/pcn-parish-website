@@ -21,6 +21,8 @@ import Gallery from "./pages/Gallery";
 import { JSX, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { api } from "./lib/api";
+import TermsOfService from "./pages/TermsOfService";
+import Safeguarding from "./pages/SafeguardingPolicy";
 
 
 function ProtectedRoute({ component: Component }: { component: () => JSX.Element }) {
@@ -68,6 +70,8 @@ function Router() {
       <Route path={"/events"} component={Events} />
       <Route path={"/staff"} component={staff} />
       <Route path={"/privacy-policy"} component={PrivacyPolicy} />
+      <Route path={"/terms-of-service"} component={TermsOfService} />
+      <Route path={"/safeguarding"} component={Safeguarding} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
