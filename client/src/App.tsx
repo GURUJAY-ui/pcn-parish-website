@@ -7,7 +7,7 @@ import ThemeToggle from "./components/ThemeToggle";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Donations from "./pages/Donations";
-import staff from "./pages/Staff";
+import Staff from "./pages/Staff";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
@@ -68,7 +68,7 @@ function Router() {
       <Route path={"/contact"} component={Contact} />
       <Route path={"/gallery"} component={Gallery} />
       <Route path={"/events"} component={Events} />
-      <Route path={"/staff"} component={staff} />
+      <Route path={"/staff"} component={Staff} />
       <Route path={"/privacy-policy"} component={PrivacyPolicy} />
       <Route path={"/terms-of-service"} component={TermsOfService} />
       <Route path={"/safeguarding"} component={Safeguarding} />

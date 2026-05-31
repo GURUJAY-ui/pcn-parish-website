@@ -13,7 +13,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
-import QRCodeSection from "@/pages/QRCodeSection";
 
 // ── SEC-02 — URL allowlist ────────────────────────────────────────
 const ALLOWED_SOCIAL_DOMAINS = [
@@ -403,7 +402,7 @@ function ServiceTimes() {
   ];
 
   return (
-    <section className="py-28 relative overflow-hidden"
+    <section id="service-times" className="py-28 relative overflow-hidden scroll-mt-16"
       style={{
         background: isLight
           ? "linear-gradient(135deg,#f8f7f4 0%,#ffffff 60%,#f3efe6 100%)"
@@ -605,8 +604,8 @@ function MinistryGrid() {
           viewport={{ once: true }} className="text-center space-y-3 max-w-2xl mx-auto">
           <p className={`text-[9px] font-black uppercase tracking-[0.4em] ${isLight ? "text-amber-600/60" : "text-amber-400/50"}`}>Explore</p>
           <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            className={`text-5xl md:text-6xl font-black ${isLight ? "text-[#132744]" : "text-white"}`}>Our Digital Ministry</h2>
-          <p className={`leading-relaxed ${isLight ? "text-[#1a3a6b]/45" : "text-white/30"}`}>Serving our congregation with excellence through governed digital channels</p>
+            className={`text-5xl md:text-6xl font-black ${isLight ? "text-[#132744]" : "text-white"}`}>Explore the Parish</h2>
+          <p className={`leading-relaxed ${isLight ? "text-[#1a3a6b]/45" : "text-white/30"}`}>Everything you need to stay connected — sermons, events, giving, prayer and more.</p>
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -642,8 +641,6 @@ function MinistryGrid() {
             );
           })}
         </div>
-
-        <QRCodeSection />
       </div>
     </section>
   );
@@ -706,9 +703,21 @@ function CTABanner() {
 // FOOTER
 // ═════════════════════════════════════════════════════════════════
 function Footer() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { theme } = useTheme();
   const isLight = theme === "light";
+
+  // "Service Times" lives in a section on the homepage — scroll to it,
+  // navigating home first if we're on another page.
+  const goToServiceTimes = useCallback(() => {
+    const scroll = () => document.getElementById("service-times")?.scrollIntoView({ behavior: "smooth" });
+    if (location === "/") {
+      scroll();
+    } else {
+      navigate("/");
+      setTimeout(scroll, 120);
+    }
+  }, [location, navigate]);
 
   const cols = [
     { heading: "New Here?",  color: "#06b6d4", links: [{ label: "Service Times", r: "/" }, { label: "Vision & Beliefs", r: "/about" }, { label: "Leadership", r: "/staff" }, { label: "Testimonies", r: "/testimonies" }] },
@@ -770,7 +779,7 @@ function Footer() {
                 <ul className="space-y-3">
                   {col.links.map((l) => (
                     <li key={l.label}>
-                      <button onClick={() => navigate(l.r)} className={`text-sm transition-colors text-left ${isLight ? "text-[#1a3a6b]/35 hover:text-[#1a3a6b]/70" : "text-white/25 hover:text-white/60"}`}>{l.label}</button>
+                      <button onClick={() => (l.label === "Service Times" ? goToServiceTimes() : navigate(l.r))} className={`text-sm transition-colors text-left ${isLight ? "text-[#1a3a6b]/35 hover:text-[#1a3a6b]/70" : "text-white/25 hover:text-white/60"}`}>{l.label}</button>
                     </li>
                   ))}
                 </ul>
@@ -794,9 +803,9 @@ function Footer() {
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className={`text-[10px] ${isLight ? "text-[#1a3a6b]/25" : "text-white/15"}`}>© 2026 Presbyterian Church of Nigeria, First Abuja Parish. All rights reserved.</p>
           <div className="flex items-center gap-5">
-            <a href="/privacy-policy" className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Privacy Policy</a>
-            <a href="/terms-of-service" className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Terms of Service</a>
-            <a  href="/safeguarding" className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Safeguarding</a>
+            <button onClick={() => navigate("/privacy-policy")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Privacy Policy</button>
+            <button onClick={() => navigate("/terms-of-service")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Terms of Service</button>
+            <button onClick={() => navigate("/safeguarding")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Safeguarding</button>
             <button onClick={() => navigate("/contact")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Contact</button>
           </div>
         </div>

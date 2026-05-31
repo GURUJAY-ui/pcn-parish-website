@@ -4,6 +4,7 @@ import { db } from "../db";
 import { donations } from "../db/schema";
 import { desc } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
+import { submissionLimiter } from "../lib/security";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -12,7 +13,7 @@ const donationSchema = z.object({
   donorName:  z.string().min(1).max(100).optional(),
   donorEmail: z.string().email().max(200).optional(),
   amount:     z.number().int().positive().max(100_000_000), // max 1M NGN in kobo, adjust as needed
-  currency:   z.enum(["NGN", "USD", "GBP"]).default("NGN"),
+  currency:   z.enum(["NGN", "USD", "GBP", "EUR"]).default("NGN"),
   category:   z.string().max(100).optional(),
   message:    z.string().max(500).optional(),
   anonymous:  z.boolean().default(false),
@@ -21,7 +22,7 @@ const donationSchema = z.object({
 });
 
 // Public — record a donation attempt
-router.post("/", async (req, res) => {
+router.post("/", submissionLimiter, async (req, res) => {
   const parsed = donationSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid input", details: parsed.error.flatten().fieldErrors });

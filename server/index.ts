@@ -6,12 +6,9 @@ import hpp from "hpp";
 import path from "path";
 import cookieParser from "cookie-parser";
 import fs from "fs";
-import dotenv from "dotenv";
 import expressWinston from "express-winston";
 import { logger } from "./lib/logger";
 import { generalLimiter, sanitizeBody } from "./lib/security";
-
-dotenv.config();
 
 // ── Validate required env vars on startup ────────────────────────────────
 const REQUIRED_ENV = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET", "SETUP_SECRET"];
@@ -40,6 +37,11 @@ import settingsRoutes from "./routes/settings";
 const app = express();
 const PORT = process.env.PORT || 3001;
 const frontendDist = path.join(process.cwd(), "dist", "public");
+
+// ── Trust the reverse proxy (Render / Railway / Nginx / Vercel) ───────────
+// Required so req.ip reflects the real client (rate limiting) and so
+// Secure cookies are honoured when TLS is terminated upstream.
+app.set("trust proxy", 1);
 
 // ── Security headers via Helmet ───────────────────────────────────────────
 app.use(
@@ -142,7 +144,15 @@ app.use("/api/settings", settingsRoutes);
 // ── Health check ──────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
 
-if (process.env.NODE_ENV === "production" && process.env.SERVE_FRONTEND === "true") {
+// ── Serve the built frontend in production ────────────────────────────────
+// On a single-server deploy (Render / Railway / VPS) the API also serves the
+// SPA. Enabled by default in production; set SERVE_FRONTEND=false when the
+// frontend is hosted separately (e.g. on Vercel) to run API-only.
+if (
+  process.env.NODE_ENV === "production" &&
+  process.env.SERVE_FRONTEND !== "false" &&
+  fs.existsSync(frontendDist)
+) {
   app.use(express.static(frontendDist));
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api/")) {
@@ -150,6 +160,7 @@ if (process.env.NODE_ENV === "production" && process.env.SERVE_FRONTEND === "tru
     }
     res.sendFile(path.join(frontendDist, "index.html"));
   });
+  logger.info("Serving frontend from " + frontendDist);
 }
 
 // ── 404 handler ───────────────────────────────────────────────────────────

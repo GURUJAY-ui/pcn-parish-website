@@ -221,8 +221,6 @@ export const api = {
 
   isLoggedIn: () => !!_accessToken,
 
-  getUsername: () => localStorage.getItem("username") || "",
-
   tryRestoreSession: async () => {
     // Attempt to refresh token using httpOnly cookie from server
     const refreshed = await refreshAccessToken();
@@ -320,6 +318,11 @@ export const api = {
   // ── Testimonies ───────────────────────────────────────────────────────────
   getTestimonies: async (): Promise<any[]> => {
     return request("/testimonies");
+  },
+
+  // Admin — includes pending (unapproved) testimonies
+  getAllTestimonies: async (): Promise<any[]> => {
+    return request("/testimonies/all", { requiresAuth: true });
   },
 
   submitTestimony: async (data: any): Promise<any> => {
@@ -429,19 +432,6 @@ export const api = {
 
   updateSiteContent: async (page: string, data: any): Promise<any> => {
     return request(`/site-content/${page}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-      requiresAuth: true,
-    });
-  },
-
-  // ── Bank Details ──────────────────────────────────────────────────────────
-  getBankDetails: async (): Promise<any> => {
-    return request("/bank");
-  },
-
-  updateBankDetails: async (data: any): Promise<any> => {
-    return request("/bank", {
       method: "PUT",
       body: JSON.stringify(data),
       requiresAuth: true,

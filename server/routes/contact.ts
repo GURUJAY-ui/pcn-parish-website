@@ -4,6 +4,7 @@ import { db } from "../db";
 import { contacts } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
+import { submissionLimiter } from "../lib/security";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -19,7 +20,7 @@ const contactSchema = z.object({
 });
 
 // Public — submit message or prayer
-router.post("/", async (req, res) => {
+router.post("/", submissionLimiter, async (req, res) => {
   const parsed = contactSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid input", details: parsed.error.flatten().fieldErrors });

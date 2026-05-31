@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Loader2, MapPin, MessageSquare, Plus, Save,
   ShieldCheck, Sparkles, Trash2, UserCog, X, ChevronDown, ChevronUp,
   Globe, Users, Heart, Play, Church, Building2, HandCoins, Sprout,
+  Check, EyeOff,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,7 @@ import { toast } from "sonner";
 
 type Sermon = { id: number | string; title: string; scripture: string; date: string; preacher: string; excerpt: string; category: string; youtubeUrl?: string; facebookUrl?: string; isLive?: boolean };
 type EventItem = { id: number; day: string; month: string; title: string; time: string; location: string; description?: string; category: string; featured?: boolean };
-type Testimony = { id: number; name: string; profession: string; quote: string; category: string };
+type Testimony = { id: number; name: string; profession: string; quote: string; category: string; approved?: boolean };
 type GalleryItem = { id: number; caption: string; category: string; imageUrl: string | null };
 type HeroSlide = { id?: number; label: string; title: string; subtitle: string; image: string; cta1?: { label: string; route?: string; href?: string }; cta2?: { label: string; route?: string; href?: string } };
 type ContactRecord = { id: number; name?: string; email?: string; phone?: string; subject?: string; message: string; type: string; anonymous?: boolean; read?: boolean; createdAt?: string };
@@ -1034,19 +1035,24 @@ function TestimoniesSection() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({ name: "", profession: "", quote: "", category: "" });
 
-  const load = async () => { try { setLoading(true); setItems((await api.getTestimonies()) || []); } catch (err) { logger.error("Failed to load testimonies", err); toast.error("Failed to load testimonies"); } finally { setLoading(false); } };
+  const load = async () => { try { setLoading(true); setItems((await api.getAllTestimonies()) || []); } catch (err) { logger.error("Failed to load testimonies", err); toast.error("Failed to load testimonies"); } finally { setLoading(false); } };
   useEffect(() => { void load(); }, []);
 
   const openDialog = (item?: Testimony) => { setEditingId(item?.id ?? null); setForm(item ? { name: item.name, profession: item.profession, quote: item.quote, category: item.category } : { name: "", profession: "", quote: "", category: "" }); setOpen(true); };
   const save = async () => { if (!form.name || !form.quote) return toast.error("Fill the required testimony fields"); try { setSaving(true); if (editingId) await api.updateTestimony(editingId, form); else await api.createTestimony(form); setOpen(false); await load(); toast.success(editingId ? "Testimony updated" : "Testimony created"); } catch (err) { logger.error("Failed to save testimony", err); toast.error("Failed to save testimony"); } finally { setSaving(false); } };
+  const toggleApproval = async (item: Testimony) => { try { await api.updateTestimony(item.id, { approved: !item.approved }); await load(); toast.success(item.approved ? "Testimony unpublished" : "Testimony approved"); } catch (err) { logger.error("Failed to update approval", err); toast.error("Failed to update approval"); } };
 
   return (
-    <SectionShell title="Testimonies" description="Manage published testimonies." icon={<MessageSquare className="h-5 w-5 text-primary" />} action={<Button size="sm" onClick={() => openDialog()}><Plus className="mr-2 h-4 w-4" />New Testimony</Button>}>
+    <SectionShell title="Testimonies" description="Review submissions and manage published testimonies." icon={<MessageSquare className="h-5 w-5 text-primary" />} action={<Button size="sm" onClick={() => openDialog()}><Plus className="mr-2 h-4 w-4" />New Testimony</Button>}>
       {loading ? <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : items.length === 0 ? <Card className="p-8 text-center"><p className="text-muted-foreground">No testimonies yet</p></Card> : (
         <div className="grid gap-4">{items.map((item) => (
           <Card key={String(item.id)} className="flex items-start justify-between p-4">
-            <div className="flex-1"><h3 className="font-semibold text-foreground">{item.name}</h3><p className="text-sm text-muted-foreground">{item.profession}</p><p className="mt-1 text-xs text-muted-foreground">{item.quote}</p></div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2"><h3 className="font-semibold text-foreground">{item.name}</h3>{item.approved === false && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">Pending</span>}</div>
+              <p className="text-sm text-muted-foreground">{item.profession}</p><p className="mt-1 text-xs text-muted-foreground">{item.quote}</p>
+            </div>
             <div className="ml-4 flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => toggleApproval(item)} className={item.approved === false ? "text-emerald-600" : "text-muted-foreground"} title={item.approved === false ? "Approve" : "Unpublish"}>{item.approved === false ? <Check className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</Button>
               <Button variant="ghost" size="sm" onClick={() => openDialog(item)}><Edit2 className="h-4 w-4" /></Button>
               <Button variant="ghost" size="sm" onClick={async () => { if (window.confirm("Delete this testimony?")) { await api.deleteTestimony(item.id); await load(); } }} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
             </div>

@@ -1,175 +1,100 @@
 # Deployment Guide
 
-This project is a full-stack app:
+This project runs as a **split deployment**:
 
-- Frontend: Vite + React
-- Backend: Express
-- Database: PostgreSQL
+- **Frontend** — Vite + React, hosted on **Vercel** (static SPA).
+- **Backend** — Express API, hosted on **Render** (Web Service).
+- **Database** — PostgreSQL on **Neon**.
 
-It can be deployed on `Render`, `Railway`, or a `VPS`.
+Pushing to the default branch auto-deploys both Vercel and Render.
 
-## Production Env Vars
+---
 
-Set these on your host:
+## 1. Database — Neon
+
+Create a Postgres database on Neon and copy its pooled connection string. It is
+used by Render as `DATABASE_URL` (keep `sslmode=require`).
+
+Push the schema once (locally or from the Render build):
+
+```bash
+pnpm run db:push
+```
+
+## 2. Backend — Render (Web Service)
+
+Connect the repo and configure:
+
+- **Build Command:** `pnpm install && pnpm run db:push && pnpm run build`
+- **Start Command:** `pnpm start`
+
+Environment variables:
 
 ```env
 NODE_ENV=production
-PORT=10000
+# Render injects PORT automatically — do not hardcode it.
 
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
 
 JWT_SECRET=generate-a-long-random-secret
 JWT_REFRESH_SECRET=generate-a-second-long-random-secret
 SETUP_SECRET=generate-a-third-long-random-secret
 
-CLIENT_URL=https://yourdomain.com
-VITE_API_URL=https://yourdomain.com/api
+# Comma-separated list of allowed browser origins (added to CORS).
+# Must include the production Vercel domain (and any custom domain).
+CLIENT_URL=https://your-frontend.vercel.app
+
+# The frontend is served by Vercel, so the API runs API-only.
+SERVE_FRONTEND=false
 
 YOUTUBE_API_KEY=your-youtube-api-key
 YOUTUBE_CHANNEL_ID=your-youtube-channel-id
-
-VITE_ANALYTICS_ENDPOINT=
-VITE_ANALYTICS_WEBSITE_ID=
-VITE_APP_ID=
 ```
 
 Notes:
 
-- `CLIENT_URL` can contain more than one URL separated by commas if needed.
-- `VITE_API_URL` should point to the public API base.
-- If frontend and backend are served from the same domain, use `https://yourdomain.com/api`.
-- Keep all secrets long and random.
+- `trust proxy` is enabled, so rate limiting and Secure cookies work correctly
+  behind Render's TLS termination.
+- The API enforces CORS — a request from an origin not in the allow-list
+  (`CLIENT_URL` + the built-in localhost / `*.vercel.app` defaults) is rejected.
 
-## Build And Start
+## 3. Frontend — Vercel
 
-Install dependencies:
+Connect the repo. `vercel.json` already sets:
 
-```bash
-npm install
+- **Output:** `dist/public`
+- **Build:** `pnpm vite build`
+- An SPA rewrite so client-side routes fall back to `index.html`.
+
+Set this environment variable in the Vercel project (Production + Preview):
+
+```env
+VITE_API_URL=https://your-api.onrender.com/api
 ```
 
-Push database schema:
+`VITE_*` vars are baked in at build time, so changing it requires a redeploy.
 
-```bash
-npm run db:push
-```
-
-Build the app:
-
-```bash
-npm run build
-```
-
-Start production server:
-
-```bash
-npm run start
-```
-
-## Render
-
-Use a `Web Service`.
-
-Settings:
-
-- Build Command: `npm install && npm run db:push && npm run build`
-- Start Command: `npm run start`
-
-Also create a PostgreSQL database on Render and copy its connection string into `DATABASE_URL`.
-
-After deployment:
-
-1. Point your domain DNS to Render.
-2. Add your custom domain in the Render dashboard.
-3. Update:
-   - `CLIENT_URL=https://yourdomain.com`
-   - `VITE_API_URL=https://yourdomain.com/api`
-
-## Railway
-
-Use one service for the app and one PostgreSQL plugin/service.
-
-Commands:
-
-- Build: `npm install && npm run db:push && npm run build`
-- Start: `npm run start`
-
-After attaching your domain:
-
-- set `CLIENT_URL` to your live domain
-- set `VITE_API_URL` to `https://yourdomain.com/api`
-
-## VPS
-
-Recommended stack:
-
-- Ubuntu server
-- Node 20+
-- PostgreSQL
-- Nginx
-- PM2
-
-Basic flow:
-
-```bash
-npm install
-npm run db:push
-npm run build
-pm2 start npm --name pcn-parish -- start
-```
-
-Then configure Nginx to reverse proxy to your Node app port.
-
-Example Nginx site:
-
-```nginx
-server {
-    server_name yourdomain.com www.yourdomain.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:10000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-Then enable SSL with Let’s Encrypt.
-
-## Domain Setup
-
-After buying your domain:
-
-1. Deploy the app first.
-2. Add the custom domain in Render/Railway/Nginx.
-3. Point DNS:
-   - `A` record to your VPS IP, or
-   - `CNAME`/provider-specific target for Render or Railway
-4. Wait for SSL to issue.
-5. Update `CLIENT_URL` and `VITE_API_URL`.
+---
 
 ## First Admin Setup
 
-The app requires:
+There is no admin until you create one. Call the one-time setup endpoint against
+the **Render API** with your `SETUP_SECRET`. It refuses to run once any admin
+exists and requires a password of at least 12 characters:
 
-- a valid database
-- env secrets
-- at least one admin account in the database
+```bash
+curl -X POST https://your-api.onrender.com/api/auth/setup \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"a-strong-password-12+chars","secret":"YOUR_SETUP_SECRET"}'
+```
 
-If you want, add the first admin before launch using your existing auth setup or a seed script.
+## Launch Checklist
 
-## Recommended Launch Checklist
-
-1. Set production env vars
-2. Create production database
-3. Run `npm run db:push`
-4. Build and start successfully
-5. Confirm `/api/health` works
-6. Confirm homepage loads
-7. Confirm admin login works
-8. Confirm uploads and gallery work
-9. Confirm contact form submits
-10. Confirm custom domain and SSL are active
+1. Neon database created and `DATABASE_URL` set on Render.
+2. All Render env vars set (secrets long and random — e.g. `openssl rand -base64 64`).
+3. `VITE_API_URL` set on Vercel and pointing at the Render API.
+4. Render build + start succeed; `GET /api/health` returns `{"status":"ok"}`.
+5. Vercel homepage loads and can reach the API (check the browser network tab).
+6. First admin created via `/api/auth/setup`; admin login works.
+7. Gallery upload, contact form, and donations submit successfully.
+8. Custom domain + SSL active on Vercel (and added to `CLIENT_URL` on Render).

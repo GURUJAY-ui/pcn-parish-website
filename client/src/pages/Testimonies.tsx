@@ -15,21 +15,6 @@ type Testimony = {
   color?: string;
 };
 
-const staticTestimonies: Testimony[] = [
-  { id: 1, quote: "God is faithful, in the fact that he lives forever. His mercies are new every morning and I am a living witness of His goodness.", name: "Airbeato", profession: "IT Professional", category: "Faith", initials: "AI", color: "from-cyan-400 to-cyan-600" },
-  { id: 2, quote: "After several weeks of praying and fasting, I got the admission I was looking for. Admitted to study Engineering! God answers prayers.", name: "Chukwuemeka Effiong", profession: "Student", category: "Answered Prayer", initials: "CE", color: "from-emerald-400 to-emerald-600" },
-  { id: 3, quote: "I thank God for helping my family through the pandemic. When everything was uncertain, God was our anchor and our peace.", name: "Mr. Fayemi Jacob", profession: "Engineer", category: "Family", initials: "FJ", color: "from-amber-400 to-amber-600" },
-  { id: 4, quote: "I want to thank God for saving my mother from a critical illness. The doctors had given up hope but God had the final say.", name: "Mrs. Ajadi", profession: "Accountant", category: "Healing", initials: "MA", color: "from-rose-400 to-rose-600" },
-  { id: 5, quote: "I thank God for preserving my job throughout the pandemic when many were being laid off. His favour over my life is undeniable.", name: "Mrs. Chinenye", profession: "Air Hostess", category: "Provision", initials: "MC", color: "from-purple-400 to-purple-600" },
-  { id: 6, quote: "I have grown in the knowledge of Christ and my eyes of understanding have been enlightened. This church has transformed my walk with God.", name: "Monday", profession: "Accountant", category: "Spiritual Growth", initials: "MO", color: "from-teal-400 to-teal-600" },
-  { id: 7, quote: "God blessed me with a business breakthrough I had been believing Him for over three years. To God be all the glory!", name: "Brother Emeka", profession: "Entrepreneur", category: "Provision", initials: "BE", color: "from-orange-400 to-orange-600" },
-  { id: 8, quote: "After years of waiting, God blessed my home with a child. I stood on His word and He did not disappoint. Hallelujah!", name: "Sister Adaeze", profession: "Civil Servant", category: "Family", initials: "SA", color: "from-pink-400 to-pink-600" },
-  { id: 9, quote: "I was involved in a terrible accident and came out without a scratch. God's protection over my life is real and I am grateful.", name: "Mr. Okafor", profession: "Driver", category: "Protection", initials: "MO", color: "from-blue-400 to-blue-600" },
-  { id: 10, quote: "Through the prayers of this church, I received my international visa after three previous rejections. God turned my story around.", name: "Miss Ngozi", profession: "Banker", category: "Answered Prayer", initials: "MN", color: "from-violet-400 to-violet-600" },
-  { id: 11, quote: "I joined PCN First Abuja Parish not knowing anyone, and found a family. The love and fellowship here is unlike anything I have experienced.", name: "Elder Benson", profession: "Retired Officer", category: "Community", initials: "EB", color: "from-lime-400 to-lime-600" },
-  { id: 12, quote: "God healed me of a condition doctors said was chronic. I stood on Isaiah 53:5 and today I am completely whole. Jesus is Lord!", name: "Mrs. Ukwu", profession: "Teacher", category: "Healing", initials: "MU", color: "from-amber-400 to-rose-500" },
-];
-
 const categoryColors: Record<string, string> = {
   "Faith": "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
   "Answered Prayer": "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
@@ -245,17 +230,19 @@ export default function Testimonies() {
   const { theme } = useTheme();
   const [, navigate] = useLocation();
   const [activeCategory, setActiveCategory] = useState("All");
-  const [testimoniesList, setTestimoniesList] = useState<Testimony[]>(staticTestimonies);
+  const [testimoniesList, setTestimoniesList] = useState<Testimony[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.getTestimonies()
       .then((data) => {
-        if (data && data.length > 0) setTestimoniesList(data);
+        if (Array.isArray(data)) setTestimoniesList(data);
       })
-      .catch(() => {}) // keep static fallback silently
+      .catch(() => {}) // network/server error → show empty state
       .finally(() => setLoading(false));
   }, []);
+
+  const isEmpty = !loading && testimoniesList.length === 0;
 
   const categories = ["All", ...Array.from(new Set(testimoniesList.map((t) => t.category)))];
 
@@ -286,40 +273,44 @@ export default function Testimonies() {
             <p className="text-xl text-muted-foreground leading-relaxed">
               "God is faithful, by whom ye were called unto the fellowship of his Son Jesus Christ our Lord." — 1 Corinthians 1:9
             </p>
-            <div className="flex flex-wrap justify-center gap-6 pt-4">
-              {[
-                { value: `${testimoniesList.length}+`, label: "Testimonies", color: "text-amber-400" },
-                { value: `${categories.length - 1}`, label: "Categories", color: "text-cyan-400" },
-                { value: "∞", label: "God's Faithfulness", color: "text-emerald-400" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                </div>
-              ))}
-            </div>
+            {testimoniesList.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-6 pt-4">
+                {[
+                  { value: `${testimoniesList.length}`, label: testimoniesList.length === 1 ? "Testimony" : "Testimonies", color: "text-amber-400" },
+                  { value: `${categories.length - 1}`, label: "Categories", color: "text-cyan-400" },
+                  { value: "∞", label: "God's Faithfulness", color: "text-emerald-400" },
+                ].map((stat) => (
+                  <div key={stat.label} className="text-center">
+                    <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <div className="container py-16 space-y-16">
 
-        {/* Featured Slider */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
-              <Star className="w-4 h-4 text-white fill-white" />
+        {/* Featured Slider — only shown when there are testimonies */}
+        {(loading || testimoniesList.length > 0) && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
+                <Star className="w-4 h-4 text-white fill-white" />
+              </div>
+              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">Featured Testimonies</h2>
             </div>
-            <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">Featured Testimonies</h2>
+            {loading ? (
+              <div className="flex justify-center py-16">
+                <div className="w-10 h-10 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
+              </div>
+            ) : (
+              <FeaturedSlider items={testimoniesList} />
+            )}
           </div>
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <div className="w-10 h-10 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
-            </div>
-          ) : (
-            <FeaturedSlider items={testimoniesList} />
-          )}
-        </div>
+        )}
 
         {/* All Testimonies Grid */}
         <div className="space-y-8">
@@ -330,18 +321,20 @@ export default function Testimonies() {
               </div>
               <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">All Testimonies</h2>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button key={cat} onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                    activeCategory === cat
-                      ? "bg-amber-500 border-amber-500 text-white"
-                      : "border-white/15 text-muted-foreground hover:border-white/30 hover:text-foreground"
-                  }`}>
-                  {cat}
-                </button>
-              ))}
-            </div>
+            {testimoniesList.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <button key={cat} onClick={() => setActiveCategory(cat)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                      activeCategory === cat
+                        ? "bg-amber-500 border-amber-500 text-white"
+                        : "border-white/15 text-muted-foreground hover:border-white/30 hover:text-foreground"
+                    }`}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -350,6 +343,14 @@ export default function Testimonies() {
                 <div key={i} className="rounded-2xl border border-white/10 bg-white/5 p-6 h-48 animate-pulse" />
               ))}
             </div>
+          ) : isEmpty ? (
+            <Card className="glass-lg flex flex-col items-center gap-3 py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-amber-500/15 flex items-center justify-center">
+                <Quote className="w-6 h-6 text-amber-400" />
+              </div>
+              <p className="text-lg font-semibold">No testimonies yet</p>
+              <p className="text-sm text-muted-foreground max-w-sm">Be the first to share what God has done in your life using the form below.</p>
+            </Card>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.map((t, i) => {

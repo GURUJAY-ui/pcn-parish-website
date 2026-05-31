@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyAccessToken } from "@/lib/tokens";
-import { logger } from "@/lib/logger";
+import { verifyAccessToken } from "../lib/tokens";
+import { logger } from "../lib/logger";
 
 export interface AuthRequest extends Request {
   adminId?: number;

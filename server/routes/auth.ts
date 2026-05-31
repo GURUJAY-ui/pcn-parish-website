@@ -13,6 +13,8 @@
 
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import { timingSafeEqual } from "crypto";
+import { z } from "zod";
 import { db } from "../db";
 import { admins } from "../db/schema";
 import { eq } from "drizzle-orm";
@@ -130,10 +132,27 @@ router.post("/logout", (req, res) => {
 });
 
 // ── POST /api/auth/setup — one-time admin creation ───────────────────────────
-router.post("/setup", async (req, res) => {
+const setupSchema = z.object({
+  username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/, "Alphanumeric only"),
+  password: z.string().min(12).max(100),
+  secret: z.string().min(1),
+});
+
+router.post("/setup", authLimiter, async (req, res) => {
   try {
-    const { username, password, secret } = req.body;
-    if (secret !== process.env.SETUP_SECRET) {
+    const parsed = setupSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid input", details: parsed.error.flatten().fieldErrors });
+    }
+    const { username, password, secret } = parsed.data;
+
+    // Timing-safe comparison against the configured setup secret
+    const expected = process.env.SETUP_SECRET ?? "";
+    const secretBuf = Buffer.from(secret);
+    const expectedBuf = Buffer.from(expected);
+    const secretOk =
+      secretBuf.length === expectedBuf.length && timingSafeEqual(secretBuf, expectedBuf);
+    if (!secretOk) {
       logger.warn("Unauthorized setup attempt", { ip: req.ip });
       return res.status(403).json({ error: "Forbidden" });
     }
@@ -141,10 +160,6 @@ router.post("/setup", async (req, res) => {
     const existing = await db.select().from(admins);
     if (existing.length > 0) {
       return res.status(403).json({ error: "Setup already completed" });
-    }
-
-    if (password.length < 12) {
-      return res.status(400).json({ error: "Password must be at least 12 characters" });
     }
 
     const passwordHash = await bcrypt.hash(password, 14);
