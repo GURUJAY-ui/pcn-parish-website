@@ -252,8 +252,9 @@ export default function AdminLogin() {
     setError("");
     try {
       await api.login(username, password);
-      // Keep overlay visible briefly before navigating
-      setTimeout(() => navigate("/admin"), 2200);
+      // Brief confirmation, then redirect. (Kept short — the login request
+      // itself can already be slow against a remote database.)
+      setTimeout(() => navigate("/admin"), 500);
     } catch (err: any) {
       setAttempts((p) => p + 1);
       setError(err.message || "Invalid credentials");
