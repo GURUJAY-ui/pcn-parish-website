@@ -237,7 +237,7 @@ export default function Donations() {
 
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
-    if (amount <= 0 || amount > 10_000_000) newErrors.amount = "Enter a valid amount between N1 and N10,000,000.";
+    if (amount <= 0 || amount > 10_000_000) newErrors.amount = "Enter a valid amount between ₦1 and ₦10,000,000.";
     if (!isAnonymous) {
       if (sanitizeText(donorName, 100).length < 2) newErrors.name = "Please enter your full name.";
       if (donorEmail && !isValidEmail(donorEmail)) newErrors.email = "Enter a valid email address.";
@@ -406,12 +406,12 @@ export default function Donations() {
               onClick={handleDonate}
               disabled={isLoading}
             >
-              {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processing...</> : <><Heart className="w-5 h-5 mr-2" />Donate N{amount.toLocaleString()}{selectedCat ? ` Â· ${selectedCat.label}` : ""}</>}
+              {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processing...</> : <><Heart className="w-5 h-5 mr-2" />Donate ₦{amount.toLocaleString()}{selectedCat ? ` · ${selectedCat.label}` : ""}</>}
             </Button>
 
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Donation attempts are recorded securely on the backend for follow-up and reconciliation.</span>
+              <span>Your gift is processed securely and handled with care and confidentiality.</span>
             </div>
           </Card>
 
@@ -425,8 +425,8 @@ export default function Donations() {
                   "Maintains and develops church facilities",
                   "Provides welfare support to members in need",
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-0.5">â€¢</span>
+                  <li key={item} className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}
