@@ -1,49 +1,49 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Home } from "lucide-react";
+/**
+ * NotFound.tsx — 404 page, liquid-glass style.
+ */
+
 import { useLocation } from "wouter";
+import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { useGlassTheme, SERIF } from "@/lib/glass";
+import SiteNav from "@/components/SiteNav";
 
 export default function NotFound() {
-  const [, setLocation] = useLocation();
-
-  const handleGoHome = () => {
-    setLocation("/");
-  };
+  const t = useGlassTheme();
+  const [, navigate] = useLocation();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-      <Card className="w-full max-w-lg mx-4 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardContent className="pt-8 pb-8 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-red-100 rounded-full animate-pulse" />
-              <AlertCircle className="relative h-16 w-16 text-red-500" />
-            </div>
-          </div>
+    <div className={`page-shell min-h-screen ${t.pageBg} ${t.ink} flex flex-col`}>
+      <SiteNav />
 
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">404</h1>
+      <div className={`relative flex-1 flex items-center justify-center px-6 py-32 overflow-hidden`}>
+        <div className={`absolute inset-0 ${t.radial}`} />
 
-          <h2 className="text-xl font-semibold text-slate-700 mb-4">
-            Page Not Found
-          </h2>
-
-          <p className="text-slate-600 mb-8 leading-relaxed">
-            Sorry, the page you are looking for doesn't exist.
-            <br />
-            It may have been moved or deleted.
+        <motion.div
+          initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className={`relative ${t.glass} rounded-3xl p-10 md:p-16 max-w-lg w-full text-center`}>
+          <p className={`${t.label} text-sm tracking-widest uppercase mb-6`}>Error 404</p>
+          <h1 style={SERIF} className={`text-7xl md:text-8xl ${t.ink} tracking-tight leading-none mb-6`}>
+            Lost, <em className={t.em}>friend?</em>
+          </h1>
+          <p className={`${t.ink50} text-sm md:text-base leading-relaxed mb-10`}>
+            Sorry, the page you are looking for doesn't exist. It may have been moved or deleted —
+            but you're always welcome home.
           </p>
-
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button
-              onClick={handleGoHome}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              <Home className="w-4 h-4 mr-2" />
+            <button onClick={() => navigate("/")}
+              className={`group ${t.btnPrimary} rounded-full px-8 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors`}>
               Go Home
-            </Button>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button onClick={() => navigate("/contact")}
+              className={`${t.glass} rounded-full px-8 py-3 ${t.ink} text-sm font-medium ${t.hoverGlass} transition-colors`}>
+              Contact Us
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }

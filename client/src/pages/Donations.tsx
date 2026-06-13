@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useGlassTheme, SERIF } from "@/lib/glass";
+import SiteNav from "@/components/SiteNav";
+import SiteFooter from "@/components/SiteFooter";
 import { api } from "@/lib/api";
 import QRCodeSection from "@/pages/QRCodeSection";
 import { motion } from "framer-motion";
@@ -202,7 +204,7 @@ function BankTransferSection({ accounts }: { accounts: Record<CurrencyKey, reado
 }
 
 export default function Donations() {
-  const { theme } = useTheme();
+  const t = useGlassTheme();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [amount, setAmount] = useState(5000);
   const [donorName, setDonorName] = useState("");
@@ -281,18 +283,16 @@ export default function Donations() {
   const selectedCat = categories.find((category) => category.id === selectedCategory);
 
   return (
-    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-background text-foreground"}`}>
-      <div className="relative overflow-hidden py-24 border-b border-white/10">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-background to-cyan-500/10" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-        <div className="container relative text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 mb-2">
-            <Heart className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-400 text-sm font-semibold uppercase tracking-widest">Give Online</span>
-          </div>
-          <h1 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-5xl md:text-6xl font-bold">Support Our Ministry</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+    <div className={`page-shell min-h-screen ${t.pageBg} ${t.ink}`}>
+      <SiteNav />
+      <div className={`relative overflow-hidden pt-36 md:pt-44 pb-12 md:pb-16 px-6 ${t.pageBg}`}>
+        <div className={`absolute inset-0 ${t.radial}`} />
+        <div className="relative max-w-4xl mx-auto text-center space-y-6">
+          <p className={`${t.label} text-sm tracking-widest uppercase`}>Give Online</p>
+          <h1 style={SERIF} className={`text-5xl md:text-7xl ${t.ink} tracking-tight leading-[1.05]`}>
+            Support our <em className={t.em}>ministry.</em>
+          </h1>
+          <p className={`text-base md:text-lg ${t.ink50} max-w-2xl mx-auto leading-relaxed`}>
             Every gift makes a difference in advancing God's kingdom through the ministries of the Presbyterian Church of Nigeria, First Abuja Parish.
           </p>
         </div>
@@ -300,7 +300,7 @@ export default function Donations() {
 
       <div className="container py-16 space-y-16">
         <div className="space-y-6">
-          <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">Choose Giving Type</h2>
+          <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif" }} className="text-2xl font-bold">Choose Giving Type</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {categories.map((category) => {
               const Icon = category.icon;
@@ -329,7 +329,7 @@ export default function Donations() {
           <Card className="lg:col-span-3 glass-lg p-8 space-y-8">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-sm">1</div>
-              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">
+              <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif" }} className="text-2xl font-bold">
                 {selectedCat ? `Give ${selectedCat.label}` : "Make a Donation"}
               </h2>
             </div>
@@ -406,7 +406,7 @@ export default function Donations() {
               onClick={handleDonate}
               disabled={isLoading}
             >
-              {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processing...</> : <><Heart className="w-5 h-5 mr-2" />Donate N{amount.toLocaleString()}{selectedCat ? ` · ${selectedCat.label}` : ""}</>}
+              {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processing...</> : <><Heart className="w-5 h-5 mr-2" />Donate N{amount.toLocaleString()}{selectedCat ? ` Â· ${selectedCat.label}` : ""}</>}
             </Button>
 
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
@@ -417,7 +417,7 @@ export default function Donations() {
 
           <div className="lg:col-span-2 space-y-6">
             <Card className="glass-lg p-6 space-y-4">
-              <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold text-lg">Why Your Gift Matters</h3>
+              <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif" }} className="font-bold text-lg">Why Your Gift Matters</h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 {[
                   "Funds weekly worship services and programmes",
@@ -426,7 +426,7 @@ export default function Donations() {
                   "Provides welfare support to members in need",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-0.5">•</span>
+                    <span className="text-amber-400 mt-0.5">â€¢</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -445,7 +445,7 @@ export default function Donations() {
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm">2</div>
-            <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">Or Pay via Bank Transfer</h2>
+            <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif" }} className="text-2xl font-bold">Or Pay via Bank Transfer</h2>
           </div>
           <BankTransferSection accounts={accounts} />
         </div>
@@ -453,11 +453,13 @@ export default function Donations() {
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold text-sm">3</div>
-            <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">Scan to Give</h2>
+            <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif" }} className="text-2xl font-bold">Scan to Give</h2>
           </div>
           <QRCodeSection />
         </div>
       </div>
+
+      <SiteFooter />
     </div>
   );
 }

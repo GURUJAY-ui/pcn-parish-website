@@ -1,10 +1,12 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useRef } from "react";
+import { useGlassTheme, SERIF } from "@/lib/glass";
 
 const PAYSTACK_LINK = "https://paystack.com/pay/pcn-first-abuja-parish"; // Replace with real link
 const SCAN_ME_TEXT = "SCAN ME";
 
 export default function QRCodeSection() {
+  const t = useGlassTheme();
   const qrRef = useRef<HTMLDivElement>(null);
 
   const downloadQRCode = () => {
@@ -54,24 +56,19 @@ export default function QRCodeSection() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a] border border-[#2a3a80] p-10 text-white">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl" />
-
+    <div className={`${t.glass} relative overflow-hidden rounded-3xl p-8 md:p-12`}>
       <div className="relative grid md:grid-cols-2 gap-10 items-center md:items-start">
 
         {/* Left: Text */}
         <div className="space-y-5 md:pt-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/25">
-            <span className="text-amber-400 text-xs font-semibold uppercase tracking-widest">Give Instantly</span>
-          </div>
-          <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-3xl font-bold">
-            Scan to Give Online
+          <p className={`${t.label} text-xs uppercase tracking-widest`}>Give Instantly</p>
+          <h2 style={SERIF} className={`text-3xl md:text-4xl ${t.ink} tracking-tight`}>
+            Scan to give <em className={t.em}>online.</em>
           </h2>
-          <p className="text-blue-200 text-sm leading-relaxed">
+          <p className={`${t.ink50} text-sm leading-relaxed`}>
             Point your phone camera at the QR code to go directly to our secure Paystack giving page. No typing, no hassle — just scan and give.
           </p>
-          <ul className="space-y-2 text-sm text-blue-200">
+          <ul className={`space-y-2 text-sm ${t.ink60}`}>
             {[
               "✦ Secure payment via Paystack",
               "✦ Works on any smartphone",
@@ -82,18 +79,17 @@ export default function QRCodeSection() {
             ))}
           </ul>
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            
             <a
               href={PAYSTACK_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm transition-all shadow-lg shadow-amber-500/20"
+              className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full ${t.btnPrimary} font-medium text-sm transition-colors`}
             >
               Give Online →
             </a>
             <button
               onClick={downloadQRCode}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-sm transition-all"
+              className={`${t.glass} inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full ${t.ink} font-medium text-sm ${t.hoverGlass} transition-all`}
             >
               Download QR Code
             </button>
@@ -102,7 +98,7 @@ export default function QRCodeSection() {
 
         {/* Right: QR Code */}
         <div className="flex flex-col items-center gap-4 md:pt-2">
-          <div className="p-5 rounded-2xl bg-white shadow-2xl shadow-black/40 flex items-center justify-center" ref={qrRef}>
+          <div className="p-5 rounded-2xl bg-white shadow-2xl shadow-black/30 flex items-center justify-center" ref={qrRef}>
             <QRCodeSVG
               value={PAYSTACK_LINK}
               size={200}
@@ -112,7 +108,7 @@ export default function QRCodeSection() {
               bgColor="#ffffff"
             />
           </div>
-          <p className="text-blue-300 text-xs text-center max-w-[200px] mx-auto">
+          <p className={`${t.ink40} text-xs text-center max-w-[200px] mx-auto`}>
             Scan with your phone camera to open the secure giving page
           </p>
         </div>

@@ -1252,8 +1252,16 @@ export default function Admin() {
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <div><h1 className="text-xl font-bold text-foreground">PCN Admin Dashboard</h1><p className="text-xs text-muted-foreground">First Abuja Parish</p></div>
-          <Button onClick={async () => { await api.logout(); navigate("/admin/login"); }} variant="outline" size="sm">Logout</Button>
+          <div className="flex items-center gap-3">
+            <img src="/assets/pcn-logo.png" alt="PCN Logo" className="h-9 w-9 object-contain" />
+            <div>
+              <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif" }} className="text-2xl tracking-tight text-foreground">
+                Admin <em className="italic opacity-60">dashboard.</em>
+              </h1>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">PCN First Abuja Parish</p>
+            </div>
+          </div>
+          <Button onClick={async () => { await api.logout(); navigate("/admin/login"); }} variant="outline" size="sm" className="rounded-full px-5">Logout</Button>
         </div>
       </div>
 
