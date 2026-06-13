@@ -1,9 +1,16 @@
+/**
+ * Testimonies.tsx — testimonies wall + submit form (API-driven).
+ * Liquid-glass redesign; slider, category filter and submit
+ * logic unchanged.
+ */
+
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
-import { Card } from "@/components/ui/card";
-import { useTheme } from "@/contexts/ThemeContext";
+import { motion } from "framer-motion";
+import { useGlassTheme, SERIF, type GlassTheme } from "@/lib/glass";
+import SiteNav from "@/components/SiteNav";
+import SiteFooter from "@/components/SiteFooter";
 import { api } from "@/lib/api";
-import { ChevronRight, ChevronLeft, Quote, Star, Heart, Plus } from "lucide-react";
+import { ChevronRight, ChevronLeft, Quote, Star, Heart } from "lucide-react";
 
 type Testimony = {
   id: number;
@@ -15,33 +22,13 @@ type Testimony = {
   color?: string;
 };
 
-const categoryColors: Record<string, string> = {
-  "Faith": "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-  "Answered Prayer": "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-  "Family": "bg-amber-500/10 border-amber-500/20 text-amber-400",
-  "Healing": "bg-rose-500/10 border-rose-500/20 text-rose-400",
-  "Provision": "bg-purple-500/10 border-purple-500/20 text-purple-400",
-  "Spiritual Growth": "bg-teal-500/10 border-teal-500/20 text-teal-400",
-  "Protection": "bg-blue-500/10 border-blue-500/20 text-blue-400",
-  "Community": "bg-lime-500/10 border-lime-500/20 text-lime-400",
-};
-
-const avatarColors = [
-  "from-cyan-400 to-cyan-600", "from-emerald-400 to-emerald-600",
-  "from-amber-400 to-amber-600", "from-rose-400 to-rose-600",
-  "from-purple-400 to-purple-600", "from-teal-400 to-teal-600",
-  "from-orange-400 to-orange-600", "from-pink-400 to-pink-600",
-  "from-blue-400 to-blue-600", "from-violet-400 to-violet-600",
-  "from-lime-400 to-lime-600", "from-amber-400 to-rose-500",
-];
-
 function getInitials(name: string): string {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
-// ── Testimony Submit Form ──────────────────────────────────────────────────────
+// ── Testimony Submit Form ─────────────────────────────────────────
 
-function TestimonySubmitForm() {
+function TestimonySubmitForm({ t }: { t: GlassTheme }) {
   const [form, setForm] = useState({ name: "", profession: "", quote: "", category: "Faith" });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -62,16 +49,18 @@ function TestimonySubmitForm() {
     }
   };
 
+  const inputCls = `w-full p-3 rounded-xl ${t.glass} ${t.ink} placeholder:${t.L ? "text-[#132744]/35" : "text-white/30"} text-sm focus:outline-none transition-colors bg-transparent`;
+
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-3 py-6">
-        <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center">
+        <div className={`${t.glass} w-14 h-14 rounded-full flex items-center justify-center`}>
           <span className="text-3xl">🙏</span>
         </div>
-        <p className="text-emerald-400 font-semibold text-lg">Thank you!</p>
-        <p className="text-muted-foreground text-sm text-center max-w-sm">Your testimony has been submitted for review. It will appear on this page once approved.</p>
+        <p style={SERIF} className={`${t.ink} text-2xl tracking-tight`}>Thank you!</p>
+        <p className={`${t.ink50} text-sm text-center max-w-sm`}>Your testimony has been submitted for review. It will appear on this page once approved.</p>
         <button onClick={() => setSubmitted(false)}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors mt-2">
+          className={`text-xs ${t.ink40} ${t.inkHover} transition-colors mt-2`}>
           Submit another testimony
         </button>
       </div>
@@ -82,51 +71,49 @@ function TestimonySubmitForm() {
     <div className="max-w-lg mx-auto space-y-4 text-left">
       <div className="grid sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Name *</label>
+          <label className={`text-xs ${t.label} uppercase tracking-widest`}>Your Name *</label>
           <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-            placeholder="Your name"
-            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-amber-500/50 transition-colors" />
+            placeholder="Your name" className={inputCls} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Profession</label>
+          <label className={`text-xs ${t.label} uppercase tracking-widest`}>Profession</label>
           <input value={form.profession} onChange={(e) => setForm((p) => ({ ...p, profession: e.target.value }))}
-            placeholder="e.g. Engineer"
-            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-amber-500/50 transition-colors" />
+            placeholder="e.g. Engineer" className={inputCls} />
         </div>
       </div>
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Category</label>
+        <label className={`text-xs ${t.label} uppercase tracking-widest`}>Category</label>
         <select value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
-          className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-amber-500/50 transition-colors">
+          className={inputCls}>
           {["Faith", "Healing", "Provision", "Answered Prayer", "Family", "Spiritual Growth", "Protection", "Community"].map((c) => (
-            <option key={c} value={c} className="bg-background">{c}</option>
+            <option key={c} value={c} className={t.L ? "bg-white" : "bg-black"}>{c}</option>
           ))}
         </select>
       </div>
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Testimony *</label>
+        <label className={`text-xs ${t.label} uppercase tracking-widest`}>Your Testimony *</label>
         <textarea value={form.quote} onChange={(e) => setForm((p) => ({ ...p, quote: e.target.value }))}
           placeholder="Share what God has done in your life..."
           rows={4}
-          className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground text-sm resize-none focus:outline-none focus:border-amber-500/50 transition-colors" />
+          className={`${inputCls} resize-none`} />
       </div>
       {error && <p className="text-xs text-rose-400">{error}</p>}
       <button onClick={handleSubmit} disabled={submitting || !form.name.trim() || !form.quote.trim()}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20">
+        className={`w-full flex items-center justify-center gap-2 py-3 rounded-full ${t.btnPrimary} font-medium text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed`}>
         {submitting
-          ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Submitting...</>
+          ? <><div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" /> Submitting...</>
           : <><Heart className="w-4 h-4" /> Submit Testimony</>}
       </button>
-      <p className="text-xs text-muted-foreground text-center">
+      <p className={`text-xs ${t.ink40} text-center`}>
         Submitted testimonies are reviewed before being published.
       </p>
     </div>
   );
 }
 
-// ── Featured Slider ────────────────────────────────────────────────────────────
+// ── Featured Slider ───────────────────────────────────────────────
 
-function FeaturedSlider({ items }: { items: Testimony[] }) {
+function FeaturedSlider({ items, t }: { items: Testimony[]; t: GlassTheme }) {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [direction, setDirection] = useState<"left" | "right">("right");
@@ -158,20 +145,17 @@ function FeaturedSlider({ items }: { items: Testimony[] }) {
 
   if (items.length === 0) return null;
 
-  const t = items[current];
-  const initials = t.initials ?? getInitials(t.name);
-  const color = t.color ?? avatarColors[current % avatarColors.length];
+  const item = items[current];
+  const initials = item.initials ?? getInitials(item.name);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a] border border-[#2a3a80] p-10 md:p-16 text-white">
-      <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-6 left-8 text-[100px] leading-none text-amber-500/10 font-serif select-none">"</div>
+    <div className={`${t.glass} relative overflow-hidden rounded-3xl p-10 md:p-16`}>
+      <div style={SERIF} className={`absolute top-4 left-8 text-[120px] leading-none select-none ${t.L ? "text-[#132744]/6" : "text-white/5"}`}>"</div>
 
       <div className="relative">
         <div className="flex justify-center gap-1 mb-6">
           {[...Array(5)].map((_, i) => (
-            <Star key={i} className="w-5 h-5 text-amber-400 fill-amber-400" />
+            <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
           ))}
         </div>
 
@@ -182,53 +166,55 @@ function FeaturedSlider({ items }: { items: Testimony[] }) {
               ? `translateX(${direction === "right" ? "-40px" : "40px"})`
               : "translateX(0)",
           }}>
-          <p className="text-xl md:text-2xl text-blue-100 leading-relaxed italic max-w-3xl mx-auto mb-8">
-            "{t.quote}"
+          <p style={SERIF} className={`text-2xl md:text-3xl ${t.ink} leading-relaxed italic max-w-3xl mx-auto mb-8`}>
+            "{item.quote}"
           </p>
           <div className="flex flex-col items-center gap-3">
-            <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${color} flex items-center justify-center shadow-xl`}>
-              <span className="text-white font-bold text-lg">{initials}</span>
+            <div className={`${t.glass} w-14 h-14 rounded-full flex items-center justify-center`}>
+              <span style={SERIF} className={`${t.ink} text-lg`}>{initials}</span>
             </div>
             <div className="text-center">
-              <p className="font-bold text-lg">{t.name}</p>
-              <p className="text-blue-300 text-sm">{t.profession}</p>
-              <span className={`text-xs font-semibold px-3 py-1 rounded-full border mt-2 inline-block ${categoryColors[t.category] ?? "bg-white/10 border-white/10 text-white"}`}>
-                {t.category}
+              <p className={`${t.ink} font-medium text-lg`}>{item.name}</p>
+              <p className={`${t.ink50} text-sm`}>{item.profession}</p>
+              <span className={`${t.glass} text-[10px] uppercase tracking-widest px-3 py-1 rounded-full mt-2 inline-block ${t.ink60}`}>
+                {item.category}
               </span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-center gap-6 mt-10">
-          <button onClick={prev}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all hover:scale-110">
+          <button onClick={prev} aria-label="Previous"
+            className={`${t.glass} w-10 h-10 rounded-full flex items-center justify-center transition-all ${t.hoverGlass} ${t.ink70}`}>
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="flex gap-2">
             {items.map((_, i) => (
               <button key={i} onClick={() => goTo(i, i > current ? "right" : "left")}
+                aria-label={`Go to testimony ${i + 1}`}
                 className={`rounded-full transition-all duration-300 ${
-                  i === current ? "bg-amber-500 w-6 h-2" : "bg-white/20 w-2 h-2 hover:bg-white/40"
+                  i === current
+                    ? `${t.L ? "bg-[#c8972a]" : "bg-white"} w-6 h-2`
+                    : `${t.L ? "bg-[#132744]/20 hover:bg-[#132744]/40" : "bg-white/20 hover:bg-white/40"} w-2 h-2`
                 }`} />
             ))}
           </div>
-          <button onClick={next}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all hover:scale-110">
+          <button onClick={next} aria-label="Next"
+            className={`${t.glass} w-10 h-10 rounded-full flex items-center justify-center transition-all ${t.hoverGlass} ${t.ink70}`}>
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-center text-blue-300/50 text-xs mt-4">{current + 1} of {items.length}</p>
+        <p className={`text-center ${t.ink30} text-xs mt-4`}>{current + 1} of {items.length}</p>
       </div>
     </div>
   );
 }
 
-// ── Main Page ──────────────────────────────────────────────────────────────────
+// ── Main Page ─────────────────────────────────────────────────────
 
 export default function Testimonies() {
-  const { theme } = useTheme();
-  const [, navigate] = useLocation();
+  const t = useGlassTheme();
   const [activeCategory, setActiveCategory] = useState("All");
   const [testimoniesList, setTestimoniesList] = useState<Testimony[]>([]);
   const [loading, setLoading] = useState(true);
@@ -244,164 +230,153 @@ export default function Testimonies() {
 
   const isEmpty = !loading && testimoniesList.length === 0;
 
-  const categories = ["All", ...Array.from(new Set(testimoniesList.map((t) => t.category)))];
+  const categories = ["All", ...Array.from(new Set(testimoniesList.map((x) => x.category)))];
 
   const filtered = activeCategory === "All"
     ? testimoniesList
-    : testimoniesList.filter((t) => t.category === activeCategory);
+    : testimoniesList.filter((x) => x.category === activeCategory);
 
   return (
-    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-background text-foreground"}`}>
+    <div className={`page-shell min-h-screen ${t.pageBg} ${t.ink}`}>
+      <SiteNav />
 
-      {/* Hero */}
-      <div className="relative overflow-hidden py-28 border-b border-white/10">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-background to-rose-500/10" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl" />
-        <div className="container relative">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-            <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Home</button>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-foreground">Testimonies</span>
-          </div>
-          <div className="text-center space-y-4 max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20">
-              <Heart className="w-4 h-4 text-amber-400" />
-              <span className="text-amber-400 text-sm font-semibold uppercase tracking-widest">God's Faithfulness</span>
-            </div>
-            <h1 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-5xl md:text-6xl font-bold">Testimonies</h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              "God is faithful, by whom ye were called unto the fellowship of his Son Jesus Christ our Lord." — 1 Corinthians 1:9
-            </p>
-            {testimoniesList.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-6 pt-4">
-                {[
-                  { value: `${testimoniesList.length}`, label: testimoniesList.length === 1 ? "Testimony" : "Testimonies", color: "text-amber-400" },
-                  { value: `${categories.length - 1}`, label: "Categories", color: "text-cyan-400" },
-                  { value: "∞", label: "God's Faithfulness", color: "text-emerald-400" },
-                ].map((stat) => (
-                  <div key={stat.label} className="text-center">
-                    <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+      {/* ── Hero ───────────────────────────────────────────────── */}
+      <section className={`relative ${t.pageBg} pt-36 md:pt-44 pb-12 md:pb-16 px-6 overflow-hidden`}>
+        <div className={`absolute inset-0 ${t.radial}`} />
+        <div className="relative max-w-4xl mx-auto text-center">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className={`${t.label} text-sm tracking-widest uppercase mb-6`}>
+            God's Faithfulness
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            style={SERIF}
+            className={`text-5xl md:text-7xl ${t.ink} tracking-tight leading-[1.05] mb-6`}>
+            <em className={t.em}>Testimonies.</em>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className={`${t.ink50} text-base md:text-lg leading-relaxed max-w-2xl mx-auto`}>
+            "God is faithful, by whom ye were called unto the fellowship of his Son Jesus Christ our Lord."
+            — 1 Corinthians 1:9
+          </motion.p>
         </div>
-      </div>
+      </section>
 
-      <div className="container py-16 space-y-16">
+      <section className={`${t.pageBg} pb-24 px-6`}>
+        <div className="max-w-6xl mx-auto space-y-16">
 
-        {/* Featured Slider — only shown when there are testimonies */}
-        {(loading || testimoniesList.length > 0) && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
-                <Star className="w-4 h-4 text-white fill-white" />
-              </div>
-              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">Featured Testimonies</h2>
-            </div>
-            {loading ? (
-              <div className="flex justify-center py-16">
-                <div className="w-10 h-10 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
-              </div>
-            ) : (
-              <FeaturedSlider items={testimoniesList} />
-            )}
-          </div>
-        )}
-
-        {/* All Testimonies Grid */}
-        <div className="space-y-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center">
-                <Quote className="w-4 h-4 text-white" />
-              </div>
-              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold">All Testimonies</h2>
-            </div>
-            {testimoniesList.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {categories.map((cat) => (
-                  <button key={cat} onClick={() => setActiveCategory(cat)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                      activeCategory === cat
-                        ? "bg-amber-500 border-amber-500 text-white"
-                        : "border-white/15 text-muted-foreground hover:border-white/30 hover:text-foreground"
-                    }`}>
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="rounded-2xl border border-white/10 bg-white/5 p-6 h-48 animate-pulse" />
-              ))}
-            </div>
-          ) : isEmpty ? (
-            <Card className="glass-lg flex flex-col items-center gap-3 py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-amber-500/15 flex items-center justify-center">
-                <Quote className="w-6 h-6 text-amber-400" />
-              </div>
-              <p className="text-lg font-semibold">No testimonies yet</p>
-              <p className="text-sm text-muted-foreground max-w-sm">Be the first to share what God has done in your life using the form below.</p>
-            </Card>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((t, i) => {
-                const initials = t.initials ?? getInitials(t.name);
-                const color = t.color ?? avatarColors[i % avatarColors.length];
-                return (
-                  <Card key={t.id} className="glass-lg p-6 flex flex-col gap-4 hover:border-white/20 transition-all duration-300 group relative overflow-hidden">
-                    <div className="absolute top-3 right-4 text-[60px] leading-none text-white/3 font-serif select-none group-hover:text-white/5 transition-colors">"</div>
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full border w-fit ${categoryColors[t.category] ?? "bg-white/10 border-white/10 text-white"}`}>
-                      {t.category}
-                    </span>
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed flex-1 italic">
-                      "{t.quote}"
-                    </p>
-                    <div className="flex items-center gap-3 pt-3 border-t border-white/10">
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${color} flex items-center justify-center shadow-lg shrink-0`}>
-                        <span className="text-white font-bold text-sm">{initials}</span>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">{t.name}</p>
-                        <p className="text-xs text-muted-foreground">{t.profession}</p>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
+          {/* Featured slider */}
+          {(loading || testimoniesList.length > 0) && (
+            <div className="space-y-6">
+              <h2 style={SERIF} className={`text-3xl md:text-4xl ${t.ink} tracking-tight`}>
+                Featured <em className={t.em}>stories.</em>
+              </h2>
+              {loading ? (
+                <div className="flex justify-center py-16">
+                  <div className={`w-10 h-10 rounded-full border-2 animate-spin ${t.L ? "border-[#132744]/15 border-t-[#132744]" : "border-white/15 border-t-white"}`} />
+                </div>
+              ) : (
+                <FeaturedSlider items={testimoniesList} t={t} />
+              )}
             </div>
           )}
-        </div>
 
-        {/* Share Your Testimony CTA */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 to-rose-500/10 border border-amber-500/20 p-12 text-center space-y-6">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl" />
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-rose-500 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/20">
-            <Plus className="w-7 h-7 text-white" />
+          {/* All testimonies */}
+          <div className="space-y-8">
+            <div className="flex items-end justify-between flex-wrap gap-4">
+              <h2 style={SERIF} className={`text-3xl md:text-4xl ${t.ink} tracking-tight`}>
+                Every <em className={t.em}>testimony.</em>
+              </h2>
+              {testimoniesList.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((cat) => (
+                    <button key={cat} onClick={() => setActiveCategory(cat)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        activeCategory === cat
+                          ? t.btnPrimary
+                          : `${t.glass} ${t.ink60} ${t.hoverGlass}`
+                      }`}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {loading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className={`${t.glass} rounded-3xl p-6 h-48 animate-pulse`} />
+                ))}
+              </div>
+            ) : isEmpty ? (
+              <div className={`${t.glass} rounded-3xl flex flex-col items-center gap-3 py-16 text-center`}>
+                <div className={`${t.glass} w-14 h-14 rounded-full flex items-center justify-center`}>
+                  <Quote className={`w-6 h-6 ${t.ink50}`} />
+                </div>
+                <p style={SERIF} className={`text-2xl ${t.ink} tracking-tight`}>No testimonies yet</p>
+                <p className={`text-sm ${t.ink50} max-w-sm`}>Be the first to share what God has done in your life using the form below.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map((item, i) => {
+                  const initials = item.initials ?? getInitials(item.name);
+                  return (
+                    <motion.div key={item.id}
+                      initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.6, delay: (i % 3) * 0.1 }}
+                      className={`${t.glass} rounded-3xl p-6 flex flex-col gap-4 relative overflow-hidden group`}>
+                      <div style={SERIF} className={`absolute top-2 right-5 text-[70px] leading-none select-none ${t.L ? "text-[#132744]/5" : "text-white/4"}`}>"</div>
+                      <span className={`${t.glass} text-[10px] uppercase tracking-widest px-3 py-1 rounded-full w-fit ${t.ink60}`}>
+                        {item.category}
+                      </span>
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, j) => (
+                          <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        ))}
+                      </div>
+                      <p style={SERIF} className={`text-base ${t.ink70} leading-relaxed flex-1 italic`}>
+                        "{item.quote}"
+                      </p>
+                      <div className={`flex items-center gap-3 pt-3 border-t ${t.divider}`}>
+                        <div className={`${t.glass} w-10 h-10 rounded-full flex items-center justify-center shrink-0`}>
+                          <span style={SERIF} className={`${t.ink} text-sm`}>{initials}</span>
+                        </div>
+                        <div>
+                          <p className={`${t.ink} font-medium text-sm`}>{item.name}</p>
+                          <p className={`text-xs ${t.ink40}`}>{item.profession}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-          <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-4xl font-bold">
-            Share Your Testimony
-          </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Has God done something amazing in your life? Your story could be the encouragement someone else needs today. Share your testimony with the PCN First Abuja Parish family.
-          </p>
-          <TestimonySubmitForm />
-        </div>
 
-      </div>
+          {/* Share CTA + form */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.8 }}
+            className={`${t.glass} relative overflow-hidden rounded-3xl p-10 md:p-14 text-center space-y-6`}>
+            <h2 style={SERIF} className={`text-3xl md:text-5xl ${t.ink} tracking-tight`}>
+              Share your <em className={t.em}>testimony.</em>
+            </h2>
+            <p className={`${t.ink50} max-w-xl mx-auto leading-relaxed text-sm md:text-base`}>
+              Has God done something amazing in your life? Your story could be the encouragement someone
+              else needs today. Share your testimony with the PCN First Abuja Parish family.
+            </p>
+            <TestimonySubmitForm t={t} />
+          </motion.div>
+        </div>
+      </section>
+
+      <SiteFooter />
     </div>
   );
 }

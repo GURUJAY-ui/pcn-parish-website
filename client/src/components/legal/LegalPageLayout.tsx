@@ -1,7 +1,12 @@
+/**
+ * LegalPageLayout — shared liquid-glass shell for legal/policy pages.
+ */
+
 import { ReactNode } from "react";
-import { useLocation } from "wouter";
-import { ChevronRight } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { motion } from "framer-motion";
+import { useGlassTheme, SERIF } from "@/lib/glass";
+import SiteNav from "@/components/SiteNav";
+import SiteFooter from "@/components/SiteFooter";
 
 interface LegalPageLayoutProps {
   title: string;
@@ -14,60 +19,48 @@ export default function LegalPageLayout({
   description,
   children,
 }: LegalPageLayoutProps) {
-  const { theme } = useTheme();
-  const [, navigate] = useLocation();
+  const t = useGlassTheme();
 
   return (
-    <div
-      className={`themed-page min-h-screen ${
-        theme === "light"
-          ? "themed-page--light bg-background text-foreground"
-          : "themed-page--dark bg-background text-foreground"
-      }`}
-    >
+    <div className={`page-shell min-h-screen ${t.pageBg} ${t.ink}`}>
+      <SiteNav />
+
       {/* HERO */}
-      <div className="relative overflow-hidden py-28 border-b border-white/10">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a3a6b]/10 via-background to-[#d4af37]/10" />
-
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#1a3a6b]/5 rounded-full blur-3xl" />
-
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#d4af37]/5 rounded-full blur-3xl" />
-
-        <div className="container relative">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-            <button
-              onClick={() => navigate("/")}
-              className="hover:text-foreground transition-colors"
-            >
-              Home
-            </button>
-
-            <ChevronRight className="w-3.5 h-3.5" />
-
-            <span className="text-foreground">{title}</span>
-          </div>
-
-          <div className="max-w-3xl space-y-4">
-            <h1
-              style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
-              className="text-5xl md:text-6xl font-bold"
-            >
-              {title}
-            </h1>
-
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {description}
-            </p>
-          </div>
+      <section className={`relative ${t.pageBg} pt-36 md:pt-44 pb-12 md:pb-16 px-6 overflow-hidden`}>
+        <div className={`absolute inset-0 ${t.radial}`} />
+        <div className="relative max-w-4xl mx-auto">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className={`${t.label} text-sm tracking-widest uppercase mb-6`}>
+            PCN First Abuja Parish
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            style={SERIF}
+            className={`text-4xl md:text-6xl ${t.ink} tracking-tight leading-[1.1] mb-6`}>
+            {title}
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className={`${t.ink50} text-base md:text-lg leading-relaxed max-w-2xl`}>
+            {description}
+          </motion.p>
         </div>
-      </div>
+      </section>
 
       {/* CONTENT */}
-      <div className="container py-16">
-        <div className="prose prose-neutral dark:prose-invert max-w-none">
-          {children}
+      <section className={`${t.pageBg} pb-20 px-6`}>
+        <div className={`max-w-4xl mx-auto ${t.glass} rounded-3xl p-6 sm:p-10 md:p-14`}>
+          <div className={`prose max-w-none ${t.L ? "prose-neutral" : "prose-invert"}`}>
+            {children}
+          </div>
         </div>
-      </div>
+      </section>
+
+      <SiteFooter />
     </div>
   );
 }

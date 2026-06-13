@@ -116,3 +116,6 @@ logs/*.log
 uploads/gallery/*
 !uploads/gallery/.gitkeep
 .env
+
+# Local Claude Code settings
+.claude/settings.local.json

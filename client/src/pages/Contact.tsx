@@ -1,50 +1,38 @@
+/**
+ * Contact.tsx — PCN First Abuja Parish
+ * MotionSites contact-page spec: full-viewport rounded media card with
+ * a floating white contact form (service chips, success state), plus
+ * info/service-times/socials sections. Both forms (message + prayer)
+ * keep their real API submit logic.
+ */
+
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/contexts/ThemeContext";
+import { Phone, Mail, MapPin, Heart } from "lucide-react";
+import { motion } from "framer-motion";
+import { useGlassTheme, SERIF, SOCIAL_LINKS, isAllowedExternalUrl, SocialIcon } from "@/lib/glass";
+import SiteNav from "@/components/SiteNav";
+import SiteFooter from "@/components/SiteFooter";
 import { api } from "@/lib/api";
-import { ChevronRight, Phone, Mail, MapPin, Send, Heart, CheckCircle, MessageSquare } from "lucide-react";
+
+const TOPICS = [
+  "New Visitor", "Prayer Request", "Baptism", "Wedding", "Counselling",
+  "Membership", "Giving", "Volunteering", "Other",
+] as const;
+
+// Contact hero background video — parish footage in client/public/assets.
+const CONTACT_VIDEO_URL = "/assets/hero.mp4";
 
 type ContactCard = {
   label: string;
   lines: string[];
   href: string;
-  color: string;
-  glow: string;
-  border: string;
   icon: typeof Phone;
 };
 
 const fallbackCards: ContactCard[] = [
-  {
-    icon: Phone,
-    color: "from-cyan-400 to-cyan-600",
-    glow: "hover:shadow-cyan-500/10",
-    border: "hover:border-cyan-500/30",
-    label: "Phone",
-    lines: ["+234 (0) 8151111877", "+234 (0) 817 5777773"],
-    href: "tel:+2348151111877",
-  },
-  {
-    icon: MapPin,
-    color: "from-amber-400 to-amber-600",
-    glow: "hover:shadow-amber-500/10",
-    border: "hover:border-amber-500/30",
-    label: "Address",
-    lines: ["No. 5 Boke Close, off Sakono Street,", "Opposite AP Plaza, Wuse II, Abuja"],
-    href: "https://maps.google.com/?q=Wuse+II+Abuja",
-  },
-  {
-    icon: Mail,
-    color: "from-emerald-400 to-emerald-600",
-    glow: "hover:shadow-emerald-500/10",
-    border: "hover:border-emerald-500/30",
-    label: "Email",
-    lines: ["pulpitfap@gmail.com"],
-    href: "mailto:pulpitfap@gmail.com",
-  },
+  { icon: Phone,  label: "Phone",   lines: ["+234 (0) 8151111877", "+234 (0) 817 5777773"], href: "tel:+2348151111877" },
+  { icon: MapPin, label: "Address", lines: ["No. 5 Boke Close, off Sakono Street,", "Opposite AP Plaza, Wuse II, Abuja"], href: "https://maps.google.com/?q=Wuse+II+Abuja" },
+  { icon: Mail,   label: "Email",   lines: ["pulpitfap@gmail.com"], href: "mailto:pulpitfap@gmail.com" },
 ];
 
 const fallbackServiceTimes = [
@@ -53,16 +41,8 @@ const fallbackServiceTimes = [
   { day: "Wednesday", time: "6:00 PM - Midweek" },
 ];
 
-const fallbackSocials = [
-  { label: "Facebook", handle: "@pcnfap", href: "https://facebook.com/pcnfap", color: "text-blue-400" },
-  { label: "YouTube", handle: "@pulpitfaptv", href: "https://youtube.com/@pulpitfaptv", color: "text-red-400" },
-  { label: "Instagram", handle: "@pcnfap", href: "https://instagram.com/pcnfap", color: "text-pink-400" },
-  { label: "X (Twitter)", handle: "@pcnfap", href: "https://x.com/pcnfap", color: "text-foreground" },
-];
-
 export default function Contact() {
-  const { theme } = useTheme();
-  const [, navigate] = useLocation();
+  const t = useGlassTheme();
   const [activeForm, setActiveForm] = useState<"message" | "prayer">("message");
   const [messageSent, setMessageSent] = useState(false);
   const [prayerSent, setPrayerSent] = useState(false);
@@ -72,9 +52,9 @@ export default function Contact() {
   const [prayerError, setPrayerError] = useState("");
   const [contactCards, setContactCards] = useState<ContactCard[]>(fallbackCards);
   const [serviceTimes, setServiceTimes] = useState(fallbackServiceTimes);
-  const [socials, setSocials] = useState(fallbackSocials);
 
-  const [messageForm, setMessageForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
+  const [selected, setSelected] = useState<string[]>([]);
+  const [messageForm, setMessageForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [prayerForm, setPrayerForm] = useState({ name: "", email: "", request: "", anonymous: false });
 
   useEffect(() => {
@@ -82,31 +62,34 @@ export default function Contact() {
       .then((data) => {
         if (Array.isArray(data?.cards) && data.cards.length === 3) {
           setContactCards([
-            { ...data.cards[0], glow: "hover:shadow-cyan-500/10", border: "hover:border-cyan-500/30", icon: Phone },
-            { ...data.cards[1], glow: "hover:shadow-amber-500/10", border: "hover:border-amber-500/30", icon: MapPin },
-            { ...data.cards[2], glow: "hover:shadow-emerald-500/10", border: "hover:border-emerald-500/30", icon: Mail },
+            { ...data.cards[0], icon: Phone },
+            { ...data.cards[1], icon: MapPin },
+            { ...data.cards[2], icon: Mail },
           ]);
         }
         if (Array.isArray(data?.serviceTimes) && data.serviceTimes.length > 0) setServiceTimes(data.serviceTimes);
-        if (Array.isArray(data?.socials) && data.socials.length > 0) setSocials(data.socials);
       })
       .catch(() => {});
   }, []);
+
+  const toggleTopic = (topic: string) =>
+    setSelected((p) => (p.includes(topic) ? p.filter((x) => x !== topic) : [...p, topic]));
 
   const handleMessage = async () => {
     if (!messageForm.message.trim()) return;
     setSubmittingMessage(true);
     setMessageError("");
-
     try {
       await api.createContact({
         ...messageForm,
+        subject: selected.join(", "),
         type: "message",
         anonymous: false,
       });
       setMessageSent(true);
-      setMessageForm({ name: "", email: "", phone: "", subject: "", message: "" });
-      setTimeout(() => setMessageSent(false), 5000);
+      setMessageForm({ name: "", email: "", phone: "", message: "" });
+      setSelected([]);
+      setTimeout(() => setMessageSent(false), 6000);
     } catch {
       setMessageError("We couldn't send your message right now. Please try again.");
     } finally {
@@ -118,7 +101,6 @@ export default function Contact() {
     if (!prayerForm.request.trim()) return;
     setSubmittingPrayer(true);
     setPrayerError("");
-
     try {
       await api.createContact({
         name: prayerForm.anonymous ? "" : prayerForm.name,
@@ -129,7 +111,7 @@ export default function Contact() {
       });
       setPrayerSent(true);
       setPrayerForm({ name: "", email: "", request: "", anonymous: false });
-      setTimeout(() => setPrayerSent(false), 5000);
+      setTimeout(() => setPrayerSent(false), 6000);
     } catch {
       setPrayerError("We couldn't submit your prayer request right now. Please try again.");
     } finally {
@@ -137,238 +119,230 @@ export default function Contact() {
     }
   };
 
+  const inputCls =
+    "flex-1 min-w-0 text-sm px-3 py-2.5 rounded-xl border border-gray-200 bg-transparent text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition";
+
+  const success = (heading: string, sub: string) => (
+    <div className="flex flex-col items-center justify-center py-6 gap-3 text-center">
+      <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-xl">✓</div>
+      <p className="text-base font-semibold text-gray-900">{heading}</p>
+      <p className="text-sm text-gray-500">{sub}</p>
+    </div>
+  );
+
   return (
-    <div className={`themed-page min-h-screen ${theme === "light" ? "themed-page--light bg-background text-foreground" : "themed-page--dark bg-background text-foreground"}`}>
-      <div className="relative overflow-hidden py-28 border-b border-white/10">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-background to-cyan-500/10" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-        <div className="container relative">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-            <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Home</button>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-foreground">Contact</span>
-          </div>
-          <div className="max-w-2xl space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <MessageSquare className="w-4 h-4 text-emerald-400" />
-              <span className="text-emerald-400 text-sm font-semibold uppercase tracking-widest">Get in Touch</span>
+    <div className={`page-shell min-h-screen ${t.pageBg} ${t.ink}`}>
+      <SiteNav />
+
+      {/* ── Hero card: video background + headline + form ─────────── */}
+      <div className="p-3 sm:p-4 md:p-6 pt-24 sm:pt-24 md:pt-28">
+        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden min-h-[calc(100vh-120px)] lg:min-h-[calc(100vh-136px)]">
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            src={CONTACT_VIDEO_URL}
+            autoPlay muted loop playsInline preload="auto"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20" />
+
+          <div className="relative z-10 flex flex-col min-h-[calc(100vh-120px)] lg:min-h-[calc(100vh-136px)] p-4 sm:p-6 md:p-8 gap-6">
+            <div className="flex-1 min-h-[2rem]" />
+
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+              {/* Headline */}
+              <p className="text-white text-3xl sm:text-4xl xl:text-5xl font-medium leading-tight drop-shadow-lg lg:max-w-lg xl:max-w-2xl shrink-0">
+                We'd love to hear from you
+                <br />
+                and pray{" "}
+                <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontWeight: 400 }}>
+                  with you.
+                </span>
+              </p>
+
+              {/* Contact form card */}
+              <div className="w-full lg:w-[min(480px,45%)] shrink-0">
+                <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden p-4 sm:p-6 flex flex-col gap-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h1 className="text-xl sm:text-2xl font-semibold text-black tracking-tight">Say hello! 👋</h1>
+                    <div className="flex gap-1 bg-gray-50 rounded-xl p-1">
+                      {([
+                        { id: "message", label: "Message" },
+                        { id: "prayer",  label: "Prayer" },
+                      ] as const).map((tab) => (
+                        <button key={tab.id} onClick={() => setActiveForm(tab.id)}
+                          className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${
+                            activeForm === tab.id ? "bg-black text-white" : "text-gray-500 hover:text-gray-900"}`}>
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Email + socials row */}
+                  <div className="flex flex-row items-center justify-between gap-3 bg-gray-50 rounded-2xl px-4 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-gray-400">Drop us a line</p>
+                      <a href="mailto:pulpitfap@gmail.com" className="text-blue-600 text-sm font-semibold hover:underline truncate block">
+                        pulpitfap@gmail.com
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {SOCIAL_LINKS.map((s) =>
+                        isAllowedExternalUrl(s.href) ? (
+                          <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                            title={s.label} aria-label={s.label}
+                            className="w-8 h-8 rounded-xl bg-gray-100 text-gray-800 flex items-center justify-center hover:opacity-80 transition-opacity">
+                            <SocialIcon s={s} className="w-3.5 h-3.5" />
+                          </a>
+                        ) : null
+                      )}
+                    </div>
+                  </div>
+
+                  {/* OR divider */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-gray-400 font-medium text-sm">OR</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+
+                  {/* Message form */}
+                  {activeForm === "message" && (
+                    messageSent ? success("You're all set!", "Expect a reply within 24–48 hours.") : (
+                      <div className="flex flex-col gap-4">
+                        <label className="text-sm font-medium text-black">Tell us how we can help</label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input value={messageForm.name} onChange={(e) => setMessageForm((p) => ({ ...p, name: e.target.value }))}
+                            placeholder="Full name" className={inputCls} />
+                          <input type="email" value={messageForm.email} onChange={(e) => setMessageForm((p) => ({ ...p, email: e.target.value }))}
+                            placeholder="Email" className={inputCls} />
+                        </div>
+                        <input value={messageForm.phone} onChange={(e) => setMessageForm((p) => ({ ...p, phone: e.target.value }))}
+                          placeholder="Phone (optional)" className={inputCls} />
+                        <textarea rows={4} value={messageForm.message}
+                          onChange={(e) => setMessageForm((p) => ({ ...p, message: e.target.value }))}
+                          placeholder="What's on your mind..." className={`${inputCls} resize-none`} />
+
+                        <div>
+                          <p className="text-sm font-medium text-black mb-2">I'm reaching out about...</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {TOPICS.map((topic) => (
+                              <button key={topic} type="button" onClick={() => toggleTopic(topic)}
+                                className={`text-xs font-medium px-3 py-2 rounded-lg border transition-all ${
+                                  selected.includes(topic)
+                                    ? "bg-gray-100 text-black border-black"
+                                    : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"}`}>
+                                {topic}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {messageError && <p className="text-sm text-rose-500">{messageError}</p>}
+                        <button onClick={handleMessage} disabled={submittingMessage || !messageForm.message.trim()}
+                          className="w-full bg-black text-white text-sm font-semibold py-3 rounded-2xl hover:bg-gray-800 transition-colors disabled:opacity-60">
+                          {submittingMessage ? "Sending..." : "Send my message"}
+                        </button>
+                      </div>
+                    )
+                  )}
+
+                  {/* Prayer form */}
+                  {activeForm === "prayer" && (
+                    prayerSent ? success("Prayer request received.", "We are praying with you. ♥") : (
+                      <div className="flex flex-col gap-4">
+                        <label className="text-sm font-medium text-black">Share what's on your heart</label>
+                        <label className="flex items-center gap-2.5 cursor-pointer">
+                          <input type="checkbox" checked={prayerForm.anonymous}
+                            onChange={(e) => setPrayerForm((p) => ({ ...p, anonymous: e.target.checked }))}
+                            className="w-4 h-4 accent-black" />
+                          <span className="text-sm text-gray-600">Submit anonymously</span>
+                        </label>
+                        {!prayerForm.anonymous && (
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <input value={prayerForm.name} onChange={(e) => setPrayerForm((p) => ({ ...p, name: e.target.value }))}
+                              placeholder="Full name" className={inputCls} />
+                            <input type="email" value={prayerForm.email} onChange={(e) => setPrayerForm((p) => ({ ...p, email: e.target.value }))}
+                              placeholder="Email (optional)" className={inputCls} />
+                          </div>
+                        )}
+                        <textarea rows={4} value={prayerForm.request}
+                          onChange={(e) => setPrayerForm((p) => ({ ...p, request: e.target.value }))}
+                          placeholder="Share your prayer request..." className={`${inputCls} resize-none`} />
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                          Your prayer request is treated with the utmost confidentiality and shared only with our prayer team.
+                        </p>
+                        {prayerError && <p className="text-sm text-rose-500">{prayerError}</p>}
+                        <button onClick={handlePrayer} disabled={submittingPrayer || !prayerForm.request.trim()}
+                          className="w-full bg-black text-white text-sm font-semibold py-3 rounded-2xl hover:bg-gray-800 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                          <Heart className="w-4 h-4" /> {submittingPrayer ? "Submitting..." : "Submit prayer request"}
+                        </button>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
             </div>
-            <h1 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-5xl md:text-6xl font-bold">Contact Us</h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              We'd love to hear from you. Reach out to us for enquiries, prayer requests, or to find out more about our ministries.
-            </p>
           </div>
         </div>
       </div>
 
-      <div className="container py-16 space-y-16">
-        <div className="grid md:grid-cols-3 gap-6">
-          {contactCards.map((item) => {
-            const Icon = item.icon;
-            return (
-              <a
-                key={item.label}
-                href={item.href}
-                target={item.label === "Address" ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                className={`group block p-8 rounded-2xl border border-white/10 bg-white/5 hover:shadow-xl transition-all duration-300 ${item.glow} ${item.border}`}
-              >
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">{item.label}</p>
-                {item.lines.map((line) => (
-                  <p key={line} className="text-sm font-medium text-foreground leading-relaxed">{line}</p>
-                ))}
-              </a>
-            );
-          })}
-        </div>
+      {/* ── Info cards + service times ─────────────────────────────── */}
+      <section className={`relative ${t.pageBg} py-20 md:py-28 px-6 overflow-hidden`}>
+        <div className={`absolute inset-0 ${t.radialMid}`} />
+        <div className="relative max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7 }}
+            className="flex items-end justify-between mb-12 md:mb-16">
+            <h2 style={SERIF} className={`text-3xl md:text-5xl ${t.ink} tracking-tight`}>
+              Find <em className={t.em}>us.</em>
+            </h2>
+            <span className={`hidden md:block ${t.label} text-sm tracking-widest uppercase`}>Get in Touch</span>
+          </motion.div>
 
-        <div className="grid lg:grid-cols-5 gap-10">
-          <div className="lg:col-span-3 space-y-6">
-            <div className="flex gap-2 p-1.5 rounded-2xl bg-white/5 border border-white/10 w-fit">
-              {[
-                { id: "message", label: "Send a Message" },
-                { id: "prayer", label: "Prayer Request" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveForm(tab.id as "message" | "prayer")}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    activeForm === tab.id ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {contactCards.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <motion.a key={item.label} href={item.href}
+                  target={item.label === "Address" ? "_blank" : undefined}
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.7, delay: i * 0.12 }}
+                  className={`${t.glass} rounded-3xl p-8 block group`}>
+                  <div className={`${t.glass} rounded-full w-12 h-12 flex items-center justify-center mb-5`}>
+                    <Icon className={`w-5 h-5 ${t.ink70}`} />
+                  </div>
+                  <p className={`${t.label} text-xs tracking-widest uppercase mb-3`}>{item.label}</p>
+                  {item.lines.map((line) => (
+                    <p key={line} className={`text-sm ${t.ink70} leading-relaxed`}>{line}</p>
+                  ))}
+                </motion.a>
+              );
+            })}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.8 }}
+            className={`${t.glass} rounded-3xl p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-8`}>
+            <div className="md:w-1/3">
+              <p className={`${t.label} text-xs tracking-widest uppercase mb-3`}>Worship With Us</p>
+              <h3 style={SERIF} className={`${t.ink} text-2xl md:text-3xl tracking-tight`}>Service times.</h3>
+            </div>
+            <div className="flex-1 grid sm:grid-cols-3 gap-6">
+              {serviceTimes.map((service) => (
+                <div key={service.day}>
+                  <p className={`${t.ink} text-base font-medium mb-1`}>{service.day}</p>
+                  <p className={`${t.ink50} text-sm`}>{service.time}</p>
+                </div>
               ))}
             </div>
-
-            {activeForm === "message" && (
-              <Card className="glass-lg p-8 space-y-5">
-                <div>
-                  <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold mb-1">Send a Message</h2>
-                  <p className="text-sm text-muted-foreground">We'll get back to you within 24-48 hours.</p>
-                </div>
-
-                {messageSent && (
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                    <CheckCircle className="w-5 h-5 shrink-0" />
-                    <p className="text-sm font-medium">Message sent! We'll be in touch soon.</p>
-                  </div>
-                )}
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Full Name</label>
-                    <Input value={messageForm.name} onChange={(e) => setMessageForm((p) => ({ ...p, name: e.target.value }))} placeholder="Your name" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</label>
-                    <Input type="email" value={messageForm.email} onChange={(e) => setMessageForm((p) => ({ ...p, email: e.target.value }))} placeholder="your@email.com" />
-                  </div>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Phone (Optional)</label>
-                    <Input value={messageForm.phone} onChange={(e) => setMessageForm((p) => ({ ...p, phone: e.target.value }))} placeholder="+234..." />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Subject</label>
-                    <Input value={messageForm.subject} onChange={(e) => setMessageForm((p) => ({ ...p, subject: e.target.value }))} placeholder="What is this about?" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Message</label>
-                  <textarea
-                    value={messageForm.message}
-                    onChange={(e) => setMessageForm((p) => ({ ...p, message: e.target.value }))}
-                    placeholder="Write your message here..."
-                    rows={5}
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-emerald-500/50 transition-colors text-sm"
-                  />
-                </div>
-                {messageError && <p className="text-sm text-rose-400">{messageError}</p>}
-                <Button
-                  onClick={handleMessage}
-                  disabled={submittingMessage || !messageForm.message.trim()}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-6 text-base font-semibold rounded-xl shadow-lg shadow-emerald-500/20"
-                >
-                  <Send className="w-4 h-4 mr-2" /> {submittingMessage ? "Sending..." : "Send Message"}
-                </Button>
-              </Card>
-            )}
-
-            {activeForm === "prayer" && (
-              <Card className="glass-lg p-8 space-y-5">
-                <div>
-                  <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="text-2xl font-bold mb-1">Prayer Request</h2>
-                  <p className="text-sm text-muted-foreground">No matter what you are facing, we would love to pray with you.</p>
-                </div>
-
-                {prayerSent && (
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-                    <CheckCircle className="w-5 h-5 shrink-0" />
-                    <p className="text-sm font-medium">Prayer request received. We are praying with you!</p>
-                  </div>
-                )}
-
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={prayerForm.anonymous}
-                    onChange={(e) => setPrayerForm((p) => ({ ...p, anonymous: e.target.checked }))}
-                    className="w-4 h-4 accent-cyan-500"
-                  />
-                  <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Submit anonymously</span>
-                </label>
-
-                {!prayerForm.anonymous && (
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Name</label>
-                      <Input value={prayerForm.name} onChange={(e) => setPrayerForm((p) => ({ ...p, name: e.target.value }))} placeholder="Your name" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email (Optional)</label>
-                      <Input type="email" value={prayerForm.email} onChange={(e) => setPrayerForm((p) => ({ ...p, email: e.target.value }))} placeholder="your@email.com" />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Prayer Request</label>
-                  <textarea
-                    value={prayerForm.request}
-                    onChange={(e) => setPrayerForm((p) => ({ ...p, request: e.target.value }))}
-                    placeholder="Share what's on your heart..."
-                    rows={6}
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-cyan-500/50 transition-colors text-sm"
-                  />
-                </div>
-
-                <Card className="p-4 border-amber-500/20 bg-amber-500/5">
-                  <p className="text-xs text-amber-300 leading-relaxed">
-                    Your prayer request is treated with the utmost confidentiality and shared only with our prayer team.
-                  </p>
-                </Card>
-
-                {prayerError && <p className="text-sm text-rose-400">{prayerError}</p>}
-                <Button
-                  onClick={handlePrayer}
-                  disabled={submittingPrayer || !prayerForm.request.trim()}
-                  className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white py-6 text-base font-semibold rounded-xl shadow-lg shadow-cyan-500/20"
-                >
-                  <Heart className="w-4 h-4 mr-2" /> {submittingPrayer ? "Submitting..." : "Submit Prayer Request"}
-                </Button>
-              </Card>
-            )}
-          </div>
-
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="glass-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-[#1a2a6e] to-[#0f1a4a] flex flex-col items-center justify-center gap-3 border-b border-white/10">
-                <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-amber-400" />
-                </div>
-                <p className="text-sm text-blue-200 text-center px-4">{contactCards[1]?.lines.join(" ")}</p>
-                <a
-                  href={contactCards[1]?.href ?? "https://maps.google.com/?q=Wuse+II+Abuja"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-all"
-                >
-                  Open in Google Maps
-                </a>
-              </div>
-              <div className="p-5 space-y-3">
-                <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold">Service Times</h3>
-                {serviceTimes.map((service) => (
-                  <div key={service.day} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{service.day}</span>
-                    <span className="font-medium text-cyan-400">{service.time}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="glass-lg p-6 space-y-4">
-              <h3 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className="font-bold">Follow Us</h3>
-              <div className="space-y-3">
-                {socials.map((social) => (
-                  <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-                  >
-                    <span className="text-sm font-medium">{social.label}</span>
-                    <span className={`text-xs ${social.color}`}>{social.handle}</span>
-                  </a>
-                ))}
-              </div>
-            </Card>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </section>
+
+      <SiteFooter />
     </div>
   );
 }

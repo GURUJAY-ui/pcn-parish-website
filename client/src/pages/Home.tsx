@@ -1,99 +1,27 @@
 /**
  * Home.tsx — PCN First Abuja Parish
- * Full light/dark theme support across all sections
+ * Liquid-glass cinematic design (MotionSites-inspired) with full
+ * light/dark theme support. Shared design system lives in
+ * "@/lib/glass"; Nav and Footer are shared components.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import {
-  ArrowRight, Users, Globe, BookOpen, Church,
-  Menu, X, ChevronLeft, ChevronRight, Play,
-  Heart, MapPin, Phone, Mail, Clock,
+  ArrowRight, ArrowUpRight, Users, Globe, BookOpen, Church,
+  Play, Heart, MapPin, Clock,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTheme } from "@/contexts/ThemeContext";
+import { motion } from "framer-motion";
+import {
+  useGlassTheme, SERIF, SOCIAL_LINKS,
+  isAllowedExternalUrl, SocialIcon,
+} from "@/lib/glass";
+import SiteNav from "@/components/SiteNav";
+import SiteFooter from "@/components/SiteFooter";
 import { api } from "@/lib/api";
 
-// ── SEC-02 — URL allowlist ────────────────────────────────────────
-const ALLOWED_SOCIAL_DOMAINS = [
-  "facebook.com", /* "x.com", */   "twitter.com",
-  "youtube.com", "youtu.be",  "instagram.com", "tiktok.com",
-];
-const isAllowedExternalUrl = (url: string): boolean => {
-  try {
-    const { hostname } = new URL(url);
-    return ALLOWED_SOCIAL_DOMAINS.some(
-      (d) => hostname === d || hostname.endsWith(`.${d}`)
-    );
-  } catch { return false; }
-};
-
-// ── SEC-04 — Frozen social icon data ─────────────────────────────
-const SOCIAL_LINKS = Object.freeze([
-  { label: "Facebook",  href: "https://facebook.com/pcnfap",              isInstagram: false, isTikTok: false, path: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" },
-  // { label: "X",         href: "https://x.com/firstabujapresbyterian",     isInstagram: false, isTikTok: false, path: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.165-6.75-5.913 6.75h-3.308l7.73-8.835L2.56 2.25h6.772l4.681 6.187 5.431-6.187zM17.7 20.005h1.813L6.283 3.993H4.366l13.334 16.012z" },
-  { label: "YouTube",   href: "https://youtube.com/@pulpitfaptv",         isInstagram: false, isTikTok: false, path: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" },
-   { label: "Instagram", href: "https://instagram.com/pcnfap",             isInstagram: true,  isTikTok: false, path: "" },
-  { label: "TikTok",    href: "https://www.tiktok.com/@pcnfap",           isInstagram: false, isTikTok: true,  path: "" },
-] as const);
-
-// ── SEC-05 — Safe image URL validator ────────────────────────────
-const ALLOWED_IMG_HOSTS = ["d2xsxph8kpxj0f.cloudfront.net"];
-const isSafeImageUrl = (url: string): boolean => {
-  if (url.startsWith("/")) return true;
-  try {
-    const { hostname } = new URL(url);
-    return ALLOWED_IMG_HOSTS.includes(hostname);
-  } catch { return false; }
-};
-
-// ── Hero slides ───────────────────────────────────────────────────
-const FALLBACK_HERO_SLIDES = [
-  {
-    id: 1, label: "Welcome",
-    title: "Welcome to The\nPresbyterian\nChurch of Nigeria",
-    subtitle: "Transforming Lives, Changing Destinies",
-    image: "/assets/PCN-FAP-CONG.jpeg",
-    cta1: { label: "Learn More",  route: "/about"  as string, href: undefined as string | undefined },
-    cta2: { label: "Watch Live",  route: undefined as string | undefined, href: "https://youtube.com/@pulpitfaptv" },
-  },
-  {
-    id: 2, label: "Community",
-    title: "Join Our\nGrowing\nFamily",
-    subtitle: "Experience Faith, Fellowship, and Purpose",
-    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663442941753/aGVKkYmkpS8dwgNiKtJuPS/hero-safeguarding-DaMHzJv7ufA7TMjb5jH9wR.webp",
-    cta1: { label: "Visit Us",    route: "/contact" as string, href: undefined as string | undefined },
-    cta2: { label: "Our Story",   route: "/about"   as string, href: undefined as string | undefined },
-  },
-  {
-    id: 3, label: "Grace",
-    title: "Grace\nUpon\nGrace",
-    subtitle: "Happy Presbyterians! From glory to glory!",
-    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663442941753/aGVKkYmkpS8dwgNiKtJuPS/ministry-background-VH63ZYgwAZ2uQP63B7gG3J.webp",
-    cta1: { label: "Our Mission", route: "/about"      as string, href: undefined as string | undefined },
-    cta2: { label: "Get Involved",route: "/ministries" as string, href: undefined as string | undefined },
-  },
-] as const;
-
-// ── SEC-08 — Hardcoded contact constants ─────────────────────────
-const CONTACT = Object.freeze({
-  phone:     "+234 (0) 8151111877",
-  phoneHref: "tel:+2348151111877",
-  email:     "pulpitfap@gmail.com",
-  emailHref: "mailto:pulpitfap@gmail.com",
-  address:   "No. 5 Boke Close, off Sakono Street, Opposite AP Plaza, Wuse II, Abuja",
-});
-
-const NAV_ITEMS = [
-  { label: "Home",        route: "/"           },
-  { label: "About",       route: "/about"      },
-  { label: "Leadership",  route: "/staff"      },
-  { label: "Sermons",     route: "/sermons"    },
-  { label: "Testimonies", route: "/testimonies"},
-  { label: "Ministries",  route: "/ministries" },
-  { label: "Events",      route: "/events"     },
-  { label: "Contact",     route: "/contact"    },
-] as const;
+// Hero background video — parish footage in client/public/assets/hero.mp4.
+const HERO_VIDEO_URL = "/assets/hero.mp4";
 
 const FALLBACK_MINISTRIES = [
   { label: "Sermons & Archive",  desc: "Complete sermon library, weekly messages and spiritual resources",    icon: Globe,    accent: "#06b6d4", route: "/sermons"    },
@@ -105,458 +33,322 @@ const FALLBACK_MINISTRIES = [
 ] as const;
 
 // ═════════════════════════════════════════════════════════════════
-// NAV
+// HERO — full viewport video background (MotionSites "Asme" spec)
+// Always dark (white-on-video) in both themes for legibility.
 // ═════════════════════════════════════════════════════════════════
-function Nav() {
-  const { theme } = useTheme();
-  const isLight = theme === "light";
-  const [scrolled, setScrolled]     = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [, navigate]                = useLocation();
+function Hero() {
+  const [, navigate] = useLocation();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fadedOut = useRef(false);
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
+  // Seamless crossfade-to-black loop. Opacity is driven by a CSS transition
+  // (robust against rAF throttling in background tabs); JS just toggles the
+  // target value at the right moments to fade in, fade out near the end, and
+  // restart the loop — the smooth "crossfade to black between plays" effect.
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
+    const v = videoRef.current;
+    if (!v) return;
+    v.style.transition = "opacity 500ms ease";
+
+    const fadeIn = () => { v.play().catch(() => {}); v.style.opacity = "1"; };
+    const onTimeUpdate = () => {
+      if (v.duration && v.duration - v.currentTime <= 0.55 && !fadedOut.current) {
+        fadedOut.current = true;
+        v.style.opacity = "0";
+      }
+    };
+    const onEnded = () => {
+      v.style.opacity = "0";
+      setTimeout(() => {
+        v.currentTime = 0;
+        v.play().catch(() => {});
+        fadedOut.current = false;
+        v.style.opacity = "1";
+      }, 100);
+    };
+
+    v.addEventListener("timeupdate", onTimeUpdate);
+    v.addEventListener("ended", onEnded);
+    fadeIn();
+    return () => {
+      v.removeEventListener("timeupdate", onTimeUpdate);
+      v.removeEventListener("ended", onEnded);
+    };
   }, []);
 
-  const go = useCallback((r: string) => { setMobileOpen(false); navigate(r); }, [navigate]);
-
-  return (
-    <>
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-        scrolled
-          ? isLight
-            ? "bg-[#fffaf0]/88 backdrop-blur-xl border-b border-[#1a3a6b]/10 shadow-xl shadow-[#1a3a6b]/8"
-            : "bg-[#050912]/96 backdrop-blur-xl border-b border-amber-500/15 shadow-2xl shadow-black/50"
-          : isLight
-            ? "bg-gradient-to-b from-[#fffaf0]/92 via-[#fffaf0]/50 to-transparent"
-            : "bg-transparent"}`}>
-        <div className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent ${isLight ? "via-[#c8972a]" : "via-amber-400"} to-transparent transition-opacity duration-500 ${scrolled ? "opacity-100" : "opacity-0"}`} />
-
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-          <button onClick={() => go("/")} className="flex items-center gap-3 group">
-            <img src="/assets/pcn-logo.png" alt="PCN Logo" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
-            <div className="hidden lg:flex flex-col leading-tight">
-              <span style={{ fontFamily: "'Cormorant Garamond', serif" }} className={`font-black text-base tracking-wide ${isLight ? "text-[#132744]" : "text-white"}`}>PCN First Abuja</span>
-              <span className={`text-[9px] uppercase tracking-[0.25em] ${isLight ? "text-[#c8972a]" : "text-amber-400/60"}`}>Parish</span>
-            </div>
-          </button>
-
-          <div className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map((n) => (
-              <button key={n.route} onClick={() => go(n.route)}
-                className={`nav-link ${isLight ? "text-[#1a3a6b]/80" : "text-white/70"}`}>
-                {n.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="hidden md:block">
-            <button onClick={() => go("/donations")}
-              className="button-primary">
-              Give Online
-            </button>
-          </div>
-
-          <button onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu"
-            className={`md:hidden w-9 h-9 flex items-center justify-center rounded-lg ${
-              isLight
-                ? "bg-white/80 border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/8"
-                : "bg-white/5 border border-white/8 text-white"
-            }`}>
-            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setMobileOpen(false)}
-              className={`fixed inset-0 z-40 backdrop-blur-sm md:hidden ${isLight ? "bg-[#132744]/18" : "bg-black/70"}`} />
-            <motion.div
-              initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "100%", opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] }}
-              className={`fixed inset-y-0 right-0 z-50 w-72 backdrop-blur-2xl flex flex-col pt-20 pb-8 px-6 ${
-                isLight
-                  ? "bg-[#fffaf0]/96 border-l border-[#1a3a6b]/10"
-                  : "bg-[#050912]/99 border-l border-white/6"
-              }`}>
-              <button onClick={() => setMobileOpen(false)} aria-label="Close"
-                className={`absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-lg ${
-                  isLight
-                    ? "bg-white/85 border border-[#1a3a6b]/10 text-[#132744]"
-                    : "bg-white/5 border border-white/8 text-white"
-                }`}>
-                <X className="w-4 h-4" />
-              </button>
-              <div className="flex flex-col gap-1 flex-1">
-                {NAV_ITEMS.map((n, i) => (
-                  <motion.button key={n.route}
-                    initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    onClick={() => go(n.route)}
-                    className={`nav-link text-left w-full ${isLight ? "text-[#1a3a6b]/80" : "text-white/70"}`}>
-                    {n.label}
-                  </motion.button>
-                ))}
-              </div>
-              <button onClick={() => go("/donations")}
-                className="button-primary w-full justify-center">
-                Give Online
-              </button>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
-
-// ═════════════════════════════════════════════════════════════════
-// HERO CAROUSEL
-// ═════════════════════════════════════════════════════════════════
-function HeroCarousel() {
-  const { theme } = useTheme();
-  const isLight = theme === "light";
-  const [current, setCurrent] = useState(0);
-  const [, navigate]          = useLocation();
-  const timerRef              = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [heroSlides, setHeroSlides] = useState(FALLBACK_HERO_SLIDES as readonly {
-    id: number;
-    label: string;
-    title: string;
-    subtitle: string;
-    image: string;
-    cta1: { label: string; route?: string; href?: string };
-    cta2: { label: string; route?: string; href?: string };
-  }[]);
-
-  useEffect(() => {
-    api.getSiteContent("home")
-      .then((data) => {
-        if (Array.isArray(data?.heroSlides) && data.heroSlides.length > 0) {
-          setHeroSlides(
-            data.heroSlides.map((slide: { id?: number; label?: string; title?: string; subtitle?: string; image?: string; cta1?: { label?: string; route?: string; href?: string }; cta2?: { label?: string; route?: string; href?: string } }, index: number) => ({
-              id: slide.id ?? index + 1,
-              label: slide.label ?? "",
-              title: slide.title ?? "",
-              subtitle: slide.subtitle ?? "",
-              image:
-                index === 0
-                  ? "/assets/PCN-FAP-CONG.jpeg"
-                  : index === 1
-                    ? "/assets/Pcn-fap-cong 2.jpeg"
-                    : (slide.image ?? ""),
-              cta1: slide.cta1 ?? { label: "", route: undefined, href: undefined },
-              cta2: slide.cta2 ?? { label: "", route: undefined, href: undefined },
-            }))
-          );
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const startTimer = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() =>
-      setCurrent((p) => (p + 1) % heroSlides.length), 6000);
-  }, [heroSlides.length]);
-
-  useEffect(() => {
-    startTimer();
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [startTimer]);
-
-  const go = (dir: 1 | -1) => {
-    setCurrent((p) => (p + dir + heroSlides.length) % heroSlides.length);
-    startTimer();
+  const submitEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await api.createContact({
+        name: "", email, phone: "",
+        subject: "Newsletter Signup",
+        message: "Homepage bulletin / newsletter signup.",
+        type: "message", anonymous: false,
+      });
+      setSubscribed(true);
+      setEmail("");
+    } catch {
+      /* keep the field so they can retry */
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const slide = heroSlides[current];
-
   return (
-    <section className="relative h-screen min-h-[700px] flex items-end overflow-hidden">
-      {heroSlides.map((s, i) => (
-        <div key={s.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ${i === current ? "opacity-100" : "opacity-0"}`}>
-          {isSafeImageUrl(s.image) && (
-            <motion.img src={s.image} alt={s.label} className="w-full h-full object-cover"
-              animate={{ scale: i === current ? 1.07 : 1 }}
-              transition={{ duration: 8, ease: "linear" }} />
-          )}
-          <div className={`absolute inset-0 ${isLight
-            ? "bg-gradient-to-t from-[#fffaf0] via-[#fffaf0]/52 to-[#fffaf0]/10"
-            : "bg-gradient-to-t from-[#050912] via-[#050912]/55 to-[#050912]/10"}`} />
-          <div className={`absolute inset-0 ${isLight
-            ? "bg-gradient-to-r from-[#fffaf0]/82 via-[#fffaf0]/22 to-transparent"
-            : "bg-gradient-to-r from-[#050912]/65 via-transparent to-transparent"}`} />
-          {isLight && <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(200,151,42,0.18),transparent_28%)]" />}
-        </div>
-      ))}
+    <section className="relative min-h-screen flex flex-col overflow-hidden bg-black">
+      {/* Background video — fades in on canplay, crossfades to black each loop */}
+      <video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover object-bottom"
+        style={{ opacity: 0 }}
+        src={HERO_VIDEO_URL}
+        muted
+        autoPlay
+        playsInline
+        preload="auto"
+      />
+      <div className="absolute inset-0 bg-black/45" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/40" />
 
-      <div className="absolute top-28 right-8 z-20 hidden lg:flex flex-col items-end gap-3">
-        {heroSlides.map((s, i) => (
-          <button key={s.id} onClick={() => { setCurrent(i); startTimer(); }}
-            className={`text-right transition-all duration-300 ${i === current ? "opacity-100" : "opacity-25 hover:opacity-50"}`}>
-            <span className={`block text-[9px] font-black uppercase tracking-[0.25em] ${i === current ? "text-amber-500" : isLight ? "text-[#1a3a6b]" : "text-white"}`}>
-              {s.label}
-            </span>
-            <div className={`h-px mt-1.5 transition-all duration-500 ml-auto ${i === current ? "bg-amber-500 w-10" : isLight ? "bg-[#1a3a6b]/25 w-4" : "bg-white/30 w-4"}`} />
-          </button>
-        ))}
-      </div>
+      {/* Hero content */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-12 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] }}
+          className="flex flex-col items-center gap-7 max-w-4xl w-full">
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pb-20 w-full">
-        <AnimatePresence mode="wait">
-          <motion.div key={current}
-            initial={{ opacity: 0, y: 36 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] }}
-            className="max-w-3xl space-y-6">
+          <h1 style={SERIF}
+            className="text-5xl sm:text-6xl md:text-8xl text-white tracking-tight leading-[1.02]">
+            You're welcome <em className="italic text-white/70">home.</em>
+          </h1>
 
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-400/25 bg-amber-400/8">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-amber-500 text-[9px] font-black uppercase tracking-[0.3em]">First Abuja Parish</span>
+          {/* Email capture pill */}
+          {subscribed ? (
+            <div className="liquid-glass rounded-full px-6 py-3.5 flex items-center gap-2.5 text-white text-sm">
+              <span className="text-emerald-400 text-base">✓</span>
+              You're on the list — see you Sunday.
             </div>
-
-            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-              className={`text-6xl md:text-8xl font-black leading-[0.87] tracking-tight whitespace-pre-line ${isLight ? "text-[#132744] drop-shadow-[0_10px_32px_rgba(255,250,240,0.4)]" : "text-white"}`}>
-              {slide.title}
-            </h1>
-
-            <p className={`text-lg max-w-lg leading-relaxed ${isLight ? "text-[#1a3a6b]/72" : "text-white/45"}`}>{slide.subtitle}</p>
-
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button onClick={() => navigate(slide.cta1.route!)}
-                className="hero-cta hero-cta-primary group">
-                {slide.cta1.label}
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              {slide.cta2.href ? (
-                isAllowedExternalUrl(slide.cta2.href) ? (
-                  <a href={slide.cta2.href} target="_blank" rel="noopener noreferrer"
-                    className="hero-cta hero-cta-secondary">
-                    <Play className={`w-4 h-4 ${isLight ? "fill-[#1a3a6b]/70" : "fill-white/70"}`} /> {slide.cta2.label}
-                  </a>
-                ) : null
-              ) : (
-                <button onClick={() => navigate(slide.cta2.route!)}
-                  className="hero-cta hero-cta-secondary">
-                  {slide.cta2.label}
+          ) : (
+            <form onSubmit={submitEmail} className="max-w-xl w-full">
+              <div className="liquid-glass rounded-full pl-6 pr-2 py-2 flex items-center gap-3">
+                <input
+                  type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email for weekly updates"
+                  className="flex-1 min-w-0 bg-transparent text-white placeholder:text-white/40 text-sm focus:outline-none"
+                />
+                <button type="submit" disabled={submitting} aria-label="Subscribe"
+                  className="bg-white rounded-full p-3 text-black hover:bg-neutral-200 transition-colors disabled:opacity-60 shrink-0">
+                  <ArrowRight className="w-5 h-5" />
                 </button>
-              )}
-            </div>
-          </motion.div>
-        </AnimatePresence>
+              </div>
+            </form>
+          )}
 
-        <div className="flex gap-2 mt-10">
-          {heroSlides.map((_, i) => (
-            <button key={i} onClick={() => { setCurrent(i); startTimer(); }}
-              className={`h-0.5 rounded-full transition-all duration-400 ${i === current ? "bg-amber-500 w-10" : isLight ? "bg-[#1a3a6b]/20 w-3 hover:bg-[#1a3a6b]/40" : "bg-white/20 w-3 hover:bg-white/40"}`} />
-          ))}
-        </div>
+          <p className="text-white/70 text-sm leading-relaxed px-4 max-w-lg">
+            Join us in worship at Wuse II, Abuja. Stay updated with our weekly bulletin and never miss a
+            service, event, or moment of grace.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-3">
+            <button onClick={() => navigate("/contact")}
+              className="liquid-glass rounded-full px-8 py-3 text-white text-sm font-medium hover:bg-white/5 transition-colors">
+              Plan Your Visit
+            </button>
+            <a href="https://youtube.com/@pulpitfaptv" target="_blank" rel="noopener noreferrer"
+              className="liquid-glass rounded-full px-8 py-3 text-white text-sm font-medium flex items-center gap-2 hover:bg-white/5 transition-colors">
+              <Play className="w-4 h-4 fill-white/70" /> Watch Live
+            </a>
+          </div>
+        </motion.div>
       </div>
 
-      <button onClick={() => go(-1)} aria-label="Previous"
-        className={`absolute left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full transition-all backdrop-blur-sm ${
-          isLight
-            ? "bg-white/82 hover:bg-white border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/10"
-            : "bg-white/6 hover:bg-white/12 border border-white/8 text-white"
-        }`}>
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-      <button onClick={() => go(1)} aria-label="Next"
-        className={`absolute right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full transition-all backdrop-blur-sm ${
-          isLight
-            ? "bg-white/82 hover:bg-white border border-[#1a3a6b]/10 text-[#132744] shadow-lg shadow-[#1a3a6b]/10"
-            : "bg-white/6 hover:bg-white/12 border border-white/8 text-white"
-        }`}>
-        <ChevronRight className="w-5 h-5" />
-      </button>
-
-      <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-30 select-none">
-        <div className={`w-px h-9 bg-gradient-to-b from-transparent ${isLight ? "to-[#1a3a6b]" : "to-white"} animate-pulse`} />
-        <span className={`text-[8px] uppercase tracking-[0.35em] ${isLight ? "text-[#1a3a6b]" : "text-white"}`}>Scroll</span>
+      {/* Social icons footer */}
+      <div className="relative z-10 flex justify-center gap-4 pb-10">
+        {SOCIAL_LINKS.map((s) =>
+          isAllowedExternalUrl(s.href) ? (
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+              title={s.label} aria-label={s.label}
+              className="liquid-glass rounded-full p-4 text-white/80 hover:text-white hover:bg-white/5 transition-all">
+              <SocialIcon s={s} />
+            </a>
+          ) : null
+        )}
       </div>
     </section>
   );
 }
 
 // ═════════════════════════════════════════════════════════════════
-// SERVICE TIMES
+// PASTOR'S WELCOME — editorial section
+// ═════════════════════════════════════════════════════════════════
+function PastorWelcome() {
+  const t = useGlassTheme();
+  return (
+    <section className={`relative ${t.pageBg} pt-32 md:pt-44 pb-16 md:pb-24 px-6 overflow-hidden`}>
+      <div className={`absolute inset-0 ${t.radial}`} />
+
+      <div className="relative max-w-4xl mx-auto text-center">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}
+          className={`${t.label} text-sm tracking-widest uppercase mb-8`}>
+          A Message from the Pulpit
+        </motion.p>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8, delay: 0.1 }}
+          style={SERIF}
+          className={`text-4xl md:text-6xl lg:text-7xl ${t.ink} leading-[1.1] tracking-tight mb-12`}>
+          Dearly beloved, <em className={t.em}>welcome</em>
+          <span className="hidden md:block" />
+          {" "}<em className={t.em}>home.</em>
+        </motion.h2>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.8, delay: 0.2 }}
+          className={`space-y-6 ${t.ink50} text-base md:text-lg leading-relaxed max-w-3xl mx-auto`}>
+          <p>
+            Thank you for visiting us. We appreciate God for your life and the great decision you have
+            taken to be with us today. Our earnest prayer is that you will be greatly uplifted and the
+            blessings of your fellowship with us shall abide in the precious name of our Lord and Saviour
+            Jesus Christ.
+          </p>
+          <p>
+            We are a <span className={t.ink}>Bible-centered, Holy Spirit led Reformed Church</span>.
+            Our mission is to raise worshippers who are passionate for God, winning in life, and positively
+            changing lives through kingdom service to the glory of God.
+          </p>
+          <p>
+            Our core values are <em style={SERIF} className={`italic ${t.ink}`}>Righteousness</em>,{" "}
+            <em style={SERIF} className={`italic ${t.ink}`}>Love</em> and{" "}
+            <em style={SERIF} className={`italic ${t.ink}`}>Excellence</em>.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.1 }}
+          className="mt-14 flex flex-col items-center gap-6">
+          <div className={`${t.glass} rounded-2xl px-8 py-6 flex flex-col sm:flex-row items-center gap-5`}>
+            <div className={`${t.glass} rounded-full w-14 h-14 flex items-center justify-center shrink-0`}>
+              <span style={SERIF} className={`${t.ink} text-lg`}>MNI</span>
+            </div>
+            <div className="text-center sm:text-left">
+              <p className={`${t.label} text-[10px] uppercase tracking-widest mb-1`}>Yours in Christ's Service</p>
+              <p style={SERIF} className={`${t.ink} text-2xl tracking-tight`}>Most Rev. Mba Nwankwo Idika</p>
+              <p className={`${t.ink50} text-sm`}>Minister In-Charge, PCN First Abuja Parish</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-2.5">
+            {["Bible-Centered", "Holy Spirit Led", "Reformed Church", "Righteousness", "Love", "Excellence"].map((label) => (
+              <span key={label} className={`${t.glass} rounded-full px-4 py-1.5 text-[11px] ${t.ink60}`}>{label}</span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════
+// SERVICE TIMES — liquid-glass cards
 // ═════════════════════════════════════════════════════════════════
 function ServiceTimes() {
-  const { theme } = useTheme();
-  const isLight = theme === "light";
-
+  const t = useGlassTheme();
   const SERVICES = [
-    { day: "Sunday",    name: "Worship Service", time: "7:00 AM & 9:30 AM", note: "Main Sanctuary — Wuse II",                                                                       accent: "#f59e0b", featured: false },
-    { day: "Tuesday",   name: "Bible Study",     time: "6:00 PM",           note: "Various district meeting points. Contact your district elder for the nearest venue.",            accent: "#f59e0b", featured: true  },
-    { day: "Wednesday", name: "Midweek Service", time: "6:00 PM",           note: "Main Sanctuary — Wuse II",                                                                       accent: "#06b6d4", featured: false },
+    { day: "Sunday",    name: "Worship Service", time: "7:00 AM & 9:30 AM", note: "Main Sanctuary — Wuse II",                                                                       featured: false },
+    { day: "Tuesday",   name: "Bible Study",     time: "6:00 PM",           note: "Various district meeting points. Contact your district elder for the nearest venue.",            featured: true  },
+    { day: "Wednesday", name: "Midweek Service", time: "6:00 PM",           note: "Main Sanctuary — Wuse II",                                                                       featured: false },
   ];
 
   return (
-    <section id="service-times" className="py-28 relative overflow-hidden scroll-mt-16"
-      style={{
-        background: isLight
-          ? "linear-gradient(135deg,#f8f7f4 0%,#ffffff 60%,#f3efe6 100%)"
-          : "linear-gradient(135deg,#0a1628 0%,#050912 60%,#0a0f18 100%)"
-      }}>
-      {/* Grid texture */}
-      <div className="absolute inset-0 opacity-[0.025]"
-        style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 80px,rgba(0,0,0,.5) 80px,rgba(0,0,0,.5) 81px),repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(0,0,0,.5) 80px,rgba(0,0,0,.5) 81px)" }} />
+    <section id="service-times" className={`relative ${t.pageBg} py-24 md:py-32 px-6 overflow-hidden scroll-mt-24`}>
+      <div className={`absolute inset-0 ${t.radialMid}`} />
 
-      <div className="max-w-5xl mx-auto px-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} className="text-center mb-20 space-y-3">
-          <p className={`text-[9px] font-black uppercase tracking-[0.4em] ${isLight ? "text-amber-600/70" : "text-amber-400/60"}`}>Join Us</p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            className={`text-6xl font-black ${isLight ? "text-[#132744]" : "text-white"}`}>Service Times</h2>
-          <div className="w-14 h-px bg-amber-500/40 mx-auto" />
+      <div className="relative max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7 }}
+          className="flex items-end justify-between mb-12 md:mb-16">
+          <h2 style={SERIF} className={`text-3xl md:text-5xl ${t.ink} tracking-tight`}>
+            Join us in <em className={t.em}>worship.</em>
+          </h2>
+          <span className={`hidden md:block ${t.label} text-sm tracking-widest uppercase`}>Service Times</span>
         </motion.div>
 
-        <div className="relative space-y-6 md:space-y-0">
-          <div className={`absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px hidden md:block ${isLight ? "bg-[#1a3a6b]/10" : "bg-white/5"}`} />
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {SERVICES.map((s, i) => (
             <motion.div key={s.day}
-              initial={{ opacity: 0, x: i % 2 === 0 ? -24 : 24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.55, delay: i * 0.1 }}
-              className={`relative flex md:items-center gap-8 pb-10 ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"}`}>
-
-              <div className="flex-1">
-                <div className={`relative rounded-2xl border p-8 transition-all duration-300 ${
-                  s.featured
-                    ? isLight
-                      ? "border-amber-500/30 bg-amber-500/6 shadow-xl shadow-amber-500/10"
-                      : "border-amber-500/25 bg-amber-500/4 shadow-2xl shadow-amber-500/8"
-                    : isLight
-                      ? "border-[#1a3a6b]/10 bg-white/70 hover:border-[#1a3a6b]/20 hover:bg-white/90 shadow-lg shadow-[#1a3a6b]/5"
-                      : "border-white/6 bg-white/2 hover:border-white/12 hover:bg-white/4"
-                }`}>
-                  {s.featured && (
-                    <div className="absolute -top-3 left-6">
-                      <span className="bg-amber-500 text-[#050912] text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Weekly</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-x-0 top-0 h-px rounded-t-2xl"
-                    style={{ background: `linear-gradient(90deg,transparent,${s.accent}45,transparent)` }} />
-
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: s.accent }}>{s.day}</p>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                    className={`text-3xl font-black mb-3 ${isLight ? "text-[#132744]" : "text-white"}`}>{s.name}</h3>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Clock className={`w-3.5 h-3.5 ${isLight ? "text-[#1a3a6b]/30" : "text-white/25"}`} />
-                    <p className={`text-lg font-semibold ${isLight ? "text-[#1a3a6b]/80" : "text-white/70"}`}>{s.time}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <MapPin className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isLight ? "text-[#1a3a6b]/20" : "text-white/20"}`} />
-                    <p className={`text-sm leading-relaxed ${isLight ? "text-[#1a3a6b]/50" : "text-white/35"}`}>{s.note}</p>
-                  </div>
-                </div>
+              initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.8, delay: i * 0.15 }}
+              className={`${t.glass} rounded-3xl p-8 relative`}>
+              {s.featured && (
+                <span className={`absolute top-6 right-6 ${t.glass} rounded-full px-3 py-1 text-[10px] ${t.L ? "text-[#c8972a]" : "text-white/70"} uppercase tracking-widest`}>Weekly</span>
+              )}
+              <p className={`${t.label} text-xs tracking-widest uppercase mb-4`}>{s.day}</p>
+              <h3 style={SERIF} className={`${t.ink} text-2xl md:text-3xl tracking-tight mb-5`}>{s.name}</h3>
+              <div className="flex items-center gap-2.5 mb-4">
+                <Clock className={`w-4 h-4 ${t.ink40}`} />
+                <p className={`${t.ink} text-base md:text-lg`}>{s.time}</p>
               </div>
-
-              <div className={`hidden md:flex w-5 h-5 rounded-full border-2 border-amber-500/35 shrink-0 items-center justify-center z-10 ${isLight ? "bg-[#f8f7f4]" : "bg-[#050912]"}`}>
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <div className="flex items-start gap-2.5">
+                <MapPin className={`w-4 h-4 mt-0.5 shrink-0 ${t.ink30}`} />
+                <p className={`${t.ink50} text-sm leading-relaxed`}>{s.note}</p>
               </div>
-
-              <div className="flex-1 hidden md:block" />
             </motion.div>
           ))}
         </div>
 
-        <p className={`text-center text-sm mt-6 ${isLight ? "text-[#1a3a6b]/35" : "text-white/20"}`}>
+        <motion.p
+          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+          viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.4 }}
+          className={`text-center ${t.ink30} text-sm mt-10`}>
           All are welcome. Come as you are and experience the love of God.
-        </p>
+        </motion.p>
       </div>
     </section>
   );
 }
 
 // ═════════════════════════════════════════════════════════════════
-// PASTOR'S WELCOME
+// FEATURED — congregation image with glass overlay card
+// (overlay stays dark in both themes for legibility over the photo)
 // ═════════════════════════════════════════════════════════════════
-function PastorWelcome() {
-  const { theme } = useTheme();
-  const isLight = theme === "light";
-
+function FeaturedSection() {
+  const t = useGlassTheme();
   return (
-    <section className={`py-28 relative overflow-hidden ${isLight ? "bg-[#f0ede8]" : "bg-[#050912]"}`}>
-      <div className={`absolute top-0 right-0 w-[700px] h-[500px] rounded-full blur-[140px] ${isLight ? "bg-amber-500/8" : "bg-amber-500/3"}`} />
-      <div className="absolute left-4 top-10 select-none pointer-events-none"
-        style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(100px,18vw,220px)", lineHeight: 1, color: isLight ? "rgba(200,151,42,0.07)" : "rgba(245,158,11,0.05)", fontWeight: 900 }}>
-        "
-      </div>
+    <section className={`${t.pageBg} pt-6 md:pt-10 pb-20 md:pb-28 px-6 overflow-hidden`}>
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.9 }}
+          className="rounded-3xl overflow-hidden relative aspect-[4/5] sm:aspect-[4/3] md:aspect-video group">
+          <img src="/assets/PCN-FAP-CONG.jpeg" alt="PCN First Abuja Parish congregation"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-      <div className="max-w-4xl mx-auto px-6 relative">
-        <motion.div initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.75 }}>
-
-          <div className="text-center mb-12 space-y-3">
-            <p className={`text-[9px] font-black uppercase tracking-[0.4em] ${isLight ? "text-amber-600/60" : "text-amber-400/50"}`}>A Message from the Pulpit</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-              className={`text-5xl md:text-6xl font-black ${isLight ? "text-[#132744]" : "text-white"}`}>
-              Dearly Beloved, <span className="text-amber-500">Welcome</span>
-            </h2>
-            <div className="w-12 h-px bg-amber-500/35 mx-auto" />
-          </div>
-
-          <div className={`space-y-6 text-lg leading-relaxed text-center max-w-3xl mx-auto ${isLight ? "text-[#1a3a6b]/60" : "text-white/45"}`}>
-            <p>
-              Thank you for visiting us. We appreciate God for your life and the great decision you have
-              taken to be with us today. Our earnest prayer is that you will be greatly uplifted and the
-              blessings of your fellowship with us shall abide in the precious name of our Lord and Saviour
-              Jesus Christ.
-            </p>
-            <p>
-              We are a <strong className={`font-semibold ${isLight ? "text-[#132744]" : "text-white"}`}>Bible-centered, Holy Spirit led Reformed Church</strong>.
-              Our mission is to raise worshippers who are passionate for God, winning in life, and positively
-              changing lives through kingdom service to the glory of God.
-            </p>
-            <p>
-              Our core values are{" "}
-              <span className="text-amber-500 font-semibold">Righteousness</span>,{" "}
-              <span className="text-cyan-500 font-semibold">Love</span> and{" "}
-              <span className="text-emerald-500 font-semibold">Excellence</span>.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-5 my-14 max-w-xs mx-auto">
-            <div className={`flex-1 h-px ${isLight ? "bg-[#1a3a6b]/10" : "bg-white/6"}`} />
-            <div className="w-2 h-2 rotate-45 bg-amber-500/40" />
-            <div className={`flex-1 h-px ${isLight ? "bg-[#1a3a6b]/10" : "bg-white/6"}`} />
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-xl shadow-amber-500/12 shrink-0"
-              style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)" }}>
-              <span style={{ fontFamily: "'Cormorant Garamond',serif" }} className="text-[#050912] text-xl font-black">MNI</span>
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div className="liquid-glass rounded-2xl p-6 md:p-8 max-w-md">
+              <p className="text-white/50 text-xs tracking-widest uppercase mb-3">Worship With Us</p>
+              <p className="text-white text-sm md:text-base leading-relaxed">
+                Happy Presbyterians! From glory to glory. Join us in the sanctuary at Wuse II, or worship
+                with us live from anywhere in the world.
+              </p>
             </div>
-            <div className="text-center sm:text-left">
-              <p className={`text-[9px] italic mb-1 uppercase tracking-widest ${isLight ? "text-[#1a3a6b]/30" : "text-white/20"}`}>Yours in Christ's Service</p>
-              <p style={{ fontFamily: "'Cormorant Garamond',serif" }} className={`text-2xl font-black ${isLight ? "text-[#132744]" : "text-white"}`}>Most Rev. Mba Nwankwo Idika</p>
-              <p className={`text-sm font-medium ${isLight ? "text-amber-600/80" : "text-amber-400/70"}`}>Minister In-Charge, PCN First Abuja Parish</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2.5 mt-10">
-            {[
-              { label: "Bible-Centered",  cls: isLight ? "border-amber-500/20 text-amber-700/70  bg-amber-500/6"  : "border-amber-500/15 text-amber-400/70  bg-amber-500/4"  },
-              { label: "Holy Spirit Led", cls: isLight ? "border-cyan-500/20  text-cyan-700/70   bg-cyan-500/6"   : "border-cyan-500/15  text-cyan-400/70   bg-cyan-500/4"   },
-              { label: "Reformed Church", cls: isLight ? "border-emerald-500/20 text-emerald-700/70 bg-emerald-500/6" : "border-emerald-500/15 text-emerald-400/70 bg-emerald-500/4" },
-              { label: "Righteousness",  cls: isLight ? "border-amber-500/20 text-amber-700/70  bg-amber-500/6"  : "border-amber-500/15 text-amber-400/70  bg-amber-500/4"  },
-              { label: "Love",           cls: isLight ? "border-rose-500/20  text-rose-700/70   bg-rose-500/6"   : "border-rose-500/15  text-rose-400/70   bg-rose-500/4"   },
-              { label: "Excellence",     cls: isLight ? "border-violet-500/20 text-violet-700/70 bg-violet-500/6" : "border-violet-500/15 text-violet-400/70 bg-violet-500/4" },
-            ].map((p) => (
-              <span key={p.label} className={`text-[10px] font-bold px-4 py-1.5 rounded-full border ${p.cls}`}>{p.label}</span>
-            ))}
+            <motion.a
+              href="https://youtube.com/@pulpitfaptv" target="_blank" rel="noopener noreferrer"
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              className="liquid-glass rounded-full px-8 py-3 text-white text-sm font-medium flex items-center gap-2 self-start md:self-auto">
+              <Play className="w-4 h-4 fill-white/70" /> Watch Live
+            </motion.a>
           </div>
         </motion.div>
       </div>
@@ -565,12 +357,11 @@ function PastorWelcome() {
 }
 
 // ═════════════════════════════════════════════════════════════════
-// MINISTRY GRID
+// MINISTRY GRID — glass cards
 // ═════════════════════════════════════════════════════════════════
 function MinistryGrid() {
+  const t = useGlassTheme();
   const [, navigate] = useLocation();
-  const { theme } = useTheme();
-  const isLight = theme === "light";
 
   const [ministries, setMinistries] = useState(FALLBACK_MINISTRIES as readonly {
     label: string;
@@ -598,45 +389,39 @@ function MinistryGrid() {
   }, []);
 
   return (
-    <section className={`py-28 relative overflow-hidden ${isLight ? "bg-white" : "bg-[#060d1a]"}`}>
-      <div className="max-w-7xl mx-auto px-6 space-y-16">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} className="text-center space-y-3 max-w-2xl mx-auto">
-          <p className={`text-[9px] font-black uppercase tracking-[0.4em] ${isLight ? "text-amber-600/60" : "text-amber-400/50"}`}>Explore</p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            className={`text-5xl md:text-6xl font-black ${isLight ? "text-[#132744]" : "text-white"}`}>Explore the Parish</h2>
-          <p className={`leading-relaxed ${isLight ? "text-[#1a3a6b]/45" : "text-white/30"}`}>Everything you need to stay connected — sermons, events, giving, prayer and more.</p>
+    <section className={`relative ${t.pageBg} py-24 md:py-32 px-6 overflow-hidden`}>
+      <div className={`absolute inset-0 ${t.radialMid}`} />
+
+      <div className="relative max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7 }}
+          className="flex items-end justify-between mb-12 md:mb-16">
+          <h2 style={SERIF} className={`text-3xl md:text-5xl ${t.ink} tracking-tight`}>
+            Explore the <em className={t.em}>parish.</em>
+          </h2>
+          <span className={`hidden md:block ${t.label} text-sm tracking-widest uppercase`}>Stay Connected</span>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {ministries.map((m, i) => {
             const Icon = m.icon;
             return (
               <motion.button key={m.label}
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.06 }}
+                initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.8, delay: (i % 3) * 0.15 }}
                 onClick={() => navigate(m.route)}
-                className={`group text-left p-8 rounded-2xl border transition-all duration-400 relative overflow-hidden ${
-                  isLight
-                    ? "border-[#1a3a6b]/8 bg-[#f8f7f4] hover:bg-white hover:border-[#1a3a6b]/15 shadow-sm hover:shadow-lg hover:shadow-[#1a3a6b]/6"
-                    : "border-white/5 bg-white/2 hover:bg-white/4 hover:border-white/10"
-                }`}>
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"
-                  style={{ background: `radial-gradient(ellipse at 20% 20%,${m.accent}07 0%,transparent 70%)` }} />
-                <div className="relative space-y-4">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-                    style={{ background: `${m.accent}18`, border: `1px solid ${m.accent}18` }}>
-                    <Icon className="w-5 h-5" style={{ color: m.accent }} />
+                className={`${t.glass} rounded-3xl p-7 md:p-8 text-left group`}>
+                <div className="flex items-start justify-between mb-6">
+                  <div className={`${t.glass} rounded-full p-3 ${t.ink70}`}>
+                    <Icon className="w-5 h-5" />
                   </div>
-                  <div>
-                    <h3 style={{ fontFamily: "'Cormorant Garamond',serif" }}
-                      className={`text-2xl font-black mb-1.5 ${isLight ? "text-[#132744]" : "text-white"}`}>{m.label}</h3>
-                    <p className={`text-sm leading-relaxed ${isLight ? "text-[#1a3a6b]/45" : "text-white/30"}`}>{m.desc}</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest" style={{ color: m.accent }}>
-                    Explore <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                  <div className={`${t.glass} rounded-full p-2 ${t.ink60} ${t.inkGroupHover} transition-colors`}>
+                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </div>
                 </div>
+                <h3 style={SERIF} className={`${t.ink} text-xl md:text-2xl tracking-tight mb-3`}>{m.label}</h3>
+                <p className={`${t.ink50} text-sm leading-relaxed`}>{m.desc}</p>
               </motion.button>
             );
           })}
@@ -647,52 +432,55 @@ function MinistryGrid() {
 }
 
 // ═════════════════════════════════════════════════════════════════
-// CTA BANNER
+// CTA — closing invitation
 // ═════════════════════════════════════════════════════════════════
 function CTABanner() {
+  const t = useGlassTheme();
   const [, navigate] = useLocation();
-  const { theme } = useTheme();
-  const isLight = theme === "light";
 
   return (
-    <section className={`py-20 px-6 ${isLight ? "bg-[#f8f7f4]" : "bg-[#050912]"}`}>
-      <div className="max-w-5xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className={`relative rounded-3xl overflow-hidden p-12 md:p-16 text-center border ${
-            isLight ? "border-[#1a3a6b]/10 shadow-xl shadow-[#1a3a6b]/6" : "border-white/5"
-          }`}
-          style={{
-            background: isLight
-              ? "linear-gradient(135deg,#ffffff 0%,#f8f7f4 60%,#f0ede8 100%)"
-              : "linear-gradient(135deg,#0d1b3e 0%,#050912 60%,#0a1010 100%)"
-          }}>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-px bg-gradient-to-r from-transparent via-amber-500/35 to-transparent" />
-          <div className="absolute inset-0 opacity-[0.025]"
-            style={{ backgroundImage: "repeating-linear-gradient(45deg,rgba(0,0,0,.4) 0,rgba(0,0,0,.4) 1px,transparent 0,transparent 50%)", backgroundSize: "18px 18px" }} />
-          <div className="relative space-y-6">
-            <p className={`text-[9px] font-black uppercase tracking-[0.4em] ${isLight ? "text-amber-600/60" : "text-amber-400/50"}`}>You're Invited</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-              className={`text-5xl md:text-6xl font-black ${isLight ? "text-[#132744]" : "text-white"}`}>Join Our Growing Community</h2>
-            <p className={`max-w-xl mx-auto leading-relaxed ${isLight ? "text-[#1a3a6b]/50" : "text-white/35"}`}>
-              Whether you're in Abuja or across the globe, connect with PCN First Abuja Parish and be
-              part of our mission to spread the gospel with excellence and integrity.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <button onClick={() => navigate("/events")}
-                className="group flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-[#050912] font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-amber-500/20">
-                Visit Us This Sunday <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button onClick={() => navigate("/contact")}
-                className={`flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold text-sm transition-all ${
-                  isLight
-                    ? "border border-[#1a3a6b]/15 hover:border-[#1a3a6b]/30 hover:bg-[#1a3a6b]/4 text-[#1a3a6b]/60 hover:text-[#1a3a6b]"
-                    : "border border-white/10 hover:border-white/20 hover:bg-white/4 text-white/60 hover:text-white"
-                }`}>
-                Contact Us
-              </button>
-            </div>
-          </div>
+    <section className={`relative ${t.pageBg} py-28 md:py-40 px-6 overflow-hidden`}>
+      <div className={`absolute inset-0 ${t.L
+        ? "bg-[radial-gradient(ellipse_at_bottom,_rgba(200,151,42,0.08)_0%,_transparent_70%)]"
+        : "bg-[radial-gradient(ellipse_at_bottom,_rgba(255,255,255,0.04)_0%,_transparent_70%)]"}`} />
+
+      <div className="relative max-w-4xl mx-auto text-center">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}
+          className={`${t.label} text-sm tracking-widest uppercase mb-8`}>
+          You're Invited
+        </motion.p>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8, delay: 0.1 }}
+          style={SERIF}
+          className={`text-4xl md:text-6xl lg:text-7xl ${t.ink} leading-[1.1] tracking-tight mb-8`}>
+          Join our growing <em className={t.em}>family.</em>
+        </motion.h2>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.2 }}
+          className={`${t.ink50} text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10`}>
+          Whether you're in Abuja or across the globe, connect with PCN First Abuja Parish and be
+          part of our mission to spread the gospel with excellence and integrity.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.3 }}
+          className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button onClick={() => navigate("/events")}
+            className={`group ${t.btnPrimary} rounded-full px-8 py-3.5 text-sm font-medium flex items-center justify-center gap-2 transition-colors`}>
+            Visit Us This Sunday
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+          <button onClick={() => navigate("/contact")}
+            className={`${t.glass} rounded-full px-8 py-3.5 ${t.ink} text-sm font-medium ${t.hoverGlass} transition-colors`}>
+            Contact Us
+          </button>
         </motion.div>
       </div>
     </section>
@@ -700,135 +488,20 @@ function CTABanner() {
 }
 
 // ═════════════════════════════════════════════════════════════════
-// FOOTER
-// ═════════════════════════════════════════════════════════════════
-function Footer() {
-  const [location, navigate] = useLocation();
-  const { theme } = useTheme();
-  const isLight = theme === "light";
-
-  // "Service Times" lives in a section on the homepage — scroll to it,
-  // navigating home first if we're on another page.
-  const goToServiceTimes = useCallback(() => {
-    const scroll = () => document.getElementById("service-times")?.scrollIntoView({ behavior: "smooth" });
-    if (location === "/") {
-      scroll();
-    } else {
-      navigate("/");
-      setTimeout(scroll, 120);
-    }
-  }, [location, navigate]);
-
-  const cols = [
-    { heading: "New Here?",  color: "#06b6d4", links: [{ label: "Service Times", r: "/" }, { label: "Vision & Beliefs", r: "/about" }, { label: "Leadership", r: "/staff" }, { label: "Testimonies", r: "/testimonies" }] },
-    { heading: "Ministries", color: "#10b981", links: [{ label: "Children's Dept", r: "/ministries" }, { label: "Teenage Ministry", r: "/ministries" }, { label: "Evangelism", r: "/ministries" }, { label: "Family Life", r: "/ministries" }, { label: "Prayer", r: "/ministries" }] },
-  ];
-
-  return (
-    <footer className={`border-t ${isLight ? "border-[#1a3a6b]/10 bg-[#f0ede8]" : "border-white/5 bg-[#030508]"}`}>
-      <div className="max-w-7xl mx-auto px-6 py-20">
-        <div className="grid md:grid-cols-12 gap-12">
-
-          {/* Brand */}
-          <div className="md:col-span-4 space-y-6">
-            <div className="flex items-center gap-3">
-              <img src="/assets/pcn-logo.png" alt="PCN Logo" className="w-10 h-10 object-contain" />
-              <div>
-                <p style={{ fontFamily: "'Cormorant Garamond',serif" }} className={`font-black text-lg ${isLight ? "text-[#132744]" : "text-white"}`}>PCN First Abuja Parish</p>
-                <p className={`text-[9px] uppercase tracking-widest ${isLight ? "text-[#1a3a6b]/35" : "text-white/25"}`}>Presbyterian Church of Nigeria</p>
-              </div>
-            </div>
-            <p className={`text-sm leading-relaxed ${isLight ? "text-[#1a3a6b]/45" : "text-white/25"}`}>Spreading the gospel with excellence and integrity across Abuja and beyond.</p>
-
-            <div className="flex gap-2">
-              {SOCIAL_LINKS.map((s) =>
-                isAllowedExternalUrl(s.href) ? (
-                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
-                    title={s.label} aria-label={s.label}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all group ${
-                      isLight
-                        ? "bg-white/70 border border-[#1a3a6b]/10 hover:bg-amber-500/10 hover:border-amber-500/25"
-                        : "bg-white/3 border border-white/6 hover:bg-amber-500/8 hover:border-amber-500/20"
-                    }`}>
-                    {s.isInstagram ? (
-                        <svg className={`w-3.5 h-3.5 transition group-hover:text-amber-500 ${isLight ? "text-[#1a3a6b]/35" : "text-white/25"}`} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                          <rect x="2.17" y="2.17" width="19.66" height="19.66" rx="4.58" />
-                          <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" />
-                          <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" />
-                        </svg>
-                      ) : s.isTikTok ? (
-                        <svg className={`w-3.5 h-3.5 transition group-hover:text-amber-500 ${isLight ? "text-[#1a3a6b]/35" : "text-white/25"}`} fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V9.41a8.16 8.16 0 0 0 4.78 1.52V7.49a4.85 4.85 0 0 1-1.01-.8z"/>
-                        </svg>
-                      ) : (
-                        <svg className={`w-3.5 h-3.5 transition group-hover:text-amber-500 ${isLight ? "text-[#1a3a6b]/35" : "text-white/25"}`} fill="currentColor" viewBox="0 0 24 24">
-                          <path d={s.path} />
-                        </svg>
-                      )}
-                  </a>
-                ) : null
-              )}
-            </div>
-          </div>
-
-          {/* Link columns */}
-          <div className="md:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8">
-            {cols.map((col) => (
-              <div key={col.heading} className="space-y-4">
-                <h4 className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: col.color }}>{col.heading}</h4>
-                <ul className="space-y-3">
-                  {col.links.map((l) => (
-                    <li key={l.label}>
-                      <button onClick={() => (l.label === "Service Times" ? goToServiceTimes() : navigate(l.r))} className={`text-sm transition-colors text-left ${isLight ? "text-[#1a3a6b]/35 hover:text-[#1a3a6b]/70" : "text-white/25 hover:text-white/60"}`}>{l.label}</button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            {/* Contact */}
-            <div className="space-y-4">
-              <h4 className={`text-[9px] font-black uppercase tracking-[0.3em] ${isLight ? "text-amber-600/60" : "text-amber-400/50"}`}>Contact</h4>
-              <ul className="space-y-4">
-                <li><a href={CONTACT.phoneHref} className={`flex items-start gap-2 text-sm transition-colors ${isLight ? "text-[#1a3a6b]/35 hover:text-[#1a3a6b]/70" : "text-white/25 hover:text-white/55"}`}><Phone className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isLight ? "text-[#1a3a6b]/20" : "text-white/15"}`} />{CONTACT.phone}</a></li>
-                <li><a href={CONTACT.emailHref} className={`flex items-start gap-2 text-sm transition-colors ${isLight ? "text-[#1a3a6b]/35 hover:text-[#1a3a6b]/70" : "text-white/25 hover:text-white/55"}`}><Mail className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isLight ? "text-[#1a3a6b]/20" : "text-white/15"}`} />{CONTACT.email}</a></li>
-                <li><div className={`flex items-start gap-2 text-sm ${isLight ? "text-[#1a3a6b]/30" : "text-white/20"}`}><MapPin className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isLight ? "text-[#1a3a6b]/15" : "text-white/12"}`} />{CONTACT.address}</div></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className={`border-t ${isLight ? "border-[#1a3a6b]/8" : "border-white/4"}`}>
-        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className={`text-[10px] ${isLight ? "text-[#1a3a6b]/25" : "text-white/15"}`}>© 2026 Presbyterian Church of Nigeria, First Abuja Parish. All rights reserved.</p>
-          <div className="flex items-center gap-5">
-            <button onClick={() => navigate("/privacy-policy")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Privacy Policy</button>
-            <button onClick={() => navigate("/terms-of-service")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Terms of Service</button>
-            <button onClick={() => navigate("/safeguarding")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Safeguarding</button>
-            <button onClick={() => navigate("/contact")} className={`text-[10px] transition-colors ${isLight ? "text-[#1a3a6b]/25 hover:text-[#1a3a6b]/50" : "text-white/15 hover:text-white/40"}`}>Contact</button>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-// ═════════════════════════════════════════════════════════════════
 // PAGE ROOT
 // ═════════════════════════════════════════════════════════════════
 export default function Home() {
-  const { theme } = useTheme();
-
+  const t = useGlassTheme();
   return (
-    <div className={`page-shell min-h-screen ${theme === "dark" ? "home-theme--dark bg-[#050912] text-white" : "home-theme--light bg-background text-foreground"}`}>
-      <Nav />
-      <HeroCarousel />
-      <ServiceTimes />
+    <div className={`page-shell min-h-screen ${t.pageBg} ${t.ink}`}>
+      <SiteNav />
+      <Hero />
       <PastorWelcome />
+      <ServiceTimes />
+      <FeaturedSection />
       <MinistryGrid />
       <CTABanner />
-      <Footer />
+      <SiteFooter />
     </div>
   );
 }

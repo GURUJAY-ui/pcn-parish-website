@@ -1,31 +1,19 @@
+/**
+ * AdminLogin.tsx — PCN First Abuja Parish
+ * Cinematic liquid-glass login: full-screen congregation photo with a
+ * slow Ken Burns drift behind a floating glass card. Always dark —
+ * this is the staff door, not a public page. Auth logic unchanged.
+ */
+
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, ShieldCheck, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { useTheme } from "@/contexts/ThemeContext";
 
-// ── Particle component ────────────────────────────────────────────────────────
-function Particles() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 rounded-full bg-blue-400/30"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `floatParticle ${4 + Math.random() * 6}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 4}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+const SERIF = { fontFamily: "'Instrument Serif', Georgia, serif" } as const;
 
-// ── Crazy loading overlay ─────────────────────────────────────────────────────
+// ── Loading overlay (authentication sequence) ─────────────────────
 function LoadingOverlay({ visible }: { visible: boolean }) {
   const [phase, setPhase] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -64,15 +52,14 @@ function LoadingOverlay({ visible }: { visible: boolean }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden">
-      {/* Blurred background */}
-      <div className="absolute inset-0 bg-[#0a0f1e]/80 backdrop-blur-2xl" />
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-2xl" />
 
-      {/* Animated rings */}
+      {/* Expanding glass rings */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="absolute rounded-full border border-blue-500/20"
+            className="absolute rounded-full border border-white/15"
             style={{
               width: `${200 + i * 120}px`,
               height: `${200 + i * 120}px`,
@@ -85,45 +72,38 @@ function LoadingOverlay({ visible }: { visible: boolean }) {
 
       {/* Scanning line */}
       <div
-        className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent"
+        className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"
         style={{ animation: "scanLine 2s ease-in-out infinite" }}
       />
 
-      {/* Main content */}
       <div className="relative flex flex-col items-center gap-8 px-8 max-w-sm w-full">
-
         {/* Logo with glow */}
         <div className="relative">
           <div
-            className="absolute inset-0 rounded-full bg-blue-500/30 blur-2xl scale-150"
+            className="absolute inset-0 rounded-full bg-white/20 blur-2xl scale-150"
             style={{ animation: "logoPulse 1.5s ease-in-out infinite" }}
           />
-          <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-600/20 to-cyan-600/20 border border-blue-500/30 flex items-center justify-center backdrop-blur-sm overflow-hidden">
+          <div className="relative w-24 h-24 rounded-full liquid-glass flex items-center justify-center overflow-hidden">
             <img
               src="/assets/pcn-logo.png"
               alt="PCN"
               className="w-16 h-16 object-contain"
               onError={(e) => { e.currentTarget.style.display = "none"; }}
             />
-            {/* Rotating border */}
             <div
-              className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-400 border-r-cyan-400"
+              className="absolute inset-0 rounded-full border-2 border-transparent border-t-white/80 border-r-amber-400/80"
               style={{ animation: "spin 1.5s linear infinite" }}
             />
           </div>
         </div>
 
-        {/* Text */}
         <div className="text-center space-y-2">
-          <h2
-            style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
-            className="text-xl font-bold text-white"
-          >
-            Authenticating
+          <h2 style={SERIF} className="text-3xl text-white tracking-tight">
+            Authenticating<em className="italic text-white/60">...</em>
           </h2>
           <p
             key={phase}
-            className="text-sm text-blue-300/70"
+            className="text-sm text-white/50"
             style={{ animation: "fadeInUp 0.3s ease-out" }}
           >
             {messages[phase]}
@@ -132,15 +112,15 @@ function LoadingOverlay({ visible }: { visible: boolean }) {
 
         {/* Progress bar */}
         <div className="w-full space-y-2">
-          <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-200 relative"
+              className="h-full bg-gradient-to-r from-white/80 to-amber-400 rounded-full transition-all duration-200 relative"
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-lg shadow-cyan-400/80" />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-amber-300 shadow-lg shadow-amber-400/80" />
             </div>
           </div>
-          <div className="flex justify-between text-xs text-white/20">
+          <div className="flex justify-between text-xs text-white/25">
             <span>Secure connection</span>
             <span>{Math.round(progress)}%</span>
           </div>
@@ -149,53 +129,19 @@ function LoadingOverlay({ visible }: { visible: boolean }) {
         {/* Security badges */}
         <div className="flex gap-3">
           {["256-bit SSL", "JWT Secured", "Monitored"].map((badge) => (
-            <div
-              key={badge}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
-            >
+            <div key={badge} className="liquid-glass rounded-full flex items-center gap-1.5 px-3 py-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "blink 1s ease-in-out infinite" }} />
-              <span className="text-xs text-white/40">{badge}</span>
+              <span className="text-xs text-white/50">{badge}</span>
             </div>
           ))}
         </div>
-
-        {/* Hex grid decoration */}
-        <div className="absolute -z-10 opacity-10">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute border border-blue-400/50"
-              style={{
-                width: "60px",
-                height: "60px",
-                transform: `rotate(${i * 30}deg)`,
-                left: `${-80 + i * 30}px`,
-                top: `${-40 + i * 20}px`,
-                animation: `hexRotate ${3 + i}s linear infinite`,
-              }}
-            />
-          ))}
-        </div>
       </div>
 
-      {/* Corner decorations */}
-      <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-blue-500/40 rounded-tl-lg" />
-      <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-blue-500/40 rounded-tr-lg" />
-      <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-blue-500/40 rounded-bl-lg" />
-      <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-blue-500/40 rounded-br-lg" />
-
-      {/* Bottom text */}
       <div className="absolute bottom-8 text-center">
-        <p className="text-xs text-white/20">PCN First Abuja Parish · Secure Admin Portal</p>
+        <p className="text-xs text-white/25 uppercase tracking-widest">PCN First Abuja Parish · Secure Admin Portal</p>
       </div>
 
-      {/* CSS animations */}
       <style>{`
-        @keyframes floatParticle {
-          0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0.3; }
-          33% { transform: translateY(-20px) translateX(10px); opacity: 0.8; }
-          66% { transform: translateY(-10px) translateX(-10px); opacity: 0.5; }
-        }
         @keyframes ringPulse {
           0%, 100% { opacity: 0.2; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(1.05); }
@@ -218,10 +164,6 @@ function LoadingOverlay({ visible }: { visible: boolean }) {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
-        @keyframes hexRotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
@@ -231,11 +173,9 @@ function LoadingOverlay({ visible }: { visible: boolean }) {
   );
 }
 
-// ── Main Login Page ───────────────────────────────────────────────────────────
+// ── Main Login Page ───────────────────────────────────────────────
 export default function AdminLogin() {
   const [, navigate] = useLocation();
-  const { theme } = useTheme();
-  const isLight = theme === "light";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -267,156 +207,130 @@ export default function AdminLogin() {
     if (e.key === "Enter") handleLogin();
   };
 
-  return (
-    <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300 ${isLight ? "bg-gradient-to-br from-[#f7f5ef] via-[#ffffff] to-[#efe7d8] text-[#1a1a2e]" : "bg-[#0a0f1e] text-white"}`}>
+  const inputCls =
+    "w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm px-4 placeholder:text-white/25 focus:outline-none focus:border-white/40 focus:bg-white/8 transition disabled:opacity-50";
 
-      {/* Loading overlay */}
+  return (
+    <div className="min-h-screen relative overflow-hidden bg-black text-white flex items-center justify-center p-4">
       <LoadingOverlay visible={isLoading} />
 
-      {/* Background */}
-      <div className="absolute inset-0">
-        <div className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl ${isLight ? "bg-amber-400/15" : "bg-blue-600/10"}`} />
-        <div className={`absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl ${isLight ? "bg-gold-500/10" : "bg-cyan-500/8"}`} />
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl ${isLight ? "bg-black/5" : "bg-indigo-600/5"}`} />
-      </div>
-
-      <Particles />
-
-      {/* Grid */}
-      <div
-        className={`absolute inset-0 ${isLight ? "opacity-[0.035]" : "opacity-[0.02]"}`}
-        style={{
-          backgroundImage: isLight
-            ? "linear-gradient(rgba(26,58,107,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(26,58,107,0.08) 1px, transparent 1px)"
-            : "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
+      {/* Cinematic photo background with slow drift */}
+      <motion.img
+        src="/assets/PCN-FAP-CONG.jpeg"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-cover"
+        initial={{ scale: 1 }}
+        animate={{ scale: 1.1 }}
+        transition={{ duration: 30, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
       />
+      <div className="absolute inset-0 bg-black/70" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.8)_100%)]" />
 
-      <div className="relative w-full max-w-md">
+      {/* Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, ease: "easeOut" }}
+        className="relative w-full max-w-md">
 
-        {/* Header */}
-        <div className="text-center mb-8 space-y-4">
-          <div className="flex justify-center">
-            <div className="relative">
-              <div className="absolute inset-0 bg-blue-500/15 rounded-full blur-xl scale-150" />
+        <div className="liquid-glass rounded-3xl p-8 md:p-10 bg-black/30">
+          {/* Header */}
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="liquid-glass rounded-full w-20 h-20 flex items-center justify-center mb-5">
               <img
                 src="/assets/pcn-logo.png"
                 alt="PCN First Abuja Parish"
-                className="relative w-20 h-20 object-contain drop-shadow-2xl"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
+                className="w-12 h-12 object-contain"
+                onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             </div>
-          </div>
-          <div>
-            <h1 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className={`text-2xl font-bold tracking-tight ${isLight ? "text-[#1a3a6b]" : "text-white"}`}>
-              PCN First Abuja Parish
+            <div className="liquid-glass rounded-full px-4 py-1.5 inline-flex items-center gap-2 mb-5">
+              <ShieldCheck className="w-3.5 h-3.5 text-white/70" />
+              <span className="text-white/70 text-[10px] uppercase tracking-[0.3em]">Admin Portal</span>
+            </div>
+            <h1 style={SERIF} className="text-4xl md:text-5xl text-white tracking-tight leading-tight">
+              Welcome <em className="italic text-white/60">back.</em>
             </h1>
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <div className="w-8 h-px bg-blue-500/50" />
-              <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${isLight ? "text-[#c8972a]" : "text-blue-400/70"}`}>Admin Portal</p>
-              <div className="w-8 h-px bg-blue-500/50" />
-            </div>
+            <p className="text-white/40 text-sm mt-3">Authorised personnel only.</p>
           </div>
-        </div>
 
-        {/* Card */}
-        <div className={`relative rounded-2xl backdrop-blur-xl shadow-2xl overflow-hidden border ${isLight ? "border-[#e5e0d8] bg-white/90" : "border-white/8 bg-white/[0.04]"}`}>
-          <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${isLight ? "via-[#c8972a]/70" : "via-blue-500/60"} to-transparent`} />
+          {error && (
+            <div className="flex items-center gap-3 p-3 mb-5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-300">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
 
-          <div className="p-8 space-y-6">
-            <div className="text-center space-y-1">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 border ${isLight ? "bg-[#1a3a6b]/10 border-[#1a3a6b]/20" : "bg-blue-500/10 border-blue-500/20"}`}>
-                <ShieldCheck className={`w-6 h-6 ${isLight ? "text-[#1a3a6b]" : "text-blue-400"}`} />
-              </div>
-              <h2 style={{ fontFamily: "'Sora', system-ui, sans-serif" }} className={`text-xl font-bold ${isLight ? "text-[#1a1a2e]" : "text-white"}`}>
-                Secure Sign In
-              </h2>
-              <p className={`text-xs ${isLight ? "text-[#6b7280]" : "text-white/30"}`}>Authorised personnel only</p>
+          {attempts >= 3 && !error && (
+            <div className="liquid-glass rounded-xl p-3 mb-5">
+              <p className="text-xs text-amber-300/90 text-center">
+                ⚠️ Multiple failed attempts. Account locks after 5 tries.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-4 mb-6">
+            <div className="space-y-2">
+              <label className="text-white/40 text-xs uppercase tracking-widest">Username</label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter your username"
+                autoComplete="username"
+                disabled={isLoading}
+                className={inputCls}
+              />
             </div>
 
-            {error && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <p className="text-sm">{error}</p>
-              </div>
-            )}
-
-            {attempts >= 3 && !error && (
-              <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
-                <p className="text-xs text-orange-400 text-center">
-                  ⚠️ Multiple failed attempts. Account locks after 5 tries.
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className={`text-xs font-semibold uppercase tracking-[0.15em] ${isLight ? "text-[#6b7280]" : "text-white/40"}`}>Username</label>
-                <Input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+            <div className="space-y-2">
+              <label className="text-white/40 text-xs uppercase tracking-widest">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Enter your username"
-                  autoComplete="username"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
                   disabled={isLoading}
-                  className={`rounded-xl h-11 ${isLight ? "bg-white border-[#e5e0d8] text-[#1a1a2e] placeholder:text-[#6b7280] focus:border-[#1a3a6b]/50" : "bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-blue-500/50"}`}
+                  className={`${inputCls} pr-11`}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label className={`text-xs font-semibold uppercase tracking-[0.15em] ${isLight ? "text-[#6b7280]" : "text-white/40"}`}>Password</label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                    disabled={isLoading}
-                    className={`rounded-xl h-11 pr-10 ${isLight ? "bg-white border-[#e5e0d8] text-[#1a1a2e] placeholder:text-[#6b7280] focus:border-[#1a3a6b]/50" : "bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-blue-500/50"}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isLight ? "text-[#6b7280] hover:text-[#1a1a2e]" : "text-white/30 hover:text-white/60"}`}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={handleLogin}
-              disabled={isLoading || !username || !password}
-              className={`w-full h-11 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isLight ? "bg-gradient-to-r from-[#1a3a6b] to-[#c8972a] hover:from-[#183663] hover:to-[#b88a25] text-white shadow-[#1a3a6b]/20" : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-blue-500/20"}`}
-            >
-              {isLoading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" />Authenticating...</>
-              ) : (
-                <><ShieldCheck className="w-4 h-4" />Sign In Securely</>
-              )}
-            </button>
-
-            <p className={`text-center text-xs ${isLight ? "text-[#6b7280]" : "text-white/20"}`}>
-              🔒 All login attempts are logged and monitored
-            </p>
           </div>
+
+          <button
+            onClick={handleLogin}
+            disabled={isLoading || !username || !password}
+            className="group w-full bg-white text-black rounded-full py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Sign in securely
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+
+          <p className="text-center text-[11px] text-white/25 mt-5">
+            🔒 All login attempts are logged and monitored
+          </p>
         </div>
 
         <div className="text-center mt-6">
           <button
             onClick={() => navigate("/")}
-            className={`text-xs transition-colors ${isLight ? "text-[#6b7280] hover:text-[#1a1a2e]" : "text-white/25 hover:text-white/50"}`}
+            className="liquid-glass rounded-full px-5 py-2 text-xs text-white/50 hover:text-white hover:bg-white/5 transition-all"
           >
             ← Back to website
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
