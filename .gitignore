@@ -119,3 +119,6 @@ uploads/gallery/*
 
 # Local Claude Code settings
 .claude/settings.local.json
+
+# Source video (only the optimized client/public/assets/hero.mp4 is committed)
+/*.mp4
