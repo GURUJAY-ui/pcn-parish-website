@@ -57,7 +57,7 @@ const isAllowedExternalUrl = (url?: string): boolean => {
 
 // ─── Validate + coerce a raw API record into a safe Sermon ────────
 type Sermon = {
-  id: number;
+  id: number | string;
   title: string;
   scripture: string;
   date: string;
@@ -76,7 +76,7 @@ type Sermon = {
 function coerceSermon(raw: unknown, index: number): Sermon {
   const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   return {
-    id: typeof r.id === "number" ? r.id : index + 1,
+    id: typeof r.id === "number" || typeof r.id === "string" ? r.id : index + 1,
     title: sanitizeInput(typeof r.title === "string" ? r.title : "Untitled", 160),
     scripture: sanitizeInput(typeof r.scripture === "string" ? r.scripture : "", 80),
     date: sanitizeInput(typeof r.date === "string" ? r.date : "", 40),
@@ -92,6 +92,15 @@ function coerceSermon(raw: unknown, index: number): Sermon {
     duration: typeof r.duration === "string" ? sanitizeInput(r.duration, 10) : undefined,
     isLive: typeof r.isLive === "boolean" ? r.isLive : false,
   };
+}
+
+// Newest-first sort key. YouTube items carry year/month (from publishedAt);
+// DB sermons carry a date string — parse whichever is available so the latest
+// content (including live YouTube uploads) surfaces at the top.
+function sermonTime(s: Sermon): number {
+  if (s.year && s.month) return new Date(s.year, s.month - 1, 1).getTime();
+  const t = Date.parse(s.date);
+  return isNaN(t) ? 0 : t;
 }
 
 // ─── Fallback data (used when API is unavailable) ─────────────────
@@ -300,6 +309,8 @@ export default function Sermons() {
       .then((data: unknown[]) => {
         if (cancelled) return;
         const safe = Array.isArray(data) && data.length > 0 ? data.map(coerceSermon) : FALLBACK_SERMONS;
+        // Newest first so live YouTube uploads and recent sermons lead.
+        safe.sort((a, b) => sermonTime(b) - sermonTime(a));
         setSermonList(safe);
       })
       .catch(() => { if (!cancelled) setSermonList(FALLBACK_SERMONS); })
