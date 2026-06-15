@@ -20,8 +20,9 @@ import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
 import { api } from "@/lib/api";
 
-// Hero background video — parish footage in client/public/assets/hero.mp4.
-const HERO_VIDEO_URL = "/assets/hero.mp4";
+// Hero background videos — parish footage. The hero crossfades between
+// them on each loop: the glowing-cross push-in and the frosted worship clip.
+const HERO_VIDEOS = ["/assets/hero.mp4", "/assets/hero2.mp4"];
 
 const FALLBACK_MINISTRIES = [
   { label: "Sermons & Archive",  desc: "Complete sermon library, weekly messages and spiritual resources",    icon: Globe,    accent: "#06b6d4", route: "/sermons"    },
@@ -40,18 +41,23 @@ function Hero() {
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fadedOut = useRef(false);
+  const videoIndex = useRef(0);
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
-  // Seamless crossfade-to-black loop. Opacity is driven by a CSS transition
-  // (robust against rAF throttling in background tabs); JS just toggles the
-  // target value at the right moments to fade in, fade out near the end, and
-  // restart the loop — the smooth "crossfade to black between plays" effect.
+  // Crossfade-through-black loop that alternates between the hero clips.
+  // Opacity is driven by a CSS transition (robust against rAF throttling in
+  // background tabs); JS toggles the target value to fade in, fade out near
+  // the end, then swap to the next video and fade back in. The src is set
+  // here (not as a JSX prop) so re-renders — e.g. typing in the email field —
+  // never reset playback.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     v.style.transition = "opacity 500ms ease";
+    v.src = HERO_VIDEOS[0];
+    v.load();
 
     const fadeIn = () => { v.play().catch(() => {}); v.style.opacity = "1"; };
     const onTimeUpdate = () => {
@@ -63,6 +69,9 @@ function Hero() {
     const onEnded = () => {
       v.style.opacity = "0";
       setTimeout(() => {
+        videoIndex.current = (videoIndex.current + 1) % HERO_VIDEOS.length;
+        v.src = HERO_VIDEOS[videoIndex.current];
+        v.load();
         v.currentTime = 0;
         v.play().catch(() => {});
         fadedOut.current = false;
@@ -101,12 +110,12 @@ function Hero() {
 
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden bg-black">
-      {/* Background video — fades in on canplay, crossfades to black each loop */}
+      {/* Background video — alternates between the hero clips, crossfading
+          through black each loop. src is managed in the effect, not here. */}
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover object-bottom"
         style={{ opacity: 0 }}
-        src={HERO_VIDEO_URL}
         muted
         autoPlay
         playsInline
