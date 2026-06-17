@@ -1389,12 +1389,6 @@ export default function Admin() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const refresh = localStorage.getItem("refreshToken");
-    if (!token && !refresh) navigate("/admin/login");
-  }, [navigate]);
-
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
