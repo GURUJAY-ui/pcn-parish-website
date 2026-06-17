@@ -46,6 +46,7 @@ function Hero() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Personalized greeting — stored only in this visitor's localStorage so it
   // shows to them but is never displayed publicly to anyone else.
@@ -107,6 +108,7 @@ function Hero() {
     e.preventDefault();
     if (!email.trim() || submitting) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const trimmedName = firstName.trim();
       await api.createContact({
@@ -122,8 +124,13 @@ function Hero() {
       setSubscribed(true);
       setEmail("");
       setFirstName("");
-    } catch {
-      /* keep the field so they can retry */
+    } catch (err: any) {
+      const msg = String(err?.message ?? "").toLowerCase();
+      if (msg.includes("limit") || msg.includes("too many") || msg.includes("429")) {
+        setSubmitError("Too many sign-ups from this network. Please try again in a few minutes.");
+      } else {
+        setSubmitError("Couldn't sign you up — please check your email and try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -189,6 +196,11 @@ function Hero() {
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
+              {submitError && (
+                <p role="alert" className="mt-3 text-center text-sm text-red-300">
+                  {submitError}
+                </p>
+              )}
             </form>
           )}
 
