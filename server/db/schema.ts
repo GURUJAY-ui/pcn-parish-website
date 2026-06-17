@@ -97,3 +97,25 @@ export const siteContentEntries = pgTable("site_content", {
   payload: jsonb("payload").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Newsletter subscribers — one row per opted-in email. Token used for the
+// public one-click unsubscribe link. unsubscribedAt being non-null means the
+// subscriber has opted out and should be excluded from sends.
+export const subscribers = pgTable("subscribers", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  unsubscribeToken: text("unsubscribe_token").notNull().unique(),
+  subscribedAt: timestamp("subscribed_at").defaultNow().notNull(),
+  unsubscribedAt: timestamp("unsubscribed_at"),
+});
+
+// Newsletter send log — one row per "Send to N subscribers" click.
+// Audit trail for who sent what and to how many people.
+export const newsletterSends = pgTable("newsletter_sends", {
+  id: serial("id").primaryKey(),
+  intro: text("intro").notNull(),
+  recipientCount: integer("recipient_count").notNull(),
+  sentBy: text("sent_by").notNull(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+});

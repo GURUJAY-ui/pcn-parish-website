@@ -428,6 +428,40 @@ export const api = {
     });
   },
 
+  // ── Newsletter (admin) ────────────────────────────────────────────────────
+  getNewsletterStats: async (): Promise<{ total: number; active: number; unsubscribed: number }> => {
+    return request("/newsletter/stats", { requiresAuth: true });
+  },
+
+  getNewsletterPreview: async (intro?: string): Promise<{
+    subscriberCount: number;
+    events: any[];
+    sermon: any | null;
+    html: string;
+    text: string;
+    emailConfigured: boolean;
+  }> => {
+    const q = intro ? `?intro=${encodeURIComponent(intro)}` : "";
+    return request(`/newsletter/preview${q}`, { requiresAuth: true });
+  },
+
+  sendNewsletter: async (data: { intro: string; subject?: string }): Promise<{ sent: number; failed: number; totalAttempted: number }> => {
+    return request("/newsletter/send", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
+  },
+
+  getNewsletterSends: async (): Promise<any[]> => {
+    return request("/newsletter/sends", { requiresAuth: true });
+  },
+
+  // Public unsubscribe link target.
+  unsubscribeNewsletter: async (token: string): Promise<{ message: string; email?: string }> => {
+    return request(`/newsletter/unsubscribe?token=${encodeURIComponent(token)}`);
+  },
+
   markContactRead: async (id: number): Promise<any> => {
     return request(`/contact/${id}/read`, {
       method: "PUT",

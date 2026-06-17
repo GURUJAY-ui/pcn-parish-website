@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { db } from "../db";
-import { contacts } from "../db/schema";
-import { eq, desc } from "drizzle-orm";
+import { contacts, subscribers } from "../db/schema";
+import { eq, desc, sql } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
 import { submissionLimiter, newsletterLimiter } from "../lib/security";
 import { logger } from "../lib/logger";
@@ -33,6 +34,7 @@ router.post("/newsletter", newsletterLimiter, async (req, res) => {
   }
 
   try {
+    // Keep writing to contacts so the admin Contacts inbox still shows signups.
     const data = await db
       .insert(contacts)
       .values({
@@ -45,6 +47,26 @@ router.post("/newsletter", newsletterLimiter, async (req, res) => {
         anonymous: false,
       })
       .returning();
+
+    // Upsert into subscribers — the authoritative list for newsletter sends.
+    // If the address was previously unsubscribed, re-subscribing clears the
+    // unsubscribedAt flag so they receive future bulletins again.
+    await db
+      .insert(subscribers)
+      .values({
+        email: parsed.data.email,
+        name: parsed.data.name ?? null,
+        unsubscribeToken: randomUUID(),
+        unsubscribedAt: null,
+      })
+      .onConflictDoUpdate({
+        target: subscribers.email,
+        set: {
+          name: sql`COALESCE(EXCLUDED.name, ${subscribers.name})`,
+          unsubscribedAt: null,
+        },
+      });
+
     res.json({ message: "Subscribed", id: data[0].id });
   } catch (err) {
     logger.error("Newsletter signup insert error", { err });
