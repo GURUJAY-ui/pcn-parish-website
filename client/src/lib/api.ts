@@ -360,6 +360,26 @@ export const api = {
     return request("/gallery");
   },
 
+  // Admin — includes pending (unapproved) submissions
+  getAllGallery: async (): Promise<any[]> => {
+    return request("/gallery/all", { requiresAuth: true });
+  },
+
+  // Public — submit a photo for admin review (multipart form-data)
+  submitGalleryPhoto: async (formData: FormData): Promise<any> => {
+    return request("/gallery/submit", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
+  approveGalleryItem: async (id: number): Promise<any> => {
+    return request(`/gallery/${id}/approve`, {
+      method: "PATCH",
+      requiresAuth: true,
+    });
+  },
+
   createGalleryItem: async (data: any): Promise<any> => {
     return request("/gallery", {
       method: "POST",
