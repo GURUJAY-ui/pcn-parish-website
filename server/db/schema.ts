@@ -52,6 +52,9 @@ export const gallery = pgTable("gallery", {
   caption: text("caption").notNull(),
   category: text("category").notNull(),
   imageUrl: text("image_url").notNull(),
+  approved: boolean("approved").notNull().default(false),
+  submitterName: text("submitter_name"),
+  submitterEmail: text("submitter_email"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

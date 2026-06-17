@@ -18,20 +18,24 @@ import multer from "multer";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import path from "path";
-import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
 import { db } from "../db";
 import { gallery } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
-import { uploadLimiter } from "../lib/security";
+import { uploadLimiter, submissionLimiter } from "../lib/security";
 import { logger } from "../lib/logger";
 
 const router = Router();
 
-// ─── Upload directory (matches index.ts static-serve path) ───────────────────
-const UPLOAD_DIR = path.resolve(process.cwd(), "uploads", "gallery");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// ─── Cloudinary config ───────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+const CLOUDINARY_FOLDER = "gallery";
 
 // ─── Allowed types ────────────────────────────────────────────────────────────
 const ALLOWED_MIME = [
@@ -64,15 +68,28 @@ function checkMagicBytes(buf: Buffer, mime: string): boolean {
   });
 }
 
-function mimeToExt(mime: string): string {
-  return (
-    {
-      "image/jpeg": ".jpg",
-      "image/png": ".png",
-      "image/webp": ".webp",
-      "image/gif": ".gif",
-    }[mime] ?? ".bin"
-  );
+// ─── Cloudinary helpers ───────────────────────────────────────────────────────
+function uploadBufferToCloudinary(
+  buf: Buffer,
+  publicId: string
+): Promise<{ secure_url: string; public_id: string }> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: CLOUDINARY_FOLDER, public_id: publicId, resource_type: "image" },
+      (err, result) => {
+        if (err || !result) return reject(err ?? new Error("Upload failed"));
+        resolve({ secure_url: result.secure_url, public_id: result.public_id });
+      }
+    );
+    stream.end(buf);
+  });
+}
+
+// Extract Cloudinary public_id from a secure_url stored in imageUrl.
+// Format: https://res.cloudinary.com/<cloud>/image/upload/v<version>/<public_id>.<ext>
+function publicIdFromUrl(url: string): string | null {
+  const m = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-z0-9]+$/i);
+  return m ? m[1] : null;
 }
 
 // ─── Multer — memory only, 5 MB cap ──────────────────────────────────────────
@@ -96,33 +113,109 @@ const galleryBodySchema = z.object({
   category: z.enum(["worship", "events", "youth", "music"]),
 });
 
-// ─── Safe file delete helper ──────────────────────────────────────────────────
-function safeDelete(imageUrl: string | null) {
+// ─── Safe remote delete helper ────────────────────────────────────────────────
+async function safeDelete(imageUrl: string | null) {
   if (!imageUrl) return;
   try {
-    const filename = path.basename(imageUrl);
-    const filePath = path.join(UPLOAD_DIR, filename);
-    // Path-traversal guard
-    if (filePath.startsWith(UPLOAD_DIR + path.sep) && fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    const publicId = publicIdFromUrl(imageUrl);
+    if (publicId) await cloudinary.uploader.destroy(publicId);
   } catch (e) {
     logger.warn("Failed to delete old gallery image", { imageUrl, error: e });
   }
 }
 
+// ─── Submission body schema (public, captures optional submitter info) ────────
+const gallerySubmitSchema = z.object({
+  caption: z
+    .string()
+    .min(1)
+    .max(200)
+    .regex(/^[\w\s,.'"\-–—!?():]+$/),
+  category: z.enum(["worship", "events", "youth", "music"]),
+  submitterName: z.string().min(1).max(100).optional(),
+  submitterEmail: z.string().email().max(200).optional(),
+});
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
-// Public: read gallery items
+// Public: read APPROVED gallery items only
 router.get("/", async (_req, res) => {
   try {
-    const data = await db.select().from(gallery).orderBy(gallery.createdAt);
+    const data = await db
+      .select()
+      .from(gallery)
+      .where(eq(gallery.approved, true))
+      .orderBy(desc(gallery.createdAt));
     res.json(data);
   } catch (err) {
     logger.error("Gallery fetch error", { err });
     res.status(500).json({ error: "Failed to fetch gallery" });
   }
 });
+
+// Admin: read ALL gallery items (including pending submissions)
+router.get("/all", requireAuth, async (_req, res) => {
+  try {
+    const data = await db.select().from(gallery).orderBy(desc(gallery.createdAt));
+    res.json(data);
+  } catch (err) {
+    logger.error("Gallery (admin) fetch error", { err });
+    res.status(500).json({ error: "Failed to fetch gallery" });
+  }
+});
+
+// Public: submit a photo for admin review (always stored unapproved)
+router.post(
+  "/submit",
+  submissionLimiter,
+  upload.single("image"),
+  async (req, res) => {
+    const parsed = gallerySubmitSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid caption or category." });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: "Image file is required." });
+    }
+
+    if (!checkMagicBytes(req.file.buffer, req.file.mimetype)) {
+      return res
+        .status(415)
+        .json({ error: "File content does not match declared type." });
+    }
+
+    let imageUrl: string | null = null;
+    try {
+      const cleaned = await sharp(req.file.buffer).withMetadata({}).toBuffer();
+      const { secure_url } = await uploadBufferToCloudinary(cleaned, uuidv4());
+      imageUrl = secure_url;
+    } catch (err) {
+      logger.error("Image processing error on /submit", { err });
+      return res.status(500).json({ error: "Image processing failed." });
+    }
+
+    try {
+      const [row] = await db
+        .insert(gallery)
+        .values({
+          caption: parsed.data.caption,
+          category: parsed.data.category,
+          imageUrl,
+          approved: false,
+          submitterName: parsed.data.submitterName ?? null,
+          submitterEmail: parsed.data.submitterEmail ?? null,
+        })
+        .returning({ id: gallery.id });
+      res
+        .status(201)
+        .json({ message: "Photo submitted for review", id: row.id });
+    } catch (err) {
+      if (imageUrl) safeDelete(imageUrl);
+      logger.error("Gallery submit insert error", { err });
+      res.status(500).json({ error: "Database error." });
+    }
+  }
+);
 
 // Admin: create new gallery item with image upload
 router.post(
@@ -148,19 +241,11 @@ router.post(
           .json({ error: "File content does not match declared type." });
       }
 
-      const ext = mimeToExt(req.file.mimetype);
-      const filename = `${uuidv4()}${ext}`;
-      const outPath = path.join(UPLOAD_DIR, filename);
-
-      // Path-traversal paranoia
-      if (!outPath.startsWith(UPLOAD_DIR + path.sep)) {
-        return res.status(400).json({ error: "Invalid file path." });
-      }
-
       try {
         // Re-encode: strips metadata, neutralises polyglots
-        await sharp(req.file.buffer).withMetadata({}).toFile(outPath);
-        imageUrl = `/uploads/gallery/${filename}`;
+        const cleaned = await sharp(req.file.buffer).withMetadata({}).toBuffer();
+        const { secure_url } = await uploadBufferToCloudinary(cleaned, uuidv4());
+        imageUrl = secure_url;
       } catch (err) {
         logger.error("Image processing error on POST", { err });
         return res.status(500).json({ error: "Image processing failed." });
@@ -170,7 +255,7 @@ router.post(
     try {
       const [row] = await db
         .insert(gallery)
-        .values({ caption, category, imageUrl: imageUrl ?? "" })
+        .values({ caption, category, imageUrl: imageUrl ?? "", approved: true })
         .returning();
       res.status(201).json(row);
     } catch (err) {
@@ -181,6 +266,26 @@ router.post(
     }
   }
 );
+
+// Admin: approve a pending submission
+router.patch("/:id/approve", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: "Invalid ID." });
+  }
+  try {
+    const [row] = await db
+      .update(gallery)
+      .set({ approved: true })
+      .where(eq(gallery.id, id))
+      .returning();
+    if (!row) return res.status(404).json({ error: "Gallery item not found." });
+    res.json(row);
+  } catch (err) {
+    logger.error("Gallery approve error", { err });
+    res.status(500).json({ error: "Database error." });
+  }
+});
 
 // Admin: update caption/category + optionally replace image
 router.put(
@@ -217,19 +322,12 @@ router.put(
           .json({ error: "File content does not match declared type." });
       }
 
-      const ext = mimeToExt(req.file.mimetype);
-      const filename = `${uuidv4()}${ext}`;
-      const outPath = path.join(UPLOAD_DIR, filename);
-
-      if (!outPath.startsWith(UPLOAD_DIR + path.sep)) {
-        return res.status(400).json({ error: "Invalid file path." });
-      }
-
       try {
-        await sharp(req.file.buffer).withMetadata({}).toFile(outPath);
-        updates.imageUrl = `/uploads/gallery/${filename}`;
-        // Delete old file after successful re-encode
-        safeDelete(existing.imageUrl);
+        const cleaned = await sharp(req.file.buffer).withMetadata({}).toBuffer();
+        const { secure_url } = await uploadBufferToCloudinary(cleaned, uuidv4());
+        updates.imageUrl = secure_url;
+        // Delete old remote asset after successful upload
+        await safeDelete(existing.imageUrl);
       } catch (err) {
         logger.error("Image processing error on PUT", { err });
         return res.status(500).json({ error: "Image processing failed." });

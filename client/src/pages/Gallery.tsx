@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { Image, Upload, X, ZoomIn, Loader2 } from "lucide-react";
+import { Image, Upload, X, ZoomIn, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGlassTheme, SERIF } from "@/lib/glass";
 import SiteNav from "@/components/SiteNav";
@@ -43,6 +43,46 @@ export default function Gallery() {
   const [loading, setLoading]               = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
   const [lightboxItem, setLightboxItem]     = useState<GalleryItem | null>(null);
+
+  // Submission modal state
+  const [submitOpen, setSubmitOpen]         = useState(false);
+  const [submitFile, setSubmitFile]         = useState<File | null>(null);
+  const [submitCaption, setSubmitCaption]   = useState("");
+  const [submitCategory, setSubmitCategory] = useState<"worship" | "events" | "youth" | "music">("worship");
+  const [submitName, setSubmitName]         = useState("");
+  const [submitEmail, setSubmitEmail]       = useState("");
+  const [submitting, setSubmitting]         = useState(false);
+  const [submitError, setSubmitError]       = useState<string | null>(null);
+  const [submitDone, setSubmitDone]         = useState(false);
+
+  const resetSubmit = () => {
+    setSubmitFile(null); setSubmitCaption(""); setSubmitCategory("worship");
+    setSubmitName(""); setSubmitEmail(""); setSubmitError(null); setSubmitDone(false);
+  };
+
+  const handleSubmitPhoto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError(null);
+    if (!submitFile) { setSubmitError("Please choose a photo to upload."); return; }
+    if (submitFile.size > 5 * 1024 * 1024) { setSubmitError("Photo must be under 5 MB."); return; }
+    if (!submitCaption.trim()) { setSubmitError("Please add a short caption."); return; }
+
+    setSubmitting(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", submitFile);
+      fd.append("caption", submitCaption.trim());
+      fd.append("category", submitCategory);
+      if (submitName.trim())  fd.append("submitterName", submitName.trim());
+      if (submitEmail.trim()) fd.append("submitterEmail", submitEmail.trim());
+      await api.submitGalleryPhoto(fd);
+      setSubmitDone(true);
+    } catch (err: any) {
+      setSubmitError(err?.message ?? "Submission failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     api.getGallery()
@@ -88,6 +128,113 @@ export default function Gallery() {
               <p style={SERIF} className="text-white text-xl tracking-tight">{lightboxItem.caption}</p>
               <p className="text-white/50 text-sm mt-1">{getCategoryInfo(lightboxItem.category).label}</p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Submission modal ───────────────────────────────────── */}
+      {submitOpen && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => !submitting && setSubmitOpen(false)}
+        >
+          <div
+            className={`relative w-full max-w-md ${t.glass} rounded-3xl p-7`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              aria-label="Close"
+              disabled={submitting}
+              onClick={() => setSubmitOpen(false)}
+              className={`absolute top-3 right-3 rounded-full p-2 ${t.hoverGlass} ${t.ink60} disabled:opacity-40`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {submitDone ? (
+              <div className="text-center py-4">
+                <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-emerald-500" />
+                <h3 style={SERIF} className={`text-2xl ${t.ink} tracking-tight mb-2`}>Thank you.</h3>
+                <p className={`${t.ink50} text-sm mb-6 leading-relaxed`}>
+                  Your photo has been received. Our team will review it and add approved photos to the gallery soon.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSubmitOpen(false)}
+                  className={`inline-flex items-center gap-2 ${t.btnPrimary} rounded-full px-6 py-2.5 text-sm font-medium`}
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitPhoto} className="space-y-4">
+                <div>
+                  <h3 style={SERIF} className={`text-2xl ${t.ink} tracking-tight`}>Send a photo</h3>
+                  <p className={`${t.ink50} text-xs mt-1`}>JPEG, PNG, WebP or GIF · max 5 MB · admin reviews before publishing.</p>
+                </div>
+
+                <label className={`block ${t.ink60} text-xs uppercase tracking-widest`}>Photo
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={(e) => setSubmitFile(e.target.files?.[0] ?? null)}
+                    className={`mt-1 block w-full text-sm ${t.ink} file:mr-3 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium ${t.btnPrimary.includes('file') ? '' : ''}`}
+                  />
+                </label>
+
+                <label className={`block ${t.ink60} text-xs uppercase tracking-widest`}>Caption
+                  <input
+                    type="text" maxLength={200} value={submitCaption}
+                    onChange={(e) => setSubmitCaption(e.target.value)}
+                    placeholder="What's happening in this photo?"
+                    className={`mt-1 block w-full rounded-xl px-3 py-2 text-sm ${t.glass} ${t.ink} placeholder:${t.ink40}`}
+                  />
+                </label>
+
+                <label className={`block ${t.ink60} text-xs uppercase tracking-widest`}>Category
+                  <select
+                    value={submitCategory}
+                    onChange={(e) => setSubmitCategory(e.target.value as any)}
+                    className={`mt-1 block w-full rounded-xl px-3 py-2 text-sm ${t.glass} ${t.ink}`}
+                  >
+                    <option value="worship">Sunday Worship</option>
+                    <option value="events">Events</option>
+                    <option value="youth">Youth Fellowship</option>
+                    <option value="music">Choir / Music</option>
+                  </select>
+                </label>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <label className={`block ${t.ink60} text-xs uppercase tracking-widest`}>Your name (optional)
+                    <input
+                      type="text" maxLength={100} value={submitName}
+                      onChange={(e) => setSubmitName(e.target.value)}
+                      className={`mt-1 block w-full rounded-xl px-3 py-2 text-sm ${t.glass} ${t.ink}`}
+                    />
+                  </label>
+                  <label className={`block ${t.ink60} text-xs uppercase tracking-widest`}>Email (optional)
+                    <input
+                      type="email" maxLength={200} value={submitEmail}
+                      onChange={(e) => setSubmitEmail(e.target.value)}
+                      className={`mt-1 block w-full rounded-xl px-3 py-2 text-sm ${t.glass} ${t.ink}`}
+                    />
+                  </label>
+                </div>
+
+                {submitError && (
+                  <p className="text-red-500 text-xs">{submitError}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className={`w-full inline-flex items-center justify-center gap-2 ${t.btnPrimary} rounded-full px-6 py-3 text-sm font-medium disabled:opacity-60`}
+                >
+                  {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Submit for review</>}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -203,12 +350,13 @@ export default function Gallery() {
               Were you at a service or event? Send your photos to us and our team will review and upload
               them to the gallery.
             </p>
-            <a
-              href="mailto:pulpitfap@gmail.com?subject=Gallery Photos — PCN First Abuja Parish"
+            <button
+              type="button"
+              onClick={() => { resetSubmit(); setSubmitOpen(true); }}
               className={`inline-flex items-center gap-2 ${t.btnPrimary} rounded-full px-8 py-3 text-sm font-medium transition-colors`}
             >
               <Upload className="w-4 h-4" /> Send Photos
-            </a>
+            </button>
           </motion.div>
         </div>
       </section>

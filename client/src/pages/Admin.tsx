@@ -30,7 +30,7 @@ import { toast } from "sonner";
 type Sermon = { id: number | string; title: string; scripture: string; date: string; preacher: string; excerpt: string; category: string; youtubeUrl?: string; facebookUrl?: string; isLive?: boolean };
 type EventItem = { id: number; day: string; month: string; title: string; time: string; location: string; description?: string; category: string; featured?: boolean };
 type Testimony = { id: number; name: string; profession: string; quote: string; category: string; approved?: boolean };
-type GalleryItem = { id: number; caption: string; category: string; imageUrl: string | null };
+type GalleryItem = { id: number; caption: string; category: string; imageUrl: string | null; approved?: boolean; submitterName?: string | null; submitterEmail?: string | null };
 type HeroSlide = { id?: number; label: string; title: string; subtitle: string; image: string; cta1?: { label: string; route?: string; href?: string }; cta2?: { label: string; route?: string; href?: string } };
 type ContactRecord = { id: number; name?: string; email?: string; phone?: string; subject?: string; message: string; type: string; anonymous?: boolean; read?: boolean; createdAt?: string };
 type AuditEntry = { id: number | string; action: string; entity: string; summary?: string; createdAt?: string; actorName?: string; role?: string };
@@ -1085,7 +1085,8 @@ function GallerySection() {
   const [category, setCategory] = useState("events");
   const [file, setFile] = useState<File | null>(null);
 
-  const load = async () => { try { setLoading(true); setItems((await api.getGallery()) || []); } catch (err) { logger.error("Failed to load gallery", err); toast.error("Failed to load gallery"); } finally { setLoading(false); } };
+  const load = async () => { try { setLoading(true); setItems((await api.getAllGallery()) || []); } catch (err) { logger.error("Failed to load gallery", err); toast.error("Failed to load gallery"); } finally { setLoading(false); } };
+  const approve = async (id: number) => { try { await api.approveGalleryItem(id); toast.success("Photo approved"); await load(); } catch (err) { logger.error("Failed to approve gallery item", err); toast.error("Failed to approve photo"); } };
   useEffect(() => { void load(); }, []);
 
   const openDialog = (item?: GalleryItem) => { setEditing(item ?? null); setCaption(item?.caption || ""); setCategory(item?.category || "events"); setFile(null); setOpen(true); };
@@ -1100,8 +1101,23 @@ function GallerySection() {
       {loading ? <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : items.length === 0 ? <Card className="p-8 text-center"><p className="text-muted-foreground">No gallery items yet</p></Card> : (
         <div className="grid gap-4">{items.map((item) => (
           <Card key={String(item.id)} className="flex items-start justify-between p-4">
-            <div className="flex-1"><h3 className="font-semibold text-foreground">{item.caption}</h3><p className="text-sm text-muted-foreground">{item.category}</p><p className="mt-1 text-xs text-muted-foreground">{item.imageUrl || "No image uploaded"}</p></div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-foreground">{item.caption}</h3>
+                {item.approved === false && <Badge variant="secondary" className="bg-amber-500/15 text-amber-700 dark:text-amber-300">Pending review</Badge>}
+              </div>
+              <p className="text-sm text-muted-foreground">{item.category}</p>
+              {(item.submitterName || item.submitterEmail) && (
+                <p className="mt-1 text-xs text-muted-foreground">From: {item.submitterName || "Anonymous"}{item.submitterEmail ? ` · ${item.submitterEmail}` : ""}</p>
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">{item.imageUrl || "No image uploaded"}</p>
+            </div>
             <div className="ml-4 flex gap-2">
+              {item.approved === false && (
+                <Button variant="ghost" size="sm" onClick={() => approve(item.id)} className="text-emerald-600" title="Approve">
+                  <Check className="h-4 w-4" />
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={() => openDialog(item)}><Edit2 className="h-4 w-4" /></Button>
               <Button variant="ghost" size="sm" onClick={async () => { if (window.confirm("Delete this gallery item?")) { await api.deleteGalleryItem(item.id); await load(); } }} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
             </div>
