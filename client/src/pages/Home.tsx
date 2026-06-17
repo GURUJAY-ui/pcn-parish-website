@@ -111,11 +111,9 @@ function Hero() {
     setSubmitError(null);
     try {
       const trimmedName = firstName.trim();
-      await api.createContact({
-        name: trimmedName, email, phone: "",
-        subject: "Newsletter Signup",
-        message: "Homepage bulletin / newsletter signup.",
-        type: "message", anonymous: false,
+      await api.subscribeNewsletter({
+        name: trimmedName || undefined,
+        email,
       });
       if (trimmedName) {
         try { localStorage.setItem("pcn:firstName", trimmedName); } catch {}

@@ -4,7 +4,7 @@ import { db } from "../db";
 import { contacts } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
-import { submissionLimiter } from "../lib/security";
+import { submissionLimiter, newsletterLimiter } from "../lib/security";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -17,6 +17,39 @@ const contactSchema = z.object({
   message:   z.string().min(1).max(3000),
   type:      z.enum(["message", "prayer"]).default("message"),
   anonymous: z.boolean().default(false),
+});
+
+// Public — homepage newsletter signup. Dedicated rate-limit bucket so it
+// doesn't compete with contact-form / prayer-request submissions.
+const newsletterSchema = z.object({
+  name:  z.string().min(1).max(100).optional(),
+  email: z.string().email().max(200),
+});
+
+router.post("/newsletter", newsletterLimiter, async (req, res) => {
+  const parsed = newsletterSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid input", details: parsed.error.flatten().fieldErrors });
+  }
+
+  try {
+    const data = await db
+      .insert(contacts)
+      .values({
+        name: parsed.data.name ?? "",
+        email: parsed.data.email,
+        phone: "",
+        subject: "Newsletter Signup",
+        message: "Homepage bulletin / newsletter signup.",
+        type: "message",
+        anonymous: false,
+      })
+      .returning();
+    res.json({ message: "Subscribed", id: data[0].id });
+  } catch (err) {
+    logger.error("Newsletter signup insert error", { err });
+    res.status(500).json({ error: "Failed to sign up" });
+  }
 });
 
 // Public — submit message or prayer
