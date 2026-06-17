@@ -12,8 +12,8 @@ export default function PrivacyPolicy() {
 # Privacy Policy
 ## Presbyterian Church of Nigeria, First Abuja Parish (PCN FAP)
 
-**Effective Date:** May 15, 2026  
-**Last Updated:** May 15, 2026
+**Effective Date:** May 15, 2026
+**Last Updated:** June 17, 2026
 
 ---
 
@@ -125,7 +125,22 @@ We do NOT store full debit card details on our systems.
 
 ---
 
-## 3.7 Media & Livestream Data
+## 3.7 Photo Submissions
+
+Members of the public may voluntarily submit photographs of services and events through the "Send Photos" feature on the Gallery page. When you submit a photo we collect:
+
+- The image file itself
+- A short caption you provide
+- The category you select
+- Your name and email (both optional)
+
+Submitted photos are stored in a pending state and are not displayed publicly until a Church administrator reviews and approves them. We may decline to publish any submission at our discretion.
+
+By submitting a photo, you confirm that you have the right to share it and that any identifiable individuals in it have given consent appropriate to public display on a church website.
+
+---
+
+## 3.8 Media & Livestream Data
 
 During church services, conferences, programs, and events, photographs, video recordings, livestream footage, and audio recordings may capture attendees.
 
@@ -335,10 +350,13 @@ We may share personal data with:
 ## Service Providers
 
 Such as:
-- Website hosting providers
+- Website hosting providers (Vercel for the frontend, Render for the API)
+- Database providers (Neon — managed PostgreSQL)
+- Media hosting providers (Cloudinary — stores and serves gallery images, including approved public photo submissions)
 - Payment processors
 - Email service providers
 - Analytics providers
+- Video hosting platforms (YouTube — for sermon and livestream content)
 
 under appropriate confidentiality obligations.
 
@@ -364,7 +382,11 @@ Where disclosure is required by law or lawful governmental request.
 
 # 11. International Data Transfers
 
-Some third-party services used by the church may process data outside Nigeria.
+Some third-party services used by the church may process data outside Nigeria. In particular:
+
+- **Cloudinary** (media hosting) processes images on infrastructure outside Nigeria.
+- **Vercel** and **Render** (hosting) may process requests through edge or compute regions outside Nigeria.
+- **YouTube** and other social platforms operate globally.
 
 Where international transfers occur, we take reasonable steps to ensure appropriate safeguards are implemented consistent with NDPA requirements.
 
