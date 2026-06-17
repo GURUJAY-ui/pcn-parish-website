@@ -258,6 +258,69 @@ router.post("/unsubscribe", async (req, res) => {
   }
 });
 
+// ─── Admin — list subscribers ───────────────────────────────────────────────
+
+router.get("/subscribers", requireAuth, async (_req, res) => {
+  try {
+    const rows = await db
+      .select({
+        id: subscribers.id,
+        email: subscribers.email,
+        name: subscribers.name,
+        subscribedAt: subscribers.subscribedAt,
+        unsubscribedAt: subscribers.unsubscribedAt,
+      })
+      .from(subscribers)
+      .orderBy(desc(subscribers.subscribedAt));
+    res.json(rows);
+  } catch (err) {
+    logger.error("Subscribers list error", { err });
+    res.status(500).json({ error: "Failed to fetch subscribers" });
+  }
+});
+
+// ─── Admin — toggle a subscriber's opt-in status ────────────────────────────
+
+router.patch("/subscribers/:id", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+  const active = req.body?.active;
+  if (typeof active !== "boolean") {
+    return res.status(400).json({ error: "Body must include { active: boolean }" });
+  }
+  try {
+    const [row] = await db
+      .update(subscribers)
+      .set({ unsubscribedAt: active ? null : new Date() })
+      .where(eq(subscribers.id, id))
+      .returning();
+    if (!row) return res.status(404).json({ error: "Subscriber not found" });
+    res.json(row);
+  } catch (err) {
+    logger.error("Subscriber toggle error", { err });
+    res.status(500).json({ error: "Failed to update subscriber" });
+  }
+});
+
+// ─── Admin — remove a subscriber entirely ───────────────────────────────────
+
+router.delete("/subscribers/:id", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+  try {
+    const result = await db.delete(subscribers).where(eq(subscribers.id, id)).returning({ id: subscribers.id });
+    if (result.length === 0) return res.status(404).json({ error: "Subscriber not found" });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error("Subscriber delete error", { err });
+    res.status(500).json({ error: "Failed to delete subscriber" });
+  }
+});
+
 // ─── Admin — subscriber stats ───────────────────────────────────────────────
 
 router.get("/stats", requireAuth, async (_req, res) => {
