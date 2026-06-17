@@ -9,8 +9,8 @@ export default function TermsOfService() {
     const staticContent = `
 # Terms of Service for Presbyterian Church of Nigeria, First Abuja Parish
 
-**Effective Date: May 15, 2026**  
-**Last Updated: May 15, 2026**
+**Effective Date: May 15, 2026**
+**Last Updated: June 17, 2026**
 
 ---
 
@@ -177,7 +177,19 @@ By submitting a prayer request, you consent to processing necessary for ministry
 
 Anonymous submissions are permitted where available.
 
-### 7.2 Testimonies
+### 7.2 Photo Submissions
+
+The Gallery page allows visitors to submit photographs of services and events for possible inclusion in the public gallery. By submitting a photo, you:
+
+- Confirm that you took the photo or otherwise have the right to share it;
+- Confirm that any identifiable individuals in the photo have given consent appropriate to public display on a church website;
+- Grant the church a non-exclusive, royalty-free licence to display, store, and distribute the photo through our digital platforms;
+- Understand that submissions are held in a pending state and are not published until reviewed and approved by a Church administrator;
+- Understand that we may decline to publish any submission, edit it for size or quality, or remove it at any time without notice.
+
+Submitted images are uploaded to our media-hosting provider (Cloudinary). Metadata stripping is applied before storage.
+
+### 7.3 Testimonies
 
 By submitting testimonies, you:
 
