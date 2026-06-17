@@ -420,6 +420,14 @@ export const api = {
     });
   },
 
+  // Dedicated endpoint + rate-limit bucket for the homepage newsletter pill.
+  subscribeNewsletter: async (data: { name?: string; email: string }): Promise<any> => {
+    return request("/contact/newsletter", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
   markContactRead: async (id: number): Promise<any> => {
     return request(`/contact/${id}/read`, {
       method: "PUT",

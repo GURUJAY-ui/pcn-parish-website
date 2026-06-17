@@ -50,11 +50,27 @@ export const uploadLimiter = rateLimit({
 });
 
 // ── Contact/submission rate limit ─────────────────────────────────────────
+// Shared by contact form, prayer requests, gallery submissions, testimony
+// submissions. Households on shared wifi can legitimately submit several
+// times in an hour, so the cap is generous.
 export const submissionLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10,
+  max: 30,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ error: "Submission limit reached. Try again later." });
+  },
+});
+
+// ── Newsletter signup rate limit ──────────────────────────────────────────
+// Dedicated bucket for the homepage email-capture pill so legitimate
+// newsletter signups don't compete with the (sensitive) contact / prayer /
+// submission flows. Newsletter abuse is low-impact (it's an inbox-bound
+// contact row) so this is intentionally tight per IP.
+export const newsletterLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({ error: "Newsletter signup limit reached. Try again later." });
   },
 });
 
