@@ -42,9 +42,24 @@ function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fadedOut = useRef(false);
   const videoIndex = useRef(0);
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+
+  // Personalized greeting — stored only in this visitor's localStorage so it
+  // shows to them but is never displayed publicly to anyone else.
+  const [savedName, setSavedName] = useState<string | null>(null);
+  useEffect(() => {
+    try { setSavedName(localStorage.getItem("pcn:firstName")); } catch {}
+  }, []);
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  })();
 
   // Crossfade-through-black loop that alternates between the hero clips.
   // Opacity is driven by a CSS transition (robust against rAF throttling in
@@ -93,14 +108,20 @@ function Hero() {
     if (!email.trim() || submitting) return;
     setSubmitting(true);
     try {
+      const trimmedName = firstName.trim();
       await api.createContact({
-        name: "", email, phone: "",
+        name: trimmedName, email, phone: "",
         subject: "Newsletter Signup",
         message: "Homepage bulletin / newsletter signup.",
         type: "message", anonymous: false,
       });
+      if (trimmedName) {
+        try { localStorage.setItem("pcn:firstName", trimmedName); } catch {}
+        setSavedName(trimmedName);
+      }
       setSubscribed(true);
       setEmail("");
+      setFirstName("");
     } catch {
       /* keep the field so they can retry */
     } finally {
@@ -133,7 +154,13 @@ function Hero() {
 
           <h1 style={SERIF}
             className="text-5xl sm:text-6xl md:text-8xl text-white tracking-tight leading-[1.02]">
-            You're welcome <em className="italic text-white/70">home.</em>
+            {savedName ? (
+              <>
+                {greeting}, {savedName} — <em className="italic text-white/70">welcome back.</em>
+              </>
+            ) : (
+              <>You're welcome <em className="italic text-white/70">home.</em></>
+            )}
           </h1>
 
           {/* Email capture pill */}
@@ -146,8 +173,15 @@ function Hero() {
             <form onSubmit={submitEmail} className="max-w-xl w-full">
               <div className="liquid-glass rounded-full pl-6 pr-2 py-2 flex items-center gap-3">
                 <input
+                  type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="First name"
+                  maxLength={40}
+                  className="w-24 sm:w-28 shrink-0 bg-transparent text-white placeholder:text-white/40 text-sm focus:outline-none"
+                />
+                <span aria-hidden className="h-5 w-px bg-white/15 shrink-0" />
+                <input
                   type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email for weekly updates"
+                  placeholder="Email for weekly updates"
                   className="flex-1 min-w-0 bg-transparent text-white placeholder:text-white/40 text-sm focus:outline-none"
                 />
                 <button type="submit" disabled={submitting} aria-label="Subscribe"
