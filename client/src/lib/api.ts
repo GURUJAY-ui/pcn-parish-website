@@ -457,6 +457,25 @@ export const api = {
     return request("/newsletter/sends", { requiresAuth: true });
   },
 
+  getSubscribers: async (): Promise<Array<{ id: number; email: string; name: string | null; subscribedAt: string; unsubscribedAt: string | null }>> => {
+    return request("/newsletter/subscribers", { requiresAuth: true });
+  },
+
+  setSubscriberActive: async (id: number, active: boolean): Promise<any> => {
+    return request(`/newsletter/subscribers/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ active }),
+      requiresAuth: true,
+    });
+  },
+
+  deleteSubscriber: async (id: number): Promise<any> => {
+    return request(`/newsletter/subscribers/${id}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    });
+  },
+
   // Public unsubscribe link target.
   unsubscribeNewsletter: async (token: string): Promise<{ message: string; email?: string }> => {
     return request(`/newsletter/unsubscribe?token=${encodeURIComponent(token)}`);

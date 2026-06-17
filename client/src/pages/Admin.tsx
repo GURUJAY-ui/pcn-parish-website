@@ -1202,6 +1202,10 @@ function NewsletterSection() {
   const [sending, setSending] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sends, setSends] = useState<any[]>([]);
+  const [subscribersList, setSubscribersList] = useState<Array<{ id: number; email: string; name: string | null; subscribedAt: string; unsubscribedAt: string | null }>>([]);
+  const [subscriberFilter, setSubscriberFilter] = useState<"all" | "active" | "unsubscribed">("active");
+  const [subscriberSearch, setSubscriberSearch] = useState("");
+  const [subscribersLoading, setSubscribersLoading] = useState(true);
 
   const loadPreview = async (introText?: string) => {
     try {
@@ -1218,7 +1222,44 @@ function NewsletterSection() {
   const loadSends = async () => {
     try { setSends(await api.getNewsletterSends()); } catch (err) { logger.error("Sends load failed", err); }
   };
-  useEffect(() => { void loadPreview(); void loadSends(); }, []);
+  const loadSubscribers = async () => {
+    try { setSubscribersLoading(true); setSubscribersList(await api.getSubscribers()); } catch (err) { logger.error("Subscribers load failed", err); toast.error("Failed to load subscribers"); } finally { setSubscribersLoading(false); }
+  };
+  useEffect(() => { void loadPreview(); void loadSends(); void loadSubscribers(); }, []);
+
+  const toggleSubscriber = async (id: number, active: boolean) => {
+    try {
+      await api.setSubscriberActive(id, active);
+      toast.success(active ? "Re-subscribed" : "Unsubscribed");
+      await loadSubscribers();
+      await loadPreview();
+    } catch (err) {
+      logger.error("Toggle subscriber failed", err);
+      toast.error("Failed to update");
+    }
+  };
+  const removeSubscriber = async (id: number, email: string) => {
+    if (!window.confirm(`Permanently delete ${email}? They can re-subscribe from the homepage.`)) return;
+    try {
+      await api.deleteSubscriber(id);
+      toast.success("Subscriber removed");
+      await loadSubscribers();
+      await loadPreview();
+    } catch (err) {
+      logger.error("Delete subscriber failed", err);
+      toast.error("Failed to delete");
+    }
+  };
+
+  const filteredSubscribers = subscribersList.filter((s) => {
+    if (subscriberFilter === "active" && s.unsubscribedAt) return false;
+    if (subscriberFilter === "unsubscribed" && !s.unsubscribedAt) return false;
+    if (subscriberSearch.trim()) {
+      const q = subscriberSearch.toLowerCase();
+      if (!s.email.toLowerCase().includes(q) && !(s.name?.toLowerCase().includes(q))) return false;
+    }
+    return true;
+  });
 
   const send = async () => {
     if (!intro.trim()) return toast.error("Intro is required");
@@ -1303,6 +1344,76 @@ function NewsletterSection() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mt-8 space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-foreground">Subscribers</h3>
+            <p className="text-xs text-muted-foreground">Manage who receives the bulletin. Unsubscribed addresses are kept so they can resubscribe later.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search name or email…"
+              value={subscriberSearch}
+              onChange={(e) => setSubscriberSearch(e.target.value)}
+              className={`${inputCls} w-56`}
+            />
+            <Select value={subscriberFilter} onValueChange={(v: any) => setSubscriberFilter(v)}>
+              <SelectTrigger className={`${inputCls} w-36`}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active only</SelectItem>
+                <SelectItem value="unsubscribed">Unsubscribed</SelectItem>
+                <SelectItem value="all">All</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="ghost" size="sm" onClick={() => void loadSubscribers()} disabled={subscribersLoading}>
+              {subscribersLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
+            </Button>
+          </div>
+        </div>
+
+        {subscribersLoading && subscribersList.length === 0 ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        ) : filteredSubscribers.length === 0 ? (
+          <Card className="p-6 text-center text-sm text-muted-foreground">No subscribers match this view.</Card>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2 text-left font-semibold">Email</th>
+                  <th className="px-3 py-2 text-left font-semibold">Name</th>
+                  <th className="px-3 py-2 text-left font-semibold">Signed up</th>
+                  <th className="px-3 py-2 text-left font-semibold">Status</th>
+                  <th className="px-3 py-2 text-right font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSubscribers.map((s) => (
+                  <tr key={s.id} className="border-t border-border">
+                    <td className="px-3 py-2 text-foreground">{s.email}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{s.name || <span className="italic opacity-60">—</span>}</td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground">{new Date(s.subscribedAt).toLocaleDateString()}</td>
+                    <td className="px-3 py-2">
+                      {s.unsubscribedAt
+                        ? <Badge variant="secondary" className="bg-amber-500/15 text-amber-700 dark:text-amber-300">Unsubscribed</Badge>
+                        : <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">Active</Badge>}
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex justify-end gap-1">
+                        {s.unsubscribedAt
+                          ? <Button variant="ghost" size="sm" onClick={() => toggleSubscriber(s.id, true)} title="Re-subscribe">Re-subscribe</Button>
+                          : <Button variant="ghost" size="sm" onClick={() => toggleSubscriber(s.id, false)} title="Unsubscribe">Unsubscribe</Button>}
+                        <Button variant="ghost" size="sm" onClick={() => removeSubscriber(s.id, s.email)} className="text-destructive" title="Delete forever"><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
