@@ -23,6 +23,7 @@ import { useLocation } from "wouter";
 import { api } from "./lib/api";
 import TermsOfService from "./pages/TermsOfService";
 import Safeguarding from "./pages/SafeguardingPolicy";
+import Unsubscribe from "./pages/Unsubscribe";
 
 
 function ProtectedRoute({ component: Component }: { component: () => JSX.Element }) {
@@ -72,6 +73,7 @@ function Router() {
       <Route path={"/privacy-policy"} component={PrivacyPolicy} />
       <Route path={"/terms-of-service"} component={TermsOfService} />
       <Route path={"/safeguarding"} component={Safeguarding} />
+      <Route path={"/unsubscribe"} component={Unsubscribe} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

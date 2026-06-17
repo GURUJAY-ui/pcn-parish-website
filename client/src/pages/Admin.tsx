@@ -62,6 +62,7 @@ const navItems = [
   { id: "testimonies", label: "Testimonies", icon: MessageSquare },
   { id: "gallery", label: "Gallery", icon: GalleryHorizontal },
   { id: "hero", label: "Hero Slides", icon: Image },
+  { id: "newsletter", label: "Newsletter", icon: Inbox },
   { id: "contact", label: "Contact", icon: MapPin },
   { id: "bank", label: "Bank Details", icon: CreditCard },
 ] as const;
@@ -1193,6 +1194,136 @@ function HeroSection() {
   );
 }
 
+function NewsletterSection() {
+  const [intro, setIntro] = useState("Here's what's coming up at the parish this week. We'd love to see you in worship.");
+  const [subject, setSubject] = useState("This week at PCN First Abuja Parish");
+  const [preview, setPreview] = useState<{ html: string; subscriberCount: number; emailConfigured: boolean; events: any[]; sermon: any | null } | null>(null);
+  const [previewing, setPreviewing] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [sends, setSends] = useState<any[]>([]);
+
+  const loadPreview = async (introText?: string) => {
+    try {
+      setPreviewing(true);
+      const data = await api.getNewsletterPreview(introText ?? intro);
+      setPreview(data);
+    } catch (err) {
+      logger.error("Newsletter preview load failed", err);
+      toast.error("Failed to load preview");
+    } finally {
+      setPreviewing(false);
+    }
+  };
+  const loadSends = async () => {
+    try { setSends(await api.getNewsletterSends()); } catch (err) { logger.error("Sends load failed", err); }
+  };
+  useEffect(() => { void loadPreview(); void loadSends(); }, []);
+
+  const send = async () => {
+    if (!intro.trim()) return toast.error("Intro is required");
+    try {
+      setSending(true);
+      const r = await api.sendNewsletter({ intro: intro.trim(), subject: subject.trim() || undefined });
+      toast.success(`Sent to ${r.sent} subscriber${r.sent === 1 ? "" : "s"}${r.failed ? ` · ${r.failed} failed` : ""}`);
+      setConfirmOpen(false);
+      await loadSends();
+    } catch (err: any) {
+      logger.error("Newsletter send failed", err);
+      toast.error(err?.message ?? "Failed to send");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const cfgMissing = preview && !preview.emailConfigured;
+
+  return (
+    <SectionShell
+      title="Newsletter"
+      description="Send a weekly bulletin to all opted-in subscribers."
+      icon={<Inbox className="h-5 w-5 text-primary" />}
+      action={preview ? <Badge variant="secondary">{preview.subscriberCount} active subscriber{preview.subscriberCount === 1 ? "" : "s"}</Badge> : null}
+    >
+      {cfgMissing && (
+        <Card className="mb-4 border-amber-500/40 bg-amber-500/10 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-amber-500">⚠️</div>
+            <div className="text-sm text-foreground">
+              <p className="font-semibold">Email provider not configured yet.</p>
+              <p className="mt-1 text-muted-foreground">Set <code className="rounded bg-muted px-1 py-0.5 text-xs">BREVO_API_KEY</code> and <code className="rounded bg-muted px-1 py-0.5 text-xs">NEWSLETTER_FROM_EMAIL</code> on the API server. You can still preview the bulletin below.</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-3">
+          <Field label="Subject line" value={subject} onChange={setSubject} placeholder="This week at PCN First Abuja Parish" />
+          <Field label="Intro paragraph" value={intro} onChange={setIntro} textarea rows={6} placeholder="What you want to say at the top of the email." />
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => loadPreview()} disabled={previewing}>
+              {previewing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Refreshing…</> : "Refresh preview"}
+            </Button>
+            <Button size="sm" disabled={!preview || preview.subscriberCount === 0 || cfgMissing || sending} onClick={() => setConfirmOpen(true)}>
+              Send to {preview?.subscriberCount ?? 0} subscriber{preview?.subscriberCount === 1 ? "" : "s"}
+            </Button>
+          </div>
+
+          {sends.length > 0 && (
+            <div className="mt-6 space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent sends</Label>
+              <div className="space-y-1.5">
+                {sends.slice(0, 5).map((s) => (
+                  <div key={s.id} className="rounded-lg border border-border bg-card p-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground">{new Date(s.sentAt).toLocaleString()}</span>
+                      <Badge variant="secondary">{s.recipientCount} sent</Badge>
+                    </div>
+                    <div className="mt-1 text-muted-foreground">by {s.sentBy} · {s.intro.slice(0, 80)}{s.intro.length > 80 ? "…" : ""}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Live preview</Label>
+          <div className="overflow-hidden rounded-xl border border-border bg-white">
+            {previewing && !preview ? (
+              <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            ) : (
+              <iframe
+                title="Newsletter preview"
+                srcDoc={preview?.html ?? ""}
+                className="h-[600px] w-full"
+                sandbox=""
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Send this bulletin?</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>This will email <span className="font-semibold">{preview?.subscriberCount}</span> active subscriber{preview?.subscriberCount === 1 ? "" : "s"}.</p>
+            <p className="text-muted-foreground">There's no undo. Make sure the preview looks right and the subject line is correct.</p>
+          </div>
+          <div className="mt-2 flex justify-end gap-2">
+            <Button variant="ghost" disabled={sending} onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button disabled={sending} onClick={send}>
+              {sending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…</> : "Send now"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </SectionShell>
+  );
+}
+
 function ContactInboxSection() {
   const [messages, setMessages] = useState<ContactRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1258,12 +1389,6 @@ export default function Admin() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const refresh = localStorage.getItem("refreshToken");
-    if (!token && !refresh) navigate("/admin/login");
-  }, [navigate]);
-
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
@@ -1301,6 +1426,7 @@ export default function Admin() {
           <TabsContent value="testimonies"><TestimoniesSection /></TabsContent>
           <TabsContent value="gallery"><GallerySection /></TabsContent>
           <TabsContent value="hero"><HeroSection /></TabsContent>
+          <TabsContent value="newsletter"><NewsletterSection /></TabsContent>
           <TabsContent value="contact"><ContactInboxSection /></TabsContent>
           <TabsContent value="bank"><BankSection /></TabsContent>
         </Tabs>
