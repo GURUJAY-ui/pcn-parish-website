@@ -1194,9 +1194,176 @@ function HeroSection() {
   );
 }
 
+// ─── Newsletter block editor ────────────────────────────────────────────────
+
+type EditorBlock =
+  | { _id: string; type: "heading"; text: string }
+  | { _id: string; type: "text"; text: string }
+  | { _id: string; type: "image"; url: string; alt?: string; caption?: string; href?: string }
+  | { _id: string; type: "button"; label: string; url: string }
+  | { _id: string; type: "divider" }
+  | { _id: string; type: "events" }
+  | { _id: string; type: "sermon" };
+
+const BLOCK_LABELS: Record<EditorBlock["type"], string> = {
+  text: "Text",
+  heading: "Heading",
+  image: "Image / Poster",
+  button: "Button",
+  divider: "Divider",
+  events: "Events (auto)",
+  sermon: "Sermon (auto)",
+};
+
+let _blockCounterSeed = 0;
+function uid(): string {
+  return `b${Date.now().toString(36)}${(_blockCounterSeed++).toString(36)}`;
+}
+
+function makeBlock(type: EditorBlock["type"], text = ""): EditorBlock {
+  const _id = uid();
+  switch (type) {
+    case "heading":
+    case "text":
+      return { _id, type, text };
+    case "image":
+      return { _id, type, url: "", alt: "", caption: "", href: "" };
+    case "button":
+      return { _id, type, label: "", url: "" };
+    default:
+      return { _id, type } as EditorBlock;
+  }
+}
+
+// Map editor blocks to the server payload: drop the local _id, trim, and skip
+// blocks that aren't filled in yet (e.g. an image with no URL) so the live
+// preview and send never choke on half-built content.
+function serializeBlocks(blocks: EditorBlock[]): any[] {
+  const out: any[] = [];
+  for (const b of blocks) {
+    switch (b.type) {
+      case "heading":
+      case "text":
+        if (b.text.trim()) out.push({ type: b.type, text: b.text.trim() });
+        break;
+      case "image":
+        if (b.url.trim()) {
+          const block: any = { type: "image", url: b.url.trim() };
+          if (b.alt?.trim()) block.alt = b.alt.trim();
+          if (b.caption?.trim()) block.caption = b.caption.trim();
+          if (b.href?.trim()) block.href = b.href.trim();
+          out.push(block);
+        }
+        break;
+      case "button":
+        if (b.label.trim() && b.url.trim()) out.push({ type: "button", label: b.label.trim(), url: b.url.trim() });
+        break;
+      case "divider":
+      case "events":
+      case "sermon":
+        out.push({ type: b.type });
+        break;
+    }
+  }
+  return out;
+}
+
+function ImageBlockEditor({
+  block,
+  onPatch,
+}: {
+  block: Extract<EditorBlock, { type: "image" }>;
+  onPatch: (patch: Partial<Extract<EditorBlock, { type: "image" }>>) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(false);
+
+  const onFile = async (file: File | null) => {
+    if (!file) return;
+    try {
+      setUploading(true);
+      const { url } = await api.uploadNewsletterImage(file);
+      onPatch({ url });
+      toast.success("Image uploaded");
+    } catch (err: any) {
+      logger.error("Newsletter image upload failed", err);
+      toast.error(err?.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const openPicker = async () => {
+    setPickerOpen(true);
+    if (gallery.length === 0) {
+      try {
+        setGalleryLoading(true);
+        setGallery(await api.getGallery());
+      } catch (err) {
+        logger.error("Gallery load failed", err);
+        toast.error("Failed to load gallery");
+      } finally {
+        setGalleryLoading(false);
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      {block.url ? (
+        <img src={block.url} alt={block.alt || ""} className="max-h-40 w-full rounded-lg border border-border object-cover" />
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent">
+          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
+          {uploading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading…</> : <><Image className="h-3.5 w-3.5" /> Upload</>}
+        </label>
+        <Button type="button" variant="outline" size="sm" onClick={openPicker}><GalleryHorizontal className="mr-1 h-3.5 w-3.5" /> From gallery</Button>
+      </div>
+      <Input value={block.url} placeholder="…or paste an image URL" onChange={(e) => onPatch({ url: e.target.value })} className={inputCls} />
+      <Input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onPatch({ caption: e.target.value })} className={inputCls} />
+      <Input value={block.alt ?? ""} placeholder="Alt text for accessibility (optional)" onChange={(e) => onPatch({ alt: e.target.value })} className={inputCls} />
+      <Input value={block.href ?? ""} placeholder="Make image a link (optional, https://…)" onChange={(e) => onPatch({ href: e.target.value })} className={inputCls} />
+
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Pick from gallery</DialogTitle></DialogHeader>
+          {galleryLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          ) : gallery.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">No gallery images available.</p>
+          ) : (
+            <div className="grid max-h-[60vh] grid-cols-3 gap-2 overflow-y-auto">
+              {gallery.map((g) =>
+                g.imageUrl ? (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => { onPatch({ url: g.imageUrl! }); setPickerOpen(false); }}
+                    className="group overflow-hidden rounded-md border border-border transition-colors hover:border-primary"
+                    title={g.caption}
+                  >
+                    <img src={g.imageUrl} alt={g.caption} className="h-24 w-full object-cover" />
+                  </button>
+                ) : null
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function NewsletterSection() {
-  const [intro, setIntro] = useState("Here's what's coming up at the parish this week. We'd love to see you in worship.");
   const [subject, setSubject] = useState("This week at PCN First Abuja Parish");
+  const [blocks, setBlocks] = useState<EditorBlock[]>(() => [
+    makeBlock("text", "Here's what's coming up at the parish this week. We'd love to see you in worship."),
+    makeBlock("events"),
+    makeBlock("sermon"),
+  ]);
   const [preview, setPreview] = useState<{ html: string; subscriberCount: number; emailConfigured: boolean; events: any[]; sermon: any | null } | null>(null);
   const [previewing, setPreviewing] = useState(true);
   const [sending, setSending] = useState(false);
@@ -1207,14 +1374,28 @@ function NewsletterSection() {
   const [subscriberSearch, setSubscriberSearch] = useState("");
   const [subscribersLoading, setSubscribersLoading] = useState(true);
 
-  const loadPreview = async (introText?: string) => {
+  // ── Block editing ──
+  const patchBlock = (id: string, patch: Record<string, unknown>) =>
+    setBlocks((bs) => bs.map((b) => (b._id === id ? ({ ...b, ...patch } as EditorBlock) : b)));
+  const removeBlock = (id: string) => setBlocks((bs) => bs.filter((b) => b._id !== id));
+  const moveBlock = (id: string, dir: -1 | 1) =>
+    setBlocks((bs) => {
+      const i = bs.findIndex((b) => b._id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= bs.length) return bs;
+      const copy = [...bs];
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+      return copy;
+    });
+  const addBlock = (type: EditorBlock["type"]) => setBlocks((bs) => [...bs, makeBlock(type)]);
+
+  const loadPreview = async () => {
     try {
       setPreviewing(true);
-      const data = await api.getNewsletterPreview(introText ?? intro);
+      const data = await api.getNewsletterPreview({ subject: subject.trim() || undefined, blocks: serializeBlocks(blocks) });
       setPreview(data);
     } catch (err) {
       logger.error("Newsletter preview load failed", err);
-      toast.error("Failed to load preview");
     } finally {
       setPreviewing(false);
     }
@@ -1225,7 +1406,13 @@ function NewsletterSection() {
   const loadSubscribers = async () => {
     try { setSubscribersLoading(true); setSubscribersList(await api.getSubscribers()); } catch (err) { logger.error("Subscribers load failed", err); toast.error("Failed to load subscribers"); } finally { setSubscribersLoading(false); }
   };
-  useEffect(() => { void loadPreview(); void loadSends(); void loadSubscribers(); }, []);
+  useEffect(() => { void loadSends(); void loadSubscribers(); }, []);
+  // Debounced live preview whenever the subject or blocks change.
+  useEffect(() => {
+    const t = setTimeout(() => { void loadPreview(); }, 700);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject, blocks]);
 
   const toggleSubscriber = async (id: number, active: boolean) => {
     try {
@@ -1262,10 +1449,11 @@ function NewsletterSection() {
   });
 
   const send = async () => {
-    if (!intro.trim()) return toast.error("Intro is required");
+    const payload = serializeBlocks(blocks);
+    if (payload.length === 0) return toast.error("Add some content to the bulletin first");
     try {
       setSending(true);
-      const r = await api.sendNewsletter({ intro: intro.trim(), subject: subject.trim() || undefined });
+      const r = await api.sendNewsletter({ blocks: payload, subject: subject.trim() || undefined });
       toast.success(`Sent to ${r.sent} subscriber${r.sent === 1 ? "" : "s"}${r.failed ? ` · ${r.failed} failed` : ""}`);
       setConfirmOpen(false);
       await loadSends();
@@ -1301,8 +1489,59 @@ function NewsletterSection() {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-3">
           <Field label="Subject line" value={subject} onChange={setSubject} placeholder="This week at PCN First Abuja Parish" />
-          <Field label="Intro paragraph" value={intro} onChange={setIntro} textarea rows={6} placeholder="What you want to say at the top of the email." />
-          <div className="flex gap-2">
+
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Content blocks</Label>
+            {blocks.length === 0 && (
+              <Card className="p-4 text-center text-sm text-muted-foreground">No blocks yet — add one below to start building the bulletin.</Card>
+            )}
+            {blocks.map((b, i) => (
+              <Card key={b._id} className="space-y-2 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-primary">{BLOCK_LABELS[b.type]}</span>
+                  <div className="flex gap-0.5">
+                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={i === 0} onClick={() => moveBlock(b._id, -1)} title="Move up"><ChevronUp className="h-4 w-4" /></Button>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={i === blocks.length - 1} onClick={() => moveBlock(b._id, 1)} title="Move down"><ChevronDown className="h-4 w-4" /></Button>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => removeBlock(b._id)} title="Remove"><X className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+                {b.type === "heading" && (
+                  <Input value={b.text} placeholder="Heading text" onChange={(e) => patchBlock(b._id, { text: e.target.value })} className={inputCls} />
+                )}
+                {b.type === "text" && (
+                  <Textarea value={b.text} rows={4} placeholder="Paragraph text. Leave a blank line between paragraphs." onChange={(e) => patchBlock(b._id, { text: e.target.value })} className={textareaCls} />
+                )}
+                {b.type === "button" && (
+                  <div className="space-y-2">
+                    <Input value={b.label} placeholder="Button label (e.g. RSVP)" onChange={(e) => patchBlock(b._id, { label: e.target.value })} className={inputCls} />
+                    <Input value={b.url} placeholder="Link URL (https://…)" onChange={(e) => patchBlock(b._id, { url: e.target.value })} className={inputCls} />
+                  </div>
+                )}
+                {b.type === "image" && (
+                  <ImageBlockEditor block={b} onPatch={(patch) => patchBlock(b._id, patch)} />
+                )}
+                {b.type === "divider" && (
+                  <p className="text-xs text-muted-foreground">A thin horizontal rule.</p>
+                )}
+                {b.type === "events" && (
+                  <p className="text-xs text-muted-foreground">Auto: this week's events, pulled live from the site when the bulletin is sent.</p>
+                )}
+                {b.type === "sermon" && (
+                  <p className="text-xs text-muted-foreground">Auto: the latest sermon, pulled live from the site when the bulletin is sent.</p>
+                )}
+              </Card>
+            ))}
+
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {(Object.keys(BLOCK_LABELS) as EditorBlock["type"][]).map((t) => (
+                <Button key={t} type="button" variant="outline" size="sm" onClick={() => addBlock(t)}>
+                  <Plus className="mr-1 h-3.5 w-3.5" />{BLOCK_LABELS[t]}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={() => loadPreview()} disabled={previewing}>
               {previewing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Refreshing…</> : "Refresh preview"}
             </Button>
@@ -1329,7 +1568,7 @@ function NewsletterSection() {
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 md:sticky md:top-4 md:self-start">
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Live preview</Label>
           <div className="overflow-hidden rounded-xl border border-border bg-white">
             {previewing && !preview ? (
@@ -1338,7 +1577,7 @@ function NewsletterSection() {
               <iframe
                 title="Newsletter preview"
                 srcDoc={preview?.html ?? ""}
-                className="h-[600px] w-full"
+                className="h-[640px] w-full"
                 sandbox=""
               />
             )}

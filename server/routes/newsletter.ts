@@ -9,11 +9,34 @@ import { logger } from "../lib/logger";
 import {
   renderNewsletterHtml,
   renderNewsletterText,
+  summarizeBlocks,
+  type NewsletterBlock,
   type NewsletterContext,
 } from "../lib/newsletterTemplate";
 import { isEmailConfigured, sendEmail } from "../lib/email";
+import { imageUpload, processAndUploadImage } from "../lib/imageUpload";
+import { uploadLimiter } from "../lib/security";
 
 const router = Router();
+
+// ─── Newsletter content blocks — validation ──────────────────────────────────
+// URLs are stored as plain strings; the template's safeUrl() neutralises any
+// non-http(s) scheme before rendering, so we only cap length here.
+const blockSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("heading"), text: z.string().min(1).max(200) }),
+  z.object({ type: z.literal("text"), text: z.string().min(1).max(5000) }),
+  z.object({
+    type: z.literal("image"),
+    url: z.string().min(1).max(2000),
+    alt: z.string().max(300).optional(),
+    caption: z.string().max(300).optional(),
+    href: z.string().max(2000).optional(),
+  }),
+  z.object({ type: z.literal("button"), label: z.string().min(1).max(100), url: z.string().min(1).max(2000) }),
+  z.object({ type: z.literal("divider") }),
+  z.object({ type: z.literal("events") }),
+  z.object({ type: z.literal("sermon") }),
+]);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -48,24 +71,27 @@ async function fetchLatestSermon() {
   return row ?? null;
 }
 
-async function buildContext(intro: string, recipientName: string | null, token: string): Promise<NewsletterContext> {
-  const [evts, sermon] = await Promise.all([fetchUpcomingEvents(), fetchLatestSermon()]);
-  return {
-    intro,
-    events: evts,
-    sermon,
-    recipientName,
-    unsubscribeUrl: unsubscribeUrl(token),
-    siteUrl: siteUrl(),
-  };
-}
+// A sensible starter bulletin: an intro line, the auto events list, and the
+// latest sermon. Used when the admin hasn't built any blocks yet.
+const DEFAULT_BLOCKS: NewsletterBlock[] = [
+  { type: "text", text: "Here's what's coming up at the parish this week. We'd love to see you in worship." },
+  { type: "events" },
+  { type: "sermon" },
+];
 
-// ─── Admin — preview the next bulletin ──────────────────────────────────────
+// ─── Admin — preview the bulletin ────────────────────────────────────────────
 
-router.get("/preview", requireAuth, async (req, res) => {
-  const intro = typeof req.query.intro === "string" && req.query.intro.trim()
-    ? req.query.intro.trim()
-    : "Here's what's coming up at the parish this week. We'd love to see you in worship.";
+const previewSchema = z.object({
+  subject: z.string().max(200).optional(),
+  blocks: z.array(blockSchema).max(50).optional(),
+});
+
+router.post("/preview", requireAuth, async (req, res) => {
+  const parsed = previewSchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid input", details: parsed.error.flatten().fieldErrors });
+  }
+  const blocks = parsed.data.blocks?.length ? parsed.data.blocks : DEFAULT_BLOCKS;
 
   try {
     const [evts, sermon, activeCount] = await Promise.all([
@@ -79,7 +105,7 @@ router.get("/preview", requireAuth, async (req, res) => {
     ]);
 
     const ctx: NewsletterContext = {
-      intro,
+      blocks,
       events: evts,
       sermon,
       recipientName: "Friend",
@@ -101,10 +127,26 @@ router.get("/preview", requireAuth, async (req, res) => {
   }
 });
 
+// ─── Admin — upload a banner/poster image ────────────────────────────────────
+
+router.post("/image", requireAuth, uploadLimiter, imageUpload.single("image"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "Image file is required." });
+  try {
+    const url = await processAndUploadImage(req.file.buffer, req.file.mimetype, "newsletter");
+    res.json({ url });
+  } catch (err: any) {
+    if (err?.message === "BAD_MAGIC") {
+      return res.status(415).json({ error: "File content does not match declared type." });
+    }
+    logger.error("Newsletter image upload error", { err });
+    res.status(500).json({ error: "Image processing failed." });
+  }
+});
+
 // ─── Admin — send to all active subscribers ─────────────────────────────────
 
 const sendSchema = z.object({
-  intro: z.string().min(1).max(2000),
+  blocks: z.array(blockSchema).min(1).max(50),
   subject: z.string().min(1).max(200).optional(),
 });
 
@@ -120,7 +162,7 @@ router.post("/send", requireAuth, async (req: AuthRequest, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid input", details: parsed.error.flatten().fieldErrors });
   }
-  const intro = parsed.data.intro.trim();
+  const blocks = parsed.data.blocks;
   const subject = parsed.data.subject?.trim() || "This week at PCN First Abuja Parish";
 
   try {
@@ -144,7 +186,7 @@ router.post("/send", requireAuth, async (req: AuthRequest, res) => {
     let failed = 0;
     for (const sub of recipients) {
       const ctx: NewsletterContext = {
-        intro,
+        blocks,
         events: evts,
         sermon,
         recipientName: sub.name,
@@ -177,7 +219,7 @@ router.post("/send", requireAuth, async (req: AuthRequest, res) => {
       if (adminRow) sentByLabel = adminRow.username;
     }
     await db.insert(newsletterSends).values({
-      intro,
+      intro: summarizeBlocks(blocks),
       recipientCount: sent,
       sentBy: sentByLabel,
     });
@@ -333,6 +375,17 @@ router.get("/stats", requireAuth, async (_req, res) => {
     logger.error("Newsletter stats error", { err });
     res.status(500).json({ error: "Failed to fetch stats" });
   }
+});
+
+// ─── Multer error handler (must be last in this router) ───────────────────────
+router.use((err: any, _req: any, res: any, next: any) => {
+  if (err.message === "INVALID_MIME_TYPE") {
+    return res.status(415).json({ error: "File type not allowed. Use JPEG, PNG, WebP, or GIF." });
+  }
+  if (err.message?.includes("File too large")) {
+    return res.status(413).json({ error: "File exceeds 5 MB limit." });
+  }
+  next(err);
 });
 
 export default router;

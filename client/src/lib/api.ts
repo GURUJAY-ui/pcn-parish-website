@@ -433,7 +433,7 @@ export const api = {
     return request("/newsletter/stats", { requiresAuth: true });
   },
 
-  getNewsletterPreview: async (intro?: string): Promise<{
+  getNewsletterPreview: async (data: { subject?: string; blocks: any[] }): Promise<{
     subscriberCount: number;
     events: any[];
     sermon: any | null;
@@ -441,11 +441,26 @@ export const api = {
     text: string;
     emailConfigured: boolean;
   }> => {
-    const q = intro ? `?intro=${encodeURIComponent(intro)}` : "";
-    return request(`/newsletter/preview${q}`, { requiresAuth: true });
+    return request("/newsletter/preview", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    });
   },
 
-  sendNewsletter: async (data: { intro: string; subject?: string }): Promise<{ sent: number; failed: number; totalAttempted: number }> => {
+  // Upload a banner/poster image for use in a newsletter block. Returns the
+  // hosted (Cloudinary) URL.
+  uploadNewsletterImage: async (file: File): Promise<{ url: string }> => {
+    const formData = new FormData();
+    formData.append("image", file);
+    return request("/newsletter/image", {
+      method: "POST",
+      body: formData,
+      requiresAuth: true,
+    });
+  },
+
+  sendNewsletter: async (data: { blocks: any[]; subject?: string }): Promise<{ sent: number; failed: number; totalAttempted: number }> => {
     return request("/newsletter/send", {
       method: "POST",
       body: JSON.stringify(data),
