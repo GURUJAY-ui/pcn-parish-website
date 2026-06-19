@@ -91,6 +91,11 @@ app.use(
 );
 
 // ── Body parsing with size limits ─────────────────────────────────────────
+// The newsletter editor sends a blocks array (text + image URLs) that can run
+// past the default 10kb. Parse those routes first with a higher cap; the JSON
+// parser is idempotent, so the global 10kb parser below skips already-parsed
+// bodies. (The /image upload route is multipart and handled by multer, not here.)
+app.use("/api/newsletter", express.json({ limit: "100kb" }));
 app.use(express.json({ limit: "10kb" })); // Prevent large payload attacks
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
